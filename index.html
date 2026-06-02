@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FRIGURSO — FootGolf</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{
+  --g1:#0f2010;--g2:#1a3a1a;--g3:#2d6a10;--g4:#4a9c2a;--g5:#8fce5a;--g7:#eaf3de;
+  --bg:#f4f8ee;--bg2:#eef5e6;--bg3:#fff;
+  --tx:#1a2a10;--tx2:#4a6030;--tx3:#8aaa60;
+  --bd:rgba(74,156,42,0.14);--bd2:rgba(74,156,42,0.28);
+  --eagle:#0c447c;--birdie:#2d6a10;--bogey:#854f0b;--dbl:#a32d2d;
+  --blue:#185fa5;--amber:#854f0b;--red:#a32d2d;
+  --r8:8px;--r12:12px;--r16:16px;--r22:22px;--rF:999px;
+  --sh:0 2px 12px rgba(45,106,16,0.09);--sh2:0 6px 28px rgba(0,0,0,0.13);
+  font-family:'Barlow',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#111}
+body{display:flex;align-items:center;justify-content:center}
+
+.device{width:100%;max-width:430px;height:100vh;max-height:100vh;background:var(--bg3);display:flex;flex-direction:column;position:relative;overflow:hidden}
+@media(min-width:800px){
+  .device{max-height:900px;border-radius:40px;box-shadow:0 40px 100px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.08)}
+}
+
+.sb{background:var(--g1);height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0}
+.sb-t{color:var(--g5);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px}
+
+.screens{flex:1;position:relative;overflow:hidden}
+.sc{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none}
+.sc::-webkit-scrollbar{display:none}
+.sc.cur{display:block}
+.sc.cur.flex{display:flex;flex-direction:column}
+
+.nb{background:var(--g1);border-top:0.5px solid rgba(143,206,90,0.12);display:flex;flex-shrink:0}
+.nbi{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 10px;cursor:pointer;border:none;background:none}
+.nbi-i{font-size:20px;line-height:1;opacity:.35;transition:opacity .2s}
+.nbi-l{font-size:9px;font-weight:700;font-family:'Barlow Condensed',sans-serif;color:rgba(143,206,90,0.3);letter-spacing:.4px;transition:color .2s}
+.nbi.on .nbi-i{opacity:1}
+.nbi.on .nbi-l{color:var(--g5)}
+
+/* AUTH */
+.auth-wrap{background:var(--g1);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;overflow-y:auto}
+.auth-logo{width:80px;height:80px;background:var(--g3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;margin-bottom:16px;border:2px solid rgba(143,206,90,.2)}
+.auth-title{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:800;color:var(--g5);letter-spacing:2px;margin-bottom:4px}
+.auth-sub{font-size:13px;color:rgba(143,206,90,.4);margin-bottom:28px;text-align:center;line-height:1.5}
+.auth-tabs{display:flex;background:rgba(255,255,255,.06);border-radius:var(--r12);padding:3px;margin-bottom:22px;width:100%}
+.auth-tab{flex:1;padding:9px;border-radius:var(--r8);border:none;background:none;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:rgba(143,206,90,.4);cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.auth-tab.on{background:var(--g3);color:var(--g5)}
+.inp-lbl{font-size:11px;color:rgba(143,206,90,.5);margin-bottom:5px;font-weight:700;letter-spacing:.5px;width:100%}
+.inp{width:100%;background:rgba(255,255,255,.07);border:0.5px solid rgba(143,206,90,.2);border-radius:var(--r12);padding:13px 15px;font-size:15px;color:#fff;font-family:'Barlow',sans-serif;outline:none;margin-bottom:14px}
+.inp:focus{border-color:rgba(143,206,90,.5)}
+.inp::placeholder{color:rgba(255,255,255,.2)}
+.inp-row{display:flex;gap:10px;width:100%}
+.btn-main{width:100%;background:var(--g3);border:none;border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 20px rgba(74,156,42,.3);margin-top:4px}
+.btn-main:active{transform:scale(.97)}
+.btn-main:disabled{opacity:.5}
+.auth-err{background:rgba(163,45,45,.15);border:0.5px solid rgba(163,45,45,.3);border-radius:var(--r8);padding:10px 14px;font-size:13px;color:#f09595;margin-bottom:12px;width:100%;display:none}
+.auth-ok{background:rgba(74,156,42,.15);border:0.5px solid rgba(74,156,42,.3);border-radius:var(--r8);padding:10px 14px;font-size:13px;color:var(--g5);margin-bottom:12px;width:100%;display:none}
+
+/* COMMON */
+.hdr{background:var(--g1);padding:16px 20px 18px;flex-shrink:0}
+.hdr-sub{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(143,206,90,.4);letter-spacing:1.2px;margin-bottom:3px}
+.hdr-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--g5)}
+.hdr-row{display:flex;justify-content:space-between;align-items:center}
+.hcp-box{background:rgba(143,206,90,.1);border:0.5px solid rgba(143,206,90,.2);border-radius:var(--r12);padding:8px 14px;text-align:center}
+.hcp-v{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--g5)}
+.hcp-l{font-size:9px;color:rgba(143,206,90,.3);letter-spacing:.5px}
+.card{background:var(--bg3);border-radius:var(--r22);border:0.5px solid var(--bd);padding:16px 18px;box-shadow:var(--sh);margin-bottom:12px}
+.ct{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--tx);margin-bottom:13px}
+.sec{padding:14px 16px 0}
+.sec-b{padding-bottom:24px}
+.divh{height:8px;background:var(--bg);flex-shrink:0}
+.badge{display:inline-flex;padding:2px 9px;border-radius:var(--rF);font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:.3px}
+.bg{background:var(--g7);color:var(--g3)}.ba{background:#faeeda;color:#854f0b}
+.bb{background:#e6f1fb;color:#185fa5}.br{background:#fcebeb;color:#a32d2d}
+.bgr{background:var(--bg2);color:var(--tx2)}
+.li{display:flex;align-items:center;padding:11px 0;border-bottom:0.5px solid var(--bd);gap:12px}
+.li:last-child{border-bottom:none}
+.mets{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px 0}
+.met{background:var(--bg2);border-radius:var(--r16);padding:14px;border:0.5px solid var(--bd)}
+.met-v{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800}
+.met-l{font-size:11px;color:var(--tx2);margin-top:2px}
+.met-s{font-size:11px;color:var(--g4);margin-top:2px}
+.fab{background:var(--g3);border-radius:var(--rF);padding:13px 30px;display:flex;align-items:center;gap:8px;align-self:center;margin:14px auto;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(74,156,42,.3)}
+.fab:active{transform:scale(.97)}
+.fab-t{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.5px}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 16px 14px}
+.qb{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;border:none;background:none}
+.qb-i{width:52px;height:52px;border-radius:var(--r16);display:flex;align-items:center;justify-content:center;font-size:22px}
+.qb:active .qb-i{transform:scale(.92)}
+.qb-l{font-size:10px;font-weight:700;color:var(--tx2);font-family:'Barlow Condensed',sans-serif;letter-spacing:.3px}
+
+/* SCORECARD */
+.sc-hdr{background:var(--g1);padding:14px 18px;flex-shrink:0}
+.sc-back{background:rgba(255,255,255,.08);border-radius:var(--r8);padding:7px 12px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--g5)}
+.strip{background:rgba(0,0,0,.25);overflow-x:auto;display:flex;padding:10px 14px;gap:6px;flex-shrink:0}
+.strip::-webkit-scrollbar{display:none}
+.hchip{min-width:38px;background:rgba(255,255,255,.05);border-radius:6px;padding:5px 3px;text-align:center;cursor:pointer;border:0.5px solid transparent;flex-shrink:0}
+.hchip.on{background:rgba(143,206,90,.12);border-color:rgba(143,206,90,.3)}
+.hn{font-size:10px;color:rgba(255,255,255,.4);font-family:'Barlow Condensed',sans-serif;font-weight:700}
+.hp{font-size:10px;color:rgba(255,255,255,.2)}
+.hs{width:22px;height:22px;border-radius:50%;margin:3px auto 0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;font-family:'Barlow Condensed',sans-serif}
+.sc-body{flex:1;padding:14px;background:var(--bg);overflow-y:auto}
+.sc-card{background:var(--bg3);border-radius:var(--r22);padding:20px;box-shadow:var(--sh2)}
+.g-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.gb{width:55px;height:55px;border-radius:var(--r12);border:1.5px solid var(--bd2);background:var(--bg2);font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--tx);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.gb:active{transform:scale(.93)}
+.ge{background:rgba(12,68,124,.12);border-color:var(--eagle);color:var(--eagle)}
+.gbi{background:rgba(45,106,16,.12);border-color:var(--birdie);color:var(--birdie)}
+.gp{background:rgba(26,42,16,.06);border-color:var(--tx2);color:var(--tx)}
+.gbo{background:rgba(133,79,11,.1);border-color:var(--bogey);color:var(--bogey)}
+.gd{background:rgba(163,45,45,.1);border-color:var(--dbl);color:var(--dbl)}
+.sc-nav{display:flex;justify-content:space-between;margin-top:16px}
+.sc-nb{background:none;border:none;cursor:pointer;padding:8px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--g3)}
+.sc-nb:disabled{color:var(--tx3)}
+.sc-foot{background:var(--g1);padding:12px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.sfi{flex:1;text-align:center}
+.sfv{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:#fff}
+.sfl{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.3px}
+.save-b{background:var(--g3);border:none;border-radius:var(--r12);padding:11px 16px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;flex:1.8}
+.save-b:active{transform:scale(.97)}
+.save-b:disabled{opacity:.5}
+
+/* GPS */
+.gps-hdr{background:var(--g1);padding:20px 18px;flex-shrink:0}
+.gps-big{font-family:'Barlow Condensed',sans-serif;font-size:78px;font-weight:800;color:#fff;line-height:1}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.live{animation:pulse 1.5s infinite}
+
+/* CLIMA */
+.cl-hdr{background:#071828;padding:22px 18px;text-align:center;flex-shrink:0}
+.cgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 16px}
+.cg{background:#f0f6ff;border-radius:var(--r16);padding:13px 6px;text-align:center;border:0.5px solid rgba(24,95,165,.1)}
+.cgv{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#185fa5}
+.cgl{font-size:10px;color:#5a8ab0;margin-top:3px;font-weight:600}
+.fc{display:flex;gap:8px;padding:0 16px 14px;overflow-x:auto}
+.fc::-webkit-scrollbar{display:none}
+.fcd{background:#f0f6ff;border-radius:var(--r12);padding:12px 14px;text-align:center;flex-shrink:0}
+.fcn{font-size:10px;color:#5a8ab0;font-weight:700;font-family:'Barlow Condensed',sans-serif}
+.fci{font-size:20px;margin:4px 0}
+.fct{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#185fa5}
+
+/* RANKING */
+.rk-hdr{background:var(--g1);padding:22px 18px;text-align:center;flex-shrink:0}
+.pos-b{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;flex-shrink:0}
+.p1{background:#faeeda;color:#7a4a0a}.p2{background:#d3d1c7;color:#3a3a38}.p3{background:#f5c4b3;color:#8a3218}.pn{background:var(--bg2);color:var(--tx2)}
+.av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;flex-shrink:0}
+
+/* PERFIL */
+.p-hdr{background:var(--g1);padding:24px 18px;text-align:center;flex-shrink:0}
+.p-av{width:82px;height:82px;border-radius:50%;background:var(--g3);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:#fff;border:3px solid rgba(143,206,90,.25)}
+.p-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(143,206,90,.08);margin-top:16px;border-radius:var(--r16);overflow:hidden}
+.ps{background:rgba(0,0,0,.2);padding:12px;text-align:center}
+.psv{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--g5)}
+.psl{font-size:9px;color:rgba(143,206,90,.35);letter-spacing:.3px}
+
+/* TORNEOS / CANCHAS */
+.tc{background:var(--bg3);border-radius:var(--r22);border:0.5px solid var(--bd);overflow:hidden;margin-bottom:12px;box-shadow:var(--sh)}
+.tc-img{height:72px;display:flex;align-items:center;justify-content:center;font-size:32px;background:linear-gradient(135deg,var(--g1),var(--g2))}
+.tc-b{padding:14px 16px}
+.tc-n{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;color:var(--tx)}
+.tc-m{font-size:12px;color:var(--tx2);margin-top:3px;line-height:1.5}
+
+/* EQUIPOS */
+.eq{background:var(--bg3);border-radius:var(--r22);border:0.5px solid var(--bd);padding:15px;margin-bottom:10px;box-shadow:var(--sh);display:flex;align-items:center;gap:13px}
+.eq-lg{width:50px;height:50px;border-radius:var(--r12);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;flex-shrink:0}
+
+/* HISTORIAL */
+.hr{display:flex;align-items:center;padding:12px 0;border-bottom:0.5px solid var(--bd);gap:12px}
+.hr:last-child{border-bottom:none}
+.hr-i{width:38px;height:38px;border-radius:var(--r8);background:var(--g7);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+
+/* LOADER / TOAST */
+.loader{position:absolute;inset:0;background:rgba(10,26,6,.88);display:none;align-items:center;justify-content:center;z-index:400;flex-direction:column;gap:12px}
+.loader.on{display:flex}
+.spin{width:36px;height:36px;border:3px solid rgba(143,206,90,.2);border-top-color:var(--g5);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-t{color:var(--g5);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px}
+.toast{position:absolute;bottom:76px;left:50%;transform:translateX(-50%) translateY(6px);background:var(--g1);color:var(--g5);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;padding:10px 22px;border-radius:var(--rF);box-shadow:var(--sh2);white-space:nowrap;z-index:300;opacity:0;transition:all .22s;border:0.5px solid rgba(143,206,90,.2);pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.empty{text-align:center;padding:32px 16px}
+.empty-i{font-size:36px;margin-bottom:8px}
+.empty-t{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--tx);margin-bottom:4px}
+.empty-s{font-size:13px;color:var(--tx2)}
+</style>
+</head>
+<body>
+<div class="device">
+  <div class="sb">
+    <span class="sb-t" id="sbt">09:41</span>
+    <span style="font-size:13px">📶 🔋</span>
+  </div>
+
+  <div class="screens" id="screens">
+
+    <!-- AUTH -->
+    <div class="sc cur" id="sc-auth">
+      <div class="auth-wrap">
+        <div class="auth-logo">⚽</div>
+        <div class="auth-title">FRIGURSO</div>
+        <div class="auth-sub">La app de footgolf más completa del mundo</div>
+        <div class="auth-tabs">
+          <button class="auth-tab on" id="tab-in" onclick="switchTab('login')">INGRESAR</button>
+          <button class="auth-tab" id="tab-reg" onclick="switchTab('reg')">REGISTRARSE</button>
+        </div>
+        <div id="reg-fields" style="display:none;width:100%">
+          <div class="inp-row">
+            <div style="flex:1"><div class="inp-lbl">NOMBRE</div><input class="inp" id="r-nombre" placeholder="Giovanni"></div>
+            <div style="flex:1"><div class="inp-lbl">APELLIDO</div><input class="inp" id="r-apellido" placeholder="Anzisi"></div>
+          </div>
+        </div>
+        <div class="inp-lbl">EMAIL</div>
+        <input class="inp" id="a-email" type="email" placeholder="tu@email.com" autocomplete="email">
+        <div class="inp-lbl">CONTRASEÑA</div>
+        <input class="inp" id="a-pass" type="password" placeholder="Mínimo 8 caracteres">
+        <div class="auth-err" id="auth-err"></div>
+        <div class="auth-ok" id="auth-ok"></div>
+        <button class="btn-main" id="auth-btn" onclick="doAuth()">INGRESAR</button>
+        <div style="margin-top:16px;text-align:center;font-size:12px;color:rgba(143,206,90,.25)">🌍 89 canchas · 312 jugadores · Sudamérica</div>
+      </div>
+    </div>
+
+    <!-- HOME -->
+    <div class="sc" id="sc-home">
+      <div class="hdr">
+        <div class="hdr-row">
+          <div><div class="hdr-sub">FRIGURSO</div><div class="hdr-title" id="hdr-hi">¡Hola! 👋</div></div>
+          <div class="hcp-box"><div class="hcp-v" id="hdr-hcp">—</div><div class="hcp-l">HCP</div></div>
+        </div>
+      </div>
+      <div class="mets">
+        <div class="met"><div class="met-v" id="d-mejor" style="color:var(--birdie)">—</div><div class="met-l">Mejor score</div><div class="met-s" id="d-mejor-s"> </div></div>
+        <div class="met"><div class="met-v" id="d-prom" style="color:var(--birdie)">—</div><div class="met-l">Promedio</div><div class="met-s" id="d-prom-s"> </div></div>
+        <div class="met"><div class="met-v" id="d-vict" style="color:var(--amber)">0</div><div class="met-l">Victorias</div></div>
+        <div class="met"><div class="met-v" id="d-rondas" style="color:var(--blue)">0</div><div class="met-l">Rondas</div></div>
+      </div>
+      <button class="fab" onclick="go('sc-scorecard')"><span style="font-size:20px">⚽</span><span class="fab-t">NUEVA RONDA</span></button>
+      <div class="quick">
+        <button class="qb" onclick="go('sc-gps')"><div class="qb-i" style="background:rgba(45,106,16,.1)">📍</div><span class="qb-l">GPS</span></button>
+        <button class="qb" onclick="go('sc-clima')"><div class="qb-i" style="background:rgba(24,95,165,.1)">🌤</div><span class="qb-l">CLIMA</span></button>
+        <button class="qb" onclick="go('sc-torneos')"><div class="qb-i" style="background:rgba(133,79,11,.1)">🏆</div><span class="qb-l">TORNEOS</span></button>
+        <button class="qb" onclick="go('sc-equipos')"><div class="qb-i" style="background:rgba(163,45,45,.1)">👥</div><span class="qb-l">EQUIPOS</span></button>
+      </div>
+      <div class="divh"></div>
+      <div class="sec">
+        <div class="card"><div class="ct">📅 Próximos torneos</div><div id="d-torneos"></div></div>
+      </div>
+      <div class="sec sec-b">
+        <div class="card"><div class="ct">📊 Últimas rondas</div><div id="d-rondas-list"></div></div>
+      </div>
+    </div>
+
+    <!-- SCORECARD -->
+    <div class="sc flex" id="sc-scorecard" style="background:var(--g1)">
+      <div class="sc-hdr">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <button class="sc-back" onclick="go('sc-home')">← Inicio</button>
+          <div style="text-align:right">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(143,206,90,.4);letter-spacing:.5px">LOS ÁLAMOS FG</div>
+            <div id="sc-top" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--g5)">E</div>
+          </div>
+        </div>
+      </div>
+      <div class="strip" id="strip"></div>
+      <div class="sc-body">
+        <div class="sc-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:800;color:var(--tx)" id="sc-hn">Hoyo 1</div><div style="font-size:13px;color:var(--tx2);margin-top:3px" id="sc-hi">Par 4 · 142m</div></div>
+            <div id="sc-res"></div>
+          </div>
+          <div style="font-size:12px;color:var(--tx2);font-weight:600;margin-top:16px;margin-bottom:4px">¿CUÁNTOS GOLPES?</div>
+          <div class="g-grid" id="ggrid"></div>
+          <div class="sc-nav">
+            <button class="sc-nb" id="sc-prev" onclick="scMove(-1)">◀ Anterior</button>
+            <button class="sc-nb" id="sc-next" onclick="scMove(1)">Siguiente ▶</button>
+          </div>
+        </div>
+      </div>
+      <div class="sc-foot">
+        <div class="sfi"><div class="sfv" id="sf-g">0</div><div class="sfl">GOLPES</div></div>
+        <div class="sfi"><div class="sfv" id="sf-p">0</div><div class="sfl">PAR</div></div>
+        <div class="sfi"><div class="sfv" id="sf-s" style="color:var(--g5)">E</div><div class="sfl">SCORE</div></div>
+        <button class="save-b" onclick="saveRound()" id="save-btn">GUARDAR ✓</button>
+      </div>
+    </div>
+
+    <!-- GPS -->
+    <div class="sc" id="sc-gps">
+      <div class="gps-hdr">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <div class="live" style="width:9px;height:9px;border-radius:50%;background:var(--g5)"></div>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:rgba(143,206,90,.45);letter-spacing:.8px">GPS EN VIVO</span>
+          <button onclick="getGPS()" style="margin-left:auto;background:rgba(143,206,90,.1);border:0.5px solid rgba(143,206,90,.2);border-radius:var(--r8);padding:5px 12px;color:var(--g5);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;cursor:pointer">📡 ACTIVAR</button>
+        </div>
+        <div style="display:flex;align-items:flex-end;justify-content:space-between">
+          <div><div class="gps-big"><span id="gps-m">142</span><span style="font-size:28px;color:rgba(255,255,255,.3)">m</span></div><div style="font-size:12px;color:rgba(143,206,90,.4);margin-top:4px" id="gps-lbl">distancia al hoyo</div></div>
+          <div style="text-align:right"><div style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;color:rgba(255,255,255,.6)" id="gps-pin">38m</div><div style="font-size:11px;color:rgba(255,255,255,.25)">al pin</div></div>
+        </div>
+        <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">
+          <span class="badge bg" id="gps-des">Desnivel: +2m</span>
+          <span class="badge bb" id="gps-sug">Kick medio</span>
+          <span class="badge ba" id="gps-wind">Viento: —</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 16px">
+        <div style="background:var(--bg2);border-radius:var(--r12);padding:11px 6px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800" id="gps-h">H1</div><div style="font-size:10px;color:var(--tx3)">HOYO</div></div>
+        <div style="background:var(--bg2);border-radius:var(--r12);padding:11px 6px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800" id="gps-par">P4</div><div style="font-size:10px;color:var(--tx3)">PAR</div></div>
+        <div style="background:var(--bg2);border-radius:var(--r12);padding:11px 6px;text-align:center;border:0.5px solid var(--bg)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800" id="gps-temp">—°C</div><div style="font-size:10px;color:var(--tx3)">TEMP</div></div>
+        <div style="background:var(--bg2);border-radius:var(--r12);padding:11px 6px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800" id="gps-acc">—</div><div style="font-size:10px;color:var(--tx3)">SEÑAL</div></div>
+      </div>
+      <div style="padding:0 16px 6px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2)">18 HOYOS — DISTANCIAS</div>
+      <div id="gps-list" style="padding:0 16px 24px"></div>
+    </div>
+
+    <!-- TORNEOS -->
+    <div class="sc" id="sc-torneos">
+      <div class="hdr"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Torneos 🏆</div></div>
+      <div style="display:flex;gap:7px;padding:14px 16px;flex-wrap:wrap">
+        <span class="badge bg">Todos</span><span class="badge bgr">Próximos</span><span class="badge bgr">Equipos</span>
+      </div>
+      <div class="sec sec-b" id="torneos-list"></div>
+    </div>
+
+    <!-- CANCHAS -->
+    <div class="sc" id="sc-canchas">
+      <div class="hdr"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Canchas ⛳</div></div>
+      <div style="padding:14px 16px"><input id="cancha-search" style="width:100%;background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r12);padding:12px 15px;font-size:14px;color:var(--tx);font-family:'Barlow',sans-serif;outline:none" placeholder="🔍 Buscar cancha o ciudad..." oninput="filterCanchas(this.value)"></div>
+      <div class="sec sec-b" id="canchas-list"></div>
+    </div>
+
+    <!-- EQUIPOS -->
+    <div class="sc" id="sc-equipos">
+      <div class="hdr"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Equipos 👥</div></div>
+      <div class="sec sec-b" id="equipos-list"></div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="sc" id="sc-historial">
+      <div class="hdr"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Historial 📋</div></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 16px">
+        <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800" id="h-tot">0</div><div style="font-size:10px;color:var(--tx2)">RONDAS</div></div>
+        <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--birdie)" id="h-best">—</div><div style="font-size:10px;color:var(--tx2)">MEJOR</div></div>
+        <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--birdie)" id="h-avg">—</div><div style="font-size:10px;color:var(--tx2)">PROM.</div></div>
+      </div>
+      <div class="sec sec-b"><div class="card"><div class="ct">📋 Todas las rondas</div><div id="hist-list"></div></div></div>
+    </div>
+
+    <!-- RANKING -->
+    <div class="sc" id="sc-ranking">
+      <div class="rk-hdr">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:var(--g5);letter-spacing:1px">🏆 RANKING</div>
+        <div style="font-size:12px;color:rgba(143,206,90,.35);margin-top:4px">Temporada 2025 · Sudamérica</div>
+      </div>
+      <div class="sec sec-b"><div class="card" id="ranking-list"></div></div>
+    </div>
+
+    <!-- CLIMA -->
+    <div class="sc" id="sc-clima">
+      <div class="cl-hdr">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(122,184,245,.4);letter-spacing:1px;margin-bottom:8px">CLIMA EN TU CANCHA</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:72px;font-weight:800;color:#d0e8ff;line-height:1" id="cl-temp">—°</div>
+        <div style="font-size:14px;color:rgba(122,184,245,.65);margin-top:5px" id="cl-desc">Obteniendo clima...</div>
+        <div style="font-size:12px;color:rgba(122,184,245,.35);margin-top:6px" id="cl-city">📍 Detectando ubicación...</div>
+        <div style="margin-top:14px" id="cl-apto"></div>
+      </div>
+      <div class="cgrid">
+        <div class="cg"><div class="cgv" id="cl-viento">—</div><div class="cgl">VIENTO</div></div>
+        <div class="cg"><div class="cgv" id="cl-hum">—</div><div class="cgl">HUMEDAD</div></div>
+        <div class="cg"><div class="cgv" id="cl-vis">—</div><div class="cgl">VISIB.</div></div>
+        <div class="cg"><div class="cgv" id="cl-sens">—</div><div class="cgl">SENS.</div></div>
+      </div>
+      <div style="padding:0 16px 8px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2)">PRONÓSTICO</div>
+      <div class="fc" id="cl-fc"></div>
+      <div class="sec sec-b">
+        <div class="card">
+          <div class="ct">📊 Tu score según clima</div>
+          <div class="li"><span style="flex:1;font-size:13px;color:var(--tx2)">☀️ Soleado (18–28°C)</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--birdie)">-5.2</span></div>
+          <div class="li"><span style="flex:1;font-size:13px;color:var(--tx2)">⛅ Nublado sin viento</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--birdie)">-4.8</span></div>
+          <div class="li"><span style="flex:1;font-size:13px;color:var(--tx2)">💨 Viento 20–40 km/h</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--bogey)">-1.9</span></div>
+          <div class="li"><span style="flex:1;font-size:13px;color:var(--tx2)">🌧 Lluvia</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--dbl)">+1.2</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PERFIL -->
+    <div class="sc" id="sc-perfil">
+      <div class="p-hdr">
+        <div class="p-av" id="p-av">?</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--g5)" id="p-name">—</div>
+        <div style="font-size:13px;color:rgba(143,206,90,.45);margin-top:5px" id="p-meta">—</div>
+        <div class="p-stats">
+          <div class="ps"><div class="psv" id="ps-hcp">—</div><div class="psl">HCP</div></div>
+          <div class="ps"><div class="psv" id="ps-vict">0</div><div class="psl">VICTORIAS</div></div>
+          <div class="ps"><div class="psv" id="ps-torn">0</div><div class="psl">TORNEOS</div></div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="card">
+          <div class="ct">🎯 Distribución de golpes</div>
+          <div id="p-golpes"><div class="empty"><div class="empty-i">⚽</div><div class="empty-t">Jugá tu primera ronda</div></div></div>
+        </div>
+      </div>
+      <div class="sec sec-b">
+        <div class="card">
+          <div class="ct">⚙️ Opciones</div>
+          <div class="li" style="cursor:pointer" onclick="tab(document.querySelector('[data-sc=sc-historial]'),'sc-historial')"><span style="flex:1;font-size:14px;font-weight:500">📋 Ver historial</span><span style="color:var(--tx3)">›</span></div>
+          <div class="li" style="cursor:pointer" onclick="go('sc-canchas')"><span style="flex:1;font-size:14px;font-weight:500">⛳ Explorar canchas</span><span style="color:var(--tx3)">›</span></div>
+          <div class="li" style="cursor:pointer" onclick="doLogout()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--red)">🚪 Cerrar sesión</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- NAVBAR (hidden until login) -->
+  <div class="nb" id="navbar" style="display:none">
+    <button class="nbi on" data-sc="sc-home" onclick="tab(this,'sc-home')"><span class="nbi-i">🏠</span><span class="nbi-l">INICIO</span></button>
+    <button class="nbi" data-sc="sc-torneos" onclick="tab(this,'sc-torneos')"><span class="nbi-i">🏆</span><span class="nbi-l">TORNEOS</span></button>
+    <button class="nbi" data-sc="sc-gps" onclick="tab(this,'sc-gps')"><span class="nbi-i">📍</span><span class="nbi-l">GPS</span></button>
+    <button class="nbi" data-sc="sc-ranking" onclick="tab(this,'sc-ranking')"><span class="nbi-i">🥇</span><span class="nbi-l">RANKING</span></button>
+    <button class="nbi" data-sc="sc-perfil" onclick="tab(this,'sc-perfil')"><span class="nbi-i">👤</span><span class="nbi-l">PERFIL</span></button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="loader" id="loader"><div class="spin"></div><div class="loader-t" id="loader-t">Cargando...</div></div>
+</div>
+
+<script>
+// ═══ CONFIG ═══
+const SB_URL = 'https://cwcgltillatygutfqqna.supabase.co'
+const SB_KEY = 'sb_publishable_UAFxuCxrq4foxLh698bN-g_8dXrlD54'
+const SB = supabase.createClient(SB_URL, SB_KEY, {auth:{persistSession:true,storage:localStorage}})
+
+// ═══ RELOJ ═══
+;(function tick(){
+  const n=new Date()
+  document.getElementById('sbt').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')
+  setTimeout(tick,10000)
+})()
+
+// ═══ ESTADO ═══
+let USER=null, JUGADOR=null
+
+// ═══ INIT ═══
+window.addEventListener('load', async ()=>{
+  load('Iniciando...')
+  SB.auth.onAuthStateChange(async (event, session)=>{
+    if(session){
+      USER=session.user
+      await loadJugador()
+      showApp()
+    } else {
+      USER=null; JUGADOR=null
+      hideApp()
+    }
+  })
+  const {data:{session}} = await SB.auth.getSession()
+  if(!session) stopLoad()
+  renderScorecard()
+  renderGPSList()
+  renderStaticData()
+  loadClima()
+})
+
+// ═══ AUTH ═══
+let authMode='login'
+function switchTab(m){
+  authMode=m
+  document.getElementById('tab-in').classList.toggle('on',m==='login')
+  document.getElementById('tab-reg').classList.toggle('on',m==='reg')
+  document.getElementById('reg-fields').style.display=m==='reg'?'block':'none'
+  document.getElementById('auth-btn').textContent=m==='login'?'INGRESAR':'CREAR CUENTA GRATIS'
+}
+
+async function doAuth(){
+  const email=document.getElementById('a-email').value.trim()
+  const pass=document.getElementById('a-pass').value
+  const errEl=document.getElementById('auth-err')
+  const okEl=document.getElementById('auth-ok')
+  errEl.style.display='none'; okEl.style.display='none'
+  if(!email||!pass){showErr('Completá todos los campos');return}
+  document.getElementById('auth-btn').disabled=true
+  load(authMode==='login'?'Ingresando...':'Creando cuenta...')
+  try{
+    if(authMode==='login'){
+      const {error}=await SB.auth.signInWithPassword({email,password:pass})
+      if(error){stopLoad();showErr('Email o contraseña incorrectos');document.getElementById('auth-btn').disabled=false;return}
+    } else {
+      const nombre=document.getElementById('r-nombre').value.trim()
+      const apellido=document.getElementById('r-apellido').value.trim()
+      if(!nombre||!apellido){stopLoad();showErr('Ingresá nombre y apellido');document.getElementById('auth-btn').disabled=false;return}
+      const {data,error}=await SB.auth.signUp({email,password:pass})
+      if(error){stopLoad();showErr(error.message);document.getElementById('auth-btn').disabled=false;return}
+      if(data.user){
+        await SB.from('jugadores').insert({id:data.user.id,nombre,apellido})
+        stopLoad()
+        okEl.textContent='✓ Cuenta creada. Revisá tu email para confirmar.'
+        okEl.style.display='block'
+        document.getElementById('auth-btn').disabled=false
+        return
+      }
+    }
+  } catch(e){
+    stopLoad(); showErr('Error de conexión'); document.getElementById('auth-btn').disabled=false
+  }
+}
+
+function showErr(msg){
+  const e=document.getElementById('auth-err')
+  e.textContent=msg; e.style.display='block'
+}
+
+async function loadJugador(){
+  const {data}=await SB.from('jugadores').select('*').eq('id',USER.id).single()
+  if(data) JUGADOR=data
+}
+
+function showApp(){
+  stopLoad()
+  document.getElementById('navbar').style.display='flex'
+  go('sc-home')
+  loadDashboard()
+  renderStaticData()
+}
+
+function hideApp(){
+  stopLoad()
+  document.getElementById('navbar').style.display='none'
+  go('sc-auth')
+}
+
+async function doLogout(){
+  await SB.auth.signOut()
+  toast('Sesión cerrada')
+}
+
+// ═══ NAV ═══
+function go(id){
+  document.querySelectorAll('.sc').forEach(s=>s.classList.remove('cur'))
+  document.getElementById(id).classList.add('cur')
+}
+function tab(btn,id){
+  document.querySelectorAll('.nbi').forEach(b=>b.classList.remove('on'))
+  btn.classList.add('on')
+  go(id)
+  if(id==='sc-historial') loadHistorial()
+  if(id==='sc-perfil') loadPerfil()
+  if(id==='sc-ranking') loadRanking()
+  if(id==='sc-gps') getGPS()
+  if(id==='sc-clima') loadClima()
+}
+
+// ═══ DASHBOARD ═══
+async function loadDashboard(){
+  if(!USER||!JUGADOR) return
+  document.getElementById('hdr-hi').textContent=`¡Hola, ${JUGADOR.nombre}! 👋`
+  const hcp=JUGADOR.handicap
+  document.getElementById('hdr-hcp').textContent=hcp!=null?(hcp>=0?'+'+parseFloat(hcp).toFixed(1):parseFloat(hcp).toFixed(1)):'—'
+  // Stats
+  const {data:rondas}=await SB.from('rondas').select('score_vs_par,posicion_final,torneo_id').eq('jugador_id',USER.id).eq('completada',true)
+  if(rondas&&rondas.length){
+    const scores=rondas.map(r=>r.score_vs_par).filter(s=>s!==null)
+    const mejor=Math.min(...scores)
+    const prom=(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1)
+    const vict=rondas.filter(r=>r.posicion_final===1).length
+    document.getElementById('d-mejor').textContent=mejor<=0?mejor:'+'+mejor
+    document.getElementById('d-prom').textContent=prom
+    document.getElementById('d-vict').textContent=vict
+    document.getElementById('d-rondas').textContent=rondas.length
+  }
+  // Torneos próximos
+  const {data:torneos}=await SB.from('torneos').select('nombre,fecha_inicio,estado,ciudades(nombre)').gte('fecha_inicio',new Date().toISOString().split('T')[0]).order('fecha_inicio').limit(3)
+  const tc=document.getElementById('d-torneos')
+  if(torneos&&torneos.length){
+    tc.innerHTML=torneos.map(t=>{
+      const bc={'inscripciones':'bg','en_curso':'bb','programado':'bgr'}[t.estado]||'bgr'
+      const bl={'inscripciones':'Inscribirse','en_curso':'En curso','programado':'Próximo'}[t.estado]||t.estado
+      const f=new Date(t.fecha_inicio+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'})
+      return`<div class="li"><div style="width:8px;height:8px;border-radius:50%;background:var(--g4);flex-shrink:0"></div><div style="flex:1"><div style="font-size:14px;font-weight:500">${t.nombre}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${t.ciudades?.nombre||''}</div></div><span class="badge ${bc}">${bl}</span></div>`
+    }).join('')
+  } else {
+    tc.innerHTML=demoTorneos()
+  }
+  // Últimas rondas
+  const {data:ultimas}=await SB.from('rondas').select('id,fecha,tipo,score_vs_par,canchas(nombre)').eq('jugador_id',USER.id).eq('completada',true).order('fecha',{ascending:false}).limit(5)
+  const rl=document.getElementById('d-rondas-list')
+  if(ultimas&&ultimas.length){
+    rl.innerHTML=ultimas.map(r=>{
+      const svp=r.score_vs_par
+      const col=svp<0?'var(--birdie)':svp>0?'var(--bogey)':'var(--tx)'
+      const str=svp===0?'E':svp>0?'+'+svp:svp
+      const f=new Date(r.fecha+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'})
+      return`<div class="li"><div style="flex:1"><div style="font-size:14px;font-weight:500">${r.canchas?.nombre||'Cancha'}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${r.tipo}</div></div><span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:${col}">${str??'—'}</span></div>`
+    }).join('')
+  } else {
+    rl.innerHTML=`<div class="empty"><div class="empty-i">⚽</div><div class="empty-t">Registrá tu primera ronda</div><div class="empty-s">Tocá NUEVA RONDA para empezar</div></div>`
+  }
+}
+
+function demoTorneos(){
+  return[
+    {n:'Copa Patagonia 2025',f:'15 Jun',c:'Gral. Roca',e:'bg',el:'Inscripto'},
+    {n:'Open Nacional Argentina',f:'28 Jun',c:'Buenos Aires',e:'ba',el:'Pendiente'},
+    {n:'South America Cup',f:'10 Jul',c:'São Paulo 🇧🇷',e:'bb',el:'Clasificado'},
+  ].map(t=>`<div class="li"><div style="width:8px;height:8px;border-radius:50%;background:var(--g4);flex-shrink:0"></div><div style="flex:1"><div style="font-size:14px;font-weight:500">${t.n}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${t.f} · ${t.c}</div></div><span class="badge ${t.e}">${t.el}</span></div>`).join('')
+}
+
+// ═══ SCORECARD ═══
+const HOYOS=[
+  {n:1,par:4,dist:142,des:+2,obst:'Árbol izq.'},{n:2,par:3,dist:88,des:-1,obst:'Bunker'},
+  {n:3,par:5,dist:215,des:+5,obst:'Lago'},{n:4,par:4,dist:135,des:0,obst:'—'},
+  {n:5,par:3,dist:95,des:-3,obst:'Viento'},{n:6,par:4,dist:178,des:+1,obst:'Curva'},
+  {n:7,par:5,dist:230,des:+8,obst:'Colina'},{n:8,par:3,dist:72,des:-5,obst:'—'},
+  {n:9,par:4,dist:155,des:0,obst:'Árbol der.'},{n:10,par:4,dist:148,des:+1,obst:'Bunker'},
+  {n:11,par:3,dist:91,des:-2,obst:'—'},{n:12,par:5,dist:220,des:+4,obst:'Lago'},
+  {n:13,par:4,dist:138,des:0,obst:'—'},{n:14,par:4,dist:162,des:+2,obst:'Curva'},
+  {n:15,par:3,dist:84,des:-4,obst:'—'},{n:16,par:5,dist:210,des:+6,obst:'Colina'},
+  {n:17,par:4,dist:145,des:0,obst:'—'},{n:18,par:4,dist:158,des:+1,obst:'Vista al lago'}
+]
+let scores=new Array(18).fill(null),hi=0
+const scCol=s=>s<=-2?'var(--eagle)':s===-1?'var(--birdie)':s===0?'var(--tx)':s===1?'var(--bogey)':'var(--dbl)'
+const scCls=s=>s<=-2?'ge':s===-1?'gbi':s===0?'gp':s===1?'gbo':'gd'
+const scLbl=s=>s<=-2?'EAGLE':s===-1?'BIRDIE':s===0?'PAR':s===1?'BOGEY':'DOBLE+'
+
+function renderScorecard(){
+  document.getElementById('strip').innerHTML=HOYOS.map((h,i)=>{
+    const g=scores[i],svp=g!==null?g-h.par:null
+    const ball=g!==null?`<div class="hs" style="background:${scCol(svp)}20;color:${scCol(svp)}">${g}</div>`:''
+    return`<div class="hchip${i===hi?' on':''}" onclick="scSel(${i})"><div class="hn">H${h.n}</div><div class="hp">P${h.par}</div>${ball}</div>`
+  }).join('')
+  const chips=document.getElementById('strip').querySelectorAll('.hchip')
+  if(chips[hi]) chips[hi].scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'})
+  const h=HOYOS[hi]
+  document.getElementById('sc-hn').textContent=`Hoyo ${h.n}`
+  document.getElementById('sc-hi').textContent=`Par ${h.par} · ${h.dist}m${h.obst!=='—'?' · '+h.obst:''}`
+  const g=scores[hi],svp=g!==null?g-h.par:null
+  document.getElementById('sc-res').innerHTML=g!==null?`<div style="background:${scCol(svp)}18;border-radius:999px;padding:5px 13px"><span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:${scCol(svp)}">${scLbl(svp)}</span></div>`:''
+  document.getElementById('ggrid').innerHTML=Array.from({length:h.par+3},(_,i)=>{
+    const n=i+1,cls=g===n?scCls(n-h.par):''
+    return`<button class="gb ${cls}" onclick="scSet(${n})">${n}</button>`
+  }).join('')
+  document.getElementById('sc-prev').disabled=hi===0
+  document.getElementById('sc-next').disabled=hi===17
+  const done=scores.filter(s=>s!==null)
+  const tg=done.reduce((a,b)=>a+b,0)
+  const tp=HOYOS.filter((_,i)=>scores[i]!==null).reduce((a,h)=>a+h.par,0)
+  const svpT=tg-tp
+  const str=done.length===0?'E':svpT===0?'E':svpT>0?'+'+svpT:svpT
+  document.getElementById('sf-g').textContent=tg||0
+  document.getElementById('sf-p').textContent=tp||0
+  document.getElementById('sf-s').textContent=str
+  document.getElementById('sf-s').style.color=done.length>0&&svpT<0?'var(--g5)':done.length>0&&svpT>0?'var(--bogey)':'var(--g5)'
+  document.getElementById('sc-top').textContent=str
+}
+function scSet(n){scores[hi]=n;if(hi<17)hi++;renderScorecard()}
+function scSel(i){hi=i;renderScorecard()}
+function scMove(d){hi=Math.max(0,Math.min(17,hi+d));renderScorecard()}
+
+async function saveRound(){
+  const done=scores.filter(s=>s!==null)
+  if(!done.length){toast('Ingresá al menos un hoyo');return}
+  const tg=done.reduce((a,b)=>a+b,0)
+  const tp=HOYOS.filter((_,i)=>scores[i]!==null).reduce((a,h)=>a+h.par,0)
+  const svp=tg-tp
+  const str=svp===0?'E':svp>0?'+'+svp:svp
+  if(!USER){toast('✓ Ronda guardada (modo demo) · Score '+str);setTimeout(()=>{scores=new Array(18).fill(null);hi=0;renderScorecard();go('sc-home')},1500);return}
+  document.getElementById('save-btn').disabled=true
+  load('Guardando ronda...')
+  try{
+    const {data:ronda,error}=await SB.from('rondas').insert({
+      jugador_id:USER.id,fecha:new Date().toISOString().split('T')[0],
+      tipo:'practica',total_golpes:tg,score_vs_par:svp,completada:done.length===18
+    }).select().single()
+    if(error) throw error
+    const rows=HOYOS.filter((_,i)=>scores[i]!==null).map(h=>({
+      ronda_id:ronda.id,hoyo_numero:h.n,par:h.par,golpes:scores[HOYOS.indexOf(h)],distancia_metros:h.dist
+    }))
+    await SB.from('scorecard').insert(rows)
+    stopLoad()
+    toast(`✓ Ronda guardada · Score ${str}`)
+    scores=new Array(18).fill(null);hi=0;renderScorecard()
+    setTimeout(()=>{go('sc-home');loadDashboard()},1500)
+  } catch(e){
+    stopLoad(); toast('Error al guardar')
+  }
+  document.getElementById('save-btn').disabled=false
+}
+
+// ═══ GPS ═══
+let ghi=0
+function renderGPSList(){
+  const h=HOYOS[ghi]
+  document.getElementById('gps-m').textContent=h.dist
+  document.getElementById('gps-pin').textContent=Math.round(h.dist*.27)+'m'
+  document.getElementById('gps-des').textContent=`Desnivel: ${h.des>0?'+':''}${h.des}m`
+  document.getElementById('gps-sug').textContent=h.dist>200?'Kick potente':h.dist>140?'Kick largo':h.dist>90?'Kick medio':h.dist>50?'Chip':'Putt'
+  document.getElementById('gps-h').textContent='H'+h.n
+  document.getElementById('gps-par').textContent='P'+h.par
+  document.getElementById('gps-list').innerHTML=HOYOS.map((h,i)=>`
+    <div onclick="ghi=${i};renderGPSList()" style="display:flex;align-items:center;padding:10px 0;border-bottom:0.5px solid var(--bd);gap:12px;cursor:pointer">
+      <div style="width:30px;height:30px;border-radius:50%;background:${i===ghi?'var(--g3)':'var(--bg2)'};display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:${i===ghi?'#fff':'var(--tx)'};flex-shrink:0">${h.n}</div>
+      <div style="flex:1"><div style="font-size:13px;color:var(--tx)">Par ${h.par}${h.obst!=='—'?' · '+h.obst:''}</div></div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;min-width:52px;text-align:right">${h.dist}m</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:${h.des>0?'var(--bogey)':h.des<0?'var(--blue)':'var(--tx2)'};min-width:36px;text-align:right">${h.des>0?'+':''}${h.des}m</div>
+    </div>`).join('')
+}
+function getGPS(){
+  if(!navigator.geolocation){toast('GPS no disponible');return}
+  navigator.geolocation.getCurrentPosition(
+    p=>{const acc=Math.round(p.coords.accuracy);document.getElementById('gps-acc').textContent='±'+acc+'m';document.getElementById('gps-lbl').textContent='GPS activo · ±'+acc+'m';toast('📍 GPS activo · ±'+acc+'m')},
+    ()=>toast('Activá la ubicación en tu celular'),
+    {enableHighAccuracy:true,timeout:10000}
+  )
+}
+
+// ═══ CLIMA ═══
+async function loadClima(){
+  if(!navigator.geolocation){setClimaDefault();return}
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const {latitude:lat,longitude:lon}=pos.coords
+    const OWM=localStorage.getItem('fg_owm')||''
+    if(!OWM){setClimaDefault();askOWM();return}
+    try{
+      const r=await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OWM}&units=metric&lang=es`)
+      const d=await r.json()
+      if(d.cod!==200){setClimaDefault();return}
+      const v=Math.round((d.wind?.speed||0)*3.6)
+      document.getElementById('cl-temp').textContent=Math.round(d.main.temp)+'°'
+      document.getElementById('cl-desc').textContent=d.weather[0].description
+      document.getElementById('cl-city').textContent='📍 '+d.name
+      document.getElementById('cl-viento').innerHTML=v+'<span style="font-size:10px">km/h</span>'
+      document.getElementById('cl-hum').innerHTML=d.main.humidity+'<span style="font-size:10px">%</span>'
+      document.getElementById('cl-vis').innerHTML=Math.round((d.visibility||10000)/1000)+'<span style="font-size:10px">km</span>'
+      document.getElementById('cl-sens').textContent=Math.round(d.main.feels_like)+'°'
+      const apto=d.main.temp>5&&d.main.temp<38&&v<50
+      document.getElementById('cl-apto').innerHTML=`<span style="background:${apto?'rgba(74,156,42,.2)':'rgba(163,45,45,.2)'};color:${apto?'var(--g5)':'#f09595'};font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;padding:6px 16px;border-radius:999px">${apto?'✓ Apto para jugar':'⚠ Condiciones difíciles'}</span>`
+      document.getElementById('gps-wind').textContent='Viento: '+v+' km/h'
+      document.getElementById('gps-temp').textContent=Math.round(d.main.temp)+'°C'
+    } catch(e){setClimaDefault()}
+  },()=>setClimaDefault())
+}
+function setClimaDefault(){
+  document.getElementById('cl-temp').textContent='18°'
+  document.getElementById('cl-desc').textContent='⛅ Parcialmente nublado'
+  document.getElementById('cl-city').textContent='📍 General Roca, Río Negro'
+  document.getElementById('cl-viento').innerHTML='12<span style="font-size:10px">km/h</span>'
+  document.getElementById('cl-hum').innerHTML='42<span style="font-size:10px">%</span>'
+  document.getElementById('cl-vis').innerHTML='18<span style="font-size:10px">km</span>'
+  document.getElementById('cl-sens').textContent='16°'
+  document.getElementById('cl-apto').innerHTML='<span style="background:rgba(74,156,42,.2);color:var(--g5);font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;padding:6px 16px;border-radius:999px">✓ Apto para jugar</span>'
+  document.getElementById('cl-fc').innerHTML=['HOY ⛅ 18°','MAR ☀️ 22°','MIÉ ⛅ 19°','JUE 🌧 15°','VIE ⛅ 17°','SÁB ☀️ 24°'].map(d=>{const[n,i,t]=d.split(' ');return`<div class="fcd"><div class="fcn">${n}</div><div class="fci">${i}</div><div class="fct">${t}</div></div>`}).join('')
+}
+function askOWM(){
+  const k=prompt('Para clima real, ingresá tu API key gratuita de openweathermap.org/api:')
+  if(k&&k.length>10){localStorage.setItem('fg_owm',k);loadClima()}
+}
+
+// ═══ TORNEOS ═══
+async function renderStaticData(){
+  // Torneos
+  const {data:t}=await SB.from('torneos').select('*,ciudades(nombre)').order('fecha_inicio').limit(10).catch(()=>({data:null}))
+  const tl=document.getElementById('torneos-list')
+  const items=t&&t.length?t:[
+    {nombre:'Copa Patagonia 2025',fecha_inicio:'2025-06-15',tipo:'individual',formato:'Stroke Play',estado:'inscripciones',ciudades:{nombre:'General Roca 🇦🇷'},emoji:'🏆'},
+    {nombre:'Open Nacional Argentina',fecha_inicio:'2025-06-28',tipo:'individual',formato:'Stroke · 36 hoyos',estado:'programado',ciudades:{nombre:'Buenos Aires 🇦🇷'},emoji:'⚽'},
+    {nombre:'South America Cup',fecha_inicio:'2025-07-10',tipo:'equipos',formato:'Best Ball',estado:'programado',ciudades:{nombre:'São Paulo 🇧🇷'},emoji:'🌍'},
+  ]
+  tl.innerHTML=items.map(it=>{
+    const bc={'inscripciones':'bg','en_curso':'bb','programado':'bgr'}[it.estado]||'bgr'
+    const bl={'inscripciones':'Inscribirse','en_curso':'En curso','programado':'Próximo'}[it.estado]||it.estado
+    const f=it.fecha_inicio?new Date(it.fecha_inicio+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'}):'—'
+    return`<div class="tc"><div class="tc-img">${it.emoji||'🏆'}</div><div class="tc-b"><div class="tc-n">${it.nombre}</div><div class="tc-m">📍 ${it.ciudades?.nombre||''}</div><div class="tc-m">📅 ${f} · ${it.formato||it.tipo}</div><div style="margin-top:9px;display:flex;gap:6px"><span class="badge ${bc}">${bl}</span><span class="badge bgr">${it.tipo}</span></div></div></div>`
+  }).join('')
+  // Canchas
+  const {data:ca}=await SB.from('canchas').select('*,ciudades(nombre,paises(bandera))').eq('activa',true).order('nombre').catch(()=>({data:null}))
+  window._allCanchas=ca&&ca.length?ca.map(c=>({nombre:c.nombre,ciudad:c.ciudades?.nombre||'',pais:c.ciudades?.paises?.bandera||'🌍',hoyos:c.total_hoyos,par:c.par_total,dif:c.dificultad})):[
+    {nombre:'Los Álamos FootGolf',ciudad:'General Roca, Río Negro',pais:'🇦🇷',hoyos:18,par:72,dif:'media'},
+    {nombre:'Club Árabe',ciudad:'Buenos Aires',pais:'🇦🇷',hoyos:18,par:70,dif:'difícil'},
+    {nombre:'Parque Patagónico FG',ciudad:'Bariloche',pais:'🇦🇷',hoyos:9,par:36,dif:'fácil'},
+    {nombre:'São Paulo FG Club',ciudad:'São Paulo',pais:'🇧🇷',hoyos:18,par:72,dif:'difícil'},
+    {nombre:'Montevideo FootGolf',ciudad:'Montevideo',pais:'🇺🇾',hoyos:18,par:71,dif:'media'},
+  ]
+  renderCanchas('')
+  // Equipos
+  renderEquipos()
+}
+
+function renderCanchas(f){
+  const items=(window._allCanchas||[]).filter(c=>!f||c.nombre.toLowerCase().includes(f.toLowerCase())||c.ciudad.toLowerCase().includes(f.toLowerCase()))
+  const difC={facil:'bg',media:'ba','difícil':'br',experto:'br'}
+  document.getElementById('canchas-list').innerHTML=items.map(c=>`<div class="tc"><div class="tc-img" style="background:linear-gradient(135deg,#1a3a1a,#0f2010)">⛳</div><div class="tc-b"><div class="tc-n">${c.nombre}</div><div class="tc-m">${c.pais} ${c.ciudad}</div><div style="display:flex;gap:6px;margin-top:8px"><span class="badge bgr">${c.hoyos} hoyos</span><span class="badge bgr">Par ${c.par}</span><span class="badge ${difC[c.dif]||'bgr'}">${c.dif}</span></div></div></div>`).join('')
+}
+function filterCanchas(v){renderCanchas(v)}
+
+function renderEquipos(){
+  const items=[
+    {i:'PR',n:'Patagonia Rangers',p:'🇦🇷',j:4,v:8,r:1,bg:'#eaf3de',c:'#3b6d11'},
+    {i:'RJ',n:'Rio Jaguares',p:'🇧🇷',j:4,v:6,r:2,bg:'#e6f1fb',c:'#185fa5'},
+    {i:'AM',n:'Andean Masters',p:'🇨🇱',j:3,v:4,r:3,bg:'#fbeaf0',c:'#72243e'},
+    {i:'PA',n:'Pampas Aces',p:'🇦🇷',j:4,v:3,r:4,bg:'#faeeda',c:'#854f0b'},
+  ]
+  const pc=r=>r===1?'p1':r===2?'p2':r===3?'p3':'pn'
+  document.getElementById('equipos-list').innerHTML=`
+    ${items.map(e=>`<div class="eq"><div class="eq-lg" style="background:${e.bg};color:${e.c}">${e.i}</div><div style="flex:1"><div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:var(--tx)">${e.p} ${e.n}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${e.j} jugadores</div></div><div style="text-align:center;margin-right:8px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--birdie)">${e.v}</div><div style="font-size:10px;color:var(--tx3)">victorias</div></div><div class="pos-b ${pc(e.r)}">${e.r}</div></div>`).join('')}
+    <div class="sec-b" style="padding:14px 0 0"><div class="card"><div class="ct">📋 Formatos</div>
+    <div class="li"><span style="flex:1;font-size:14px">Best Ball</span><span class="badge bg">Activo</span></div>
+    <div class="li"><span style="flex:1;font-size:14px">Scramble</span><span class="badge bg">Activo</span></div>
+    <div class="li"><span style="flex:1;font-size:14px">Match Play</span><span class="badge bb">Disponible</span></div>
+    <div class="li"><span style="flex:1;font-size:14px">Ryder Cup</span><span class="badge bb">Disponible</span></div>
+    </div></div>`
+}
+
+// ═══ HISTORIAL ═══
+async function loadHistorial(){
+  if(!USER){setHistorialDemo();return}
+  const {data}=await SB.from('rondas').select('*,canchas(nombre)').eq('jugador_id',USER.id).eq('completada',true).order('fecha',{ascending:false})
+  if(!data||!data.length){setHistorialDemo();return}
+  const sc=data.map(r=>r.score_vs_par).filter(s=>s!==null)
+  document.getElementById('h-tot').textContent=data.length
+  document.getElementById('h-best').textContent=sc.length?Math.min(...sc):'—'
+  document.getElementById('h-avg').textContent=sc.length?(sc.reduce((a,b)=>a+b,0)/sc.length).toFixed(1):'—'
+  document.getElementById('hist-list').innerHTML=data.map(r=>{
+    const svp=r.score_vs_par,col=svp<0?'var(--birdie)':svp>0?'var(--bogey)':'var(--tx)',str=svp===0?'E':svp>0?'+'+svp:svp
+    const f=new Date(r.fecha+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'})
+    return`<div class="hr"><div class="hr-i">${r.tipo==='torneo'?'🏆':'⛳'}</div><div style="flex:1"><div style="font-size:14px;font-weight:500">${r.canchas?.nombre||'Cancha'}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${r.tipo}</div></div><span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:${col}">${str??'—'}</span></div>`
+  }).join('')
+}
+function setHistorialDemo(){
+  document.getElementById('h-tot').textContent='0'
+  document.getElementById('h-best').textContent='—'
+  document.getElementById('h-avg').textContent='—'
+  document.getElementById('hist-list').innerHTML='<div class="empty"><div class="empty-i">📋</div><div class="empty-t">Sin rondas aún</div><div class="empty-s">Jugá tu primera ronda</div></div>'
+}
+
+// ═══ RANKING ═══
+async function loadRanking(){
+  const {data}=await SB.from('ranking_global').select('*').order('posicion_global').limit(20).catch(()=>({data:null}))
+  const items=data&&data.length?data.map((j,i)=>({pos:j.posicion_global||i+1,ini:(j.jugador||'??').slice(0,2).toUpperCase(),n:j.jugador||'—',p:'🌍',cat:j.categoria||'—',hcp:j.handicap>=0?'+'+j.handicap:j.handicap,pts:j.puntos_totales||0,bg:'#eaf3de',c:'#3b6d11'})):[
+    {pos:1,ini:'GA',n:'Giovanni Anzisi',p:'🇦🇷',cat:'Elite',hcp:'+3.2',pts:1240,bg:'#eaf3de',c:'#3b6d11'},
+    {pos:2,ini:'JS',n:'João Silva',p:'🇧🇷',cat:'Elite',hcp:'+2.8',pts:1180,bg:'#e6f1fb',c:'#185fa5'},
+    {pos:3,ini:'LT',n:'Luis Torres',p:'🇲🇽',cat:'Masters',hcp:'+2.1',pts:1050,bg:'#fbeaf0',c:'#72243e'},
+    {pos:4,ini:'AG',n:'Ana García',p:'🇺🇾',cat:'Masters',hcp:'+1.9',pts:980,bg:'#faeeda',c:'#854f0b'},
+    {pos:5,ini:'PR',n:'Pedro Rojas',p:'🇨🇱',cat:'Abierta',hcp:'+0.5',pts:860,bg:'#f1efea',c:'#5f5e5a'},
+  ]
+  const pc=p=>p===1?'p1':p===2?'p2':p===3?'p3':'pn'
+  document.getElementById('ranking-list').innerHTML=items.map(r=>`
+    <div class="li">
+      <div class="pos-b ${pc(r.pos)}">${r.pos}</div>
+      <div class="av" style="background:${r.bg};color:${r.c}">${r.ini}</div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${r.p} ${r.n}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${r.cat} · HCP ${r.hcp}</div></div>
+      <div style="text-align:right"><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--g3)">${r.pts}</div><div style="font-size:10px;color:var(--tx3)">pts</div></div>
+    </div>`).join('')
+}
+
+// ═══ PERFIL ═══
+async function loadPerfil(){
+  if(!JUGADOR) return
+  const ini=`${JUGADOR.nombre?.[0]||'?'}${JUGADOR.apellido?.[0]||''}`
+  document.getElementById('p-av').textContent=ini
+  document.getElementById('p-name').textContent=`${JUGADOR.nombre} ${JUGADOR.apellido}`
+  document.getElementById('p-meta').textContent=`${JUGADOR.categoria||'Aficionado'} · ${JUGADOR.ciudad||'Sin ciudad'}`
+  const hcp=JUGADOR.handicap
+  document.getElementById('ps-hcp').textContent=hcp!=null?(hcp>=0?'+'+parseFloat(hcp).toFixed(1):parseFloat(hcp).toFixed(1)):'—'
+  const {data:stats}=await SB.from('rondas').select('score_vs_par,posicion_final,torneo_id').eq('jugador_id',USER.id).eq('completada',true)
+  if(stats&&stats.length){
+    document.getElementById('ps-vict').textContent=stats.filter(r=>r.posicion_final===1).length
+    document.getElementById('ps-torn').textContent=stats.filter(r=>r.torneo_id).length
+    const {data:sc}=await SB.from('scorecard').select('resultado').eq('ronda_id',stats[0]?.id)
+    document.getElementById('p-golpes').innerHTML=`
+      <div class="li"><span style="flex:1;font-size:13px;color:var(--tx2)">🦅 Eagles</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--eagle)">cargando...</span></div>`
+  }
+}
+
+// ═══ UTILS ═══
+function toast(msg){
+  const t=document.getElementById('toast')
+  t.textContent=msg;t.classList.add('on')
+  setTimeout(()=>t.classList.remove('on'),2500)
+}
+function load(msg='Cargando...'){
+  document.getElementById('loader-t').textContent=msg
+  document.getElementById('loader').classList.add('on')
+}
+function stopLoad(){document.getElementById('loader').classList.remove('on')}
+</script>
+</body>
+</html>
