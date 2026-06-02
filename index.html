@@ -8,27 +8,27 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{
-  --g1:#0f2010;--g2:#1a3a1a;--g3:#2d6a10;--g4:#4a9c2a;--g5:#8fce5a;--g7:#eaf3de;
-  --bg:#f4f8ee;--bg2:#eef5e6;--bg3:#fff;
-  --tx:#1a2a10;--tx2:#4a6030;--tx3:#8aaa60;
-  --bd:rgba(74,156,42,0.14);--bd2:rgba(74,156,42,0.28);
-  --eagle:#0c447c;--birdie:#2d6a10;--bogey:#854f0b;--dbl:#a32d2d;
-  --blue:#185fa5;--amber:#854f0b;--red:#a32d2d;
+  --c1:#0d0d0d;--c2:#141414;--c3:#e85d0f;--c4:#ff6b1a;--c5:#ff9561;
+  --bg:#0d0d0d;--bg2:#1a1a1a;--bg3:#1e1e1e;
+  --tx:#f0f0f0;--tx2:#909090;--tx3:#505050;
+  --bd:rgba(255,107,26,0.15);--bd2:rgba(255,107,26,0.28);
+  --eagle:#4a9eff;--birdie:#4ecb71;--bogey:#e8a020;--dbl:#e85050;
+  --blue:#4a9eff;--amber:#e8a020;--red:#e85050;
   --r8:8px;--r12:12px;--r16:16px;--r22:22px;--rF:999px;
-  --sh:0 2px 12px rgba(45,106,16,0.09);--sh2:0 6px 28px rgba(0,0,0,0.13);
+  --sh:0 2px 12px rgba(0,0,0,0.4);--sh2:0 6px 28px rgba(0,0,0,0.6);
   font-family:'Barlow',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;background:#111}
+html,body{height:100%;overflow:hidden;background:#000}
 body{display:flex;align-items:center;justify-content:center}
 
 .device{width:100%;max-width:430px;height:100vh;max-height:100vh;background:var(--bg3);display:flex;flex-direction:column;position:relative;overflow:hidden}
 @media(min-width:800px){
-  .device{max-height:900px;border-radius:40px;box-shadow:0 40px 100px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.08)}
+  .device{max-height:900px;border-radius:40px;box-shadow:0 40px 100px rgba(0,0,0,0.9),0 0 0 1px rgba(255,107,26,0.12)}
 }
 
-.sb{background:var(--g1);height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0}
-.sb-t{color:var(--g5);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px}
+.sb{background:var(--c1);height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0}
+.sb-t{color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px}
 
 .screens{flex:1;position:relative;overflow:hidden}
 .sc{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none}
@@ -36,57 +36,59 @@ body{display:flex;align-items:center;justify-content:center}
 .sc.cur{display:block}
 .sc.cur.flex{display:flex;flex-direction:column}
 
-.nb{background:var(--g1);border-top:0.5px solid rgba(143,206,90,0.12);display:flex;flex-shrink:0}
+.nb{background:var(--c1);border-top:0.5px solid rgba(255,107,26,0.12);display:flex;flex-shrink:0}
 .nbi{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 10px;cursor:pointer;border:none;background:none}
 .nbi-i{font-size:20px;line-height:1;opacity:.35;transition:opacity .2s}
-.nbi-l{font-size:9px;font-weight:700;font-family:'Barlow Condensed',sans-serif;color:rgba(143,206,90,0.3);letter-spacing:.4px;transition:color .2s}
+.nbi-l{font-size:9px;font-weight:700;font-family:'Barlow Condensed',sans-serif;color:rgba(255,107,26,0.3);letter-spacing:.4px;transition:color .2s}
 .nbi.on .nbi-i{opacity:1}
-.nbi.on .nbi-l{color:var(--g5)}
+.nbi.on .nbi-l{color:var(--c4)}
 
 /* AUTH */
-.auth-wrap{background:var(--g1);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;overflow-y:auto}
-.auth-logo{width:80px;height:80px;background:var(--g3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;margin-bottom:16px;border:2px solid rgba(143,206,90,.2)}
-.auth-title{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:800;color:var(--g5);letter-spacing:2px;margin-bottom:4px}
-.auth-sub{font-size:13px;color:rgba(143,206,90,.4);margin-bottom:28px;text-align:center;line-height:1.5}
+.auth-wrap{background:var(--c1);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;overflow-y:auto}
+.auth-logo{width:80px;height:80px;background:var(--c3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;margin-bottom:16px;border:2px solid rgba(255,107,26,.25)}
+.auth-title{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:800;color:var(--c4);letter-spacing:2px;margin-bottom:4px}
+.auth-sub{font-size:13px;color:rgba(255,107,26,.4);margin-bottom:28px;text-align:center;line-height:1.5}
 .auth-tabs{display:flex;background:rgba(255,255,255,.06);border-radius:var(--r12);padding:3px;margin-bottom:22px;width:100%}
-.auth-tab{flex:1;padding:9px;border-radius:var(--r8);border:none;background:none;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:rgba(143,206,90,.4);cursor:pointer;transition:all .2s;letter-spacing:.5px}
-.auth-tab.on{background:var(--g3);color:var(--g5)}
-.inp-lbl{font-size:11px;color:rgba(143,206,90,.5);margin-bottom:5px;font-weight:700;letter-spacing:.5px;width:100%}
-.inp{width:100%;background:rgba(255,255,255,.07);border:0.5px solid rgba(143,206,90,.2);border-radius:var(--r12);padding:13px 15px;font-size:15px;color:#fff;font-family:'Barlow',sans-serif;outline:none;margin-bottom:14px}
-.inp:focus{border-color:rgba(143,206,90,.5)}
+.auth-tab{flex:1;padding:9px;border-radius:var(--r8);border:none;background:none;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:rgba(255,107,26,.4);cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.auth-tab.on{background:var(--c3);color:#fff}
+.inp-lbl{font-size:11px;color:rgba(255,107,26,.5);margin-bottom:5px;font-weight:700;letter-spacing:.5px;width:100%}
+.inp{width:100%;background:rgba(255,255,255,.07);border:0.5px solid rgba(255,107,26,.2);border-radius:var(--r12);padding:13px 15px;font-size:15px;color:#fff;font-family:'Barlow',sans-serif;outline:none;margin-bottom:14px}
+.inp:focus{border-color:rgba(255,107,26,.5)}
 .inp::placeholder{color:rgba(255,255,255,.2)}
 .inp-row{display:flex;gap:10px;width:100%}
-.btn-main{width:100%;background:var(--g3);border:none;border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 20px rgba(74,156,42,.3);margin-top:4px}
+.btn-main{width:100%;background:var(--c3);border:none;border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 20px rgba(255,107,26,.3);margin-top:4px}
 .btn-main:active{transform:scale(.97)}
 .btn-main:disabled{opacity:.5}
 .auth-err{background:rgba(163,45,45,.15);border:0.5px solid rgba(163,45,45,.3);border-radius:var(--r8);padding:10px 14px;font-size:13px;color:#f09595;margin-bottom:12px;width:100%;display:none}
-.auth-ok{background:rgba(74,156,42,.15);border:0.5px solid rgba(74,156,42,.3);border-radius:var(--r8);padding:10px 14px;font-size:13px;color:var(--g5);margin-bottom:12px;width:100%;display:none}
+.auth-ok{background:rgba(255,107,26,.15);border:0.5px solid rgba(255,107,26,.3);border-radius:var(--r8);padding:10px 14px;font-size:13px;color:var(--c4);margin-bottom:12px;width:100%;display:none}
 
 /* COMMON */
-.hdr{background:var(--g1);padding:16px 20px 18px;flex-shrink:0}
-.hdr-sub{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(143,206,90,.4);letter-spacing:1.2px;margin-bottom:3px}
-.hdr-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--g5)}
+.hdr{background:var(--c1);padding:16px 20px 18px;flex-shrink:0}
+.hdr-sub{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(255,107,26,.4);letter-spacing:1.2px;margin-bottom:3px}
+.hdr-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--c4)}
 .hdr-row{display:flex;justify-content:space-between;align-items:center}
-.hcp-box{background:rgba(143,206,90,.1);border:0.5px solid rgba(143,206,90,.2);border-radius:var(--r12);padding:8px 14px;text-align:center}
-.hcp-v{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--g5)}
-.hcp-l{font-size:9px;color:rgba(143,206,90,.3);letter-spacing:.5px}
-.card{background:var(--bg3);border-radius:var(--r22);border:0.5px solid var(--bd);padding:16px 18px;box-shadow:var(--sh);margin-bottom:12px}
+.hcp-box{background:rgba(255,107,26,.1);border:0.5px solid rgba(255,107,26,.2);border-radius:var(--r12);padding:8px 14px;text-align:center}
+.hcp-v{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--c4)}
+.hcp-l{font-size:9px;color:rgba(255,107,26,.3);letter-spacing:.5px}
+.card{background:var(--bg2);border-radius:var(--r22);border:0.5px solid var(--bd);padding:16px 18px;box-shadow:var(--sh);margin-bottom:12px}
 .ct{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--tx);margin-bottom:13px}
 .sec{padding:14px 16px 0}
 .sec-b{padding-bottom:24px}
 .divh{height:8px;background:var(--bg);flex-shrink:0}
 .badge{display:inline-flex;padding:2px 9px;border-radius:var(--rF);font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:.3px}
-.bg{background:var(--g7);color:var(--g3)}.ba{background:#faeeda;color:#854f0b}
-.bb{background:#e6f1fb;color:#185fa5}.br{background:#fcebeb;color:#a32d2d}
-.bgr{background:var(--bg2);color:var(--tx2)}
+.bg{background:rgba(255,107,26,.15);color:var(--c4)}
+.ba{background:rgba(232,160,32,.15);color:#e8a020}
+.bb{background:rgba(74,158,255,.15);color:#4a9eff}
+.br{background:rgba(232,80,80,.15);color:#e85050}
+.bgr{background:rgba(255,255,255,.07);color:var(--tx2)}
 .li{display:flex;align-items:center;padding:11px 0;border-bottom:0.5px solid var(--bd);gap:12px}
 .li:last-child{border-bottom:none}
 .mets{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px 0}
 .met{background:var(--bg2);border-radius:var(--r16);padding:14px;border:0.5px solid var(--bd)}
 .met-v{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800}
 .met-l{font-size:11px;color:var(--tx2);margin-top:2px}
-.met-s{font-size:11px;color:var(--g4);margin-top:2px}
-.fab{background:var(--g3);border-radius:var(--rF);padding:13px 30px;display:flex;align-items:center;gap:8px;align-self:center;margin:14px auto;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(74,156,42,.3)}
+.met-s{font-size:11px;color:var(--c4);margin-top:2px}
+.fab{background:var(--c3);border-radius:var(--rF);padding:13px 30px;display:flex;align-items:center;gap:8px;align-self:center;margin:14px auto;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,26,.35)}
 .fab:active{transform:scale(.97)}
 .fab-t{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.5px}
 .quick{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 16px 14px}
@@ -96,92 +98,92 @@ body{display:flex;align-items:center;justify-content:center}
 .qb-l{font-size:10px;font-weight:700;color:var(--tx2);font-family:'Barlow Condensed',sans-serif;letter-spacing:.3px}
 
 /* SCORECARD */
-.sc-hdr{background:var(--g1);padding:14px 18px;flex-shrink:0}
-.sc-back{background:rgba(255,255,255,.08);border-radius:var(--r8);padding:7px 12px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--g5)}
-.strip{background:rgba(0,0,0,.25);overflow-x:auto;display:flex;padding:10px 14px;gap:6px;flex-shrink:0}
+.sc-hdr{background:var(--c1);padding:14px 18px;flex-shrink:0}
+.sc-back{background:rgba(255,255,255,.08);border-radius:var(--r8);padding:7px 12px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--c4)}
+.strip{background:rgba(0,0,0,.4);overflow-x:auto;display:flex;padding:10px 14px;gap:6px;flex-shrink:0}
 .strip::-webkit-scrollbar{display:none}
 .hchip{min-width:38px;background:rgba(255,255,255,.05);border-radius:6px;padding:5px 3px;text-align:center;cursor:pointer;border:0.5px solid transparent;flex-shrink:0}
-.hchip.on{background:rgba(143,206,90,.12);border-color:rgba(143,206,90,.3)}
+.hchip.on{background:rgba(255,107,26,.12);border-color:rgba(255,107,26,.35)}
 .hn{font-size:10px;color:rgba(255,255,255,.4);font-family:'Barlow Condensed',sans-serif;font-weight:700}
 .hp{font-size:10px;color:rgba(255,255,255,.2)}
 .hs{width:22px;height:22px;border-radius:50%;margin:3px auto 0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;font-family:'Barlow Condensed',sans-serif}
 .sc-body{flex:1;padding:14px;background:var(--bg);overflow-y:auto}
-.sc-card{background:var(--bg3);border-radius:var(--r22);padding:20px;box-shadow:var(--sh2)}
+.sc-card{background:var(--bg2);border-radius:var(--r22);padding:20px;box-shadow:var(--sh2)}
 .g-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-.gb{width:55px;height:55px;border-radius:var(--r12);border:1.5px solid var(--bd2);background:var(--bg2);font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--tx);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.gb{width:55px;height:55px;border-radius:var(--r12);border:1.5px solid var(--bd2);background:var(--bg);font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--tx);cursor:pointer;display:flex;align-items:center;justify-content:center}
 .gb:active{transform:scale(.93)}
-.ge{background:rgba(12,68,124,.12);border-color:var(--eagle);color:var(--eagle)}
-.gbi{background:rgba(45,106,16,.12);border-color:var(--birdie);color:var(--birdie)}
-.gp{background:rgba(26,42,16,.06);border-color:var(--tx2);color:var(--tx)}
-.gbo{background:rgba(133,79,11,.1);border-color:var(--bogey);color:var(--bogey)}
-.gd{background:rgba(163,45,45,.1);border-color:var(--dbl);color:var(--dbl)}
+.ge{background:rgba(74,158,255,.15);border-color:var(--eagle);color:var(--eagle)}
+.gbi{background:rgba(78,203,113,.15);border-color:var(--birdie);color:var(--birdie)}
+.gp{background:rgba(255,255,255,.06);border-color:var(--tx3);color:var(--tx)}
+.gbo{background:rgba(232,160,32,.12);border-color:var(--bogey);color:var(--bogey)}
+.gd{background:rgba(232,80,80,.12);border-color:var(--dbl);color:var(--dbl)}
 .sc-nav{display:flex;justify-content:space-between;margin-top:16px}
-.sc-nb{background:none;border:none;cursor:pointer;padding:8px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--g3)}
+.sc-nb{background:none;border:none;cursor:pointer;padding:8px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--c4)}
 .sc-nb:disabled{color:var(--tx3)}
-.sc-foot{background:var(--g1);padding:12px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.sc-foot{background:var(--c1);padding:12px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0}
 .sfi{flex:1;text-align:center}
 .sfv{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:#fff}
 .sfl{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.3px}
-.save-b{background:var(--g3);border:none;border-radius:var(--r12);padding:11px 16px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;flex:1.8}
+.save-b{background:var(--c3);border:none;border-radius:var(--r12);padding:11px 16px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;flex:1.8}
 .save-b:active{transform:scale(.97)}
 .save-b:disabled{opacity:.5}
 
 /* GPS */
-.gps-hdr{background:var(--g1);padding:20px 18px;flex-shrink:0}
+.gps-hdr{background:var(--c1);padding:20px 18px;flex-shrink:0}
 .gps-big{font-family:'Barlow Condensed',sans-serif;font-size:78px;font-weight:800;color:#fff;line-height:1}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .live{animation:pulse 1.5s infinite}
 
 /* CLIMA */
-.cl-hdr{background:#071828;padding:22px 18px;text-align:center;flex-shrink:0}
+.cl-hdr{background:#0d1520;padding:22px 18px;text-align:center;flex-shrink:0}
 .cgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 16px}
-.cg{background:#f0f6ff;border-radius:var(--r16);padding:13px 6px;text-align:center;border:0.5px solid rgba(24,95,165,.1)}
-.cgv{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#185fa5}
-.cgl{font-size:10px;color:#5a8ab0;margin-top:3px;font-weight:600}
+.cg{background:#151f2e;border-radius:var(--r16);padding:13px 6px;text-align:center;border:0.5px solid rgba(74,158,255,.15)}
+.cgv{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#4a9eff}
+.cgl{font-size:10px;color:#4a6080;margin-top:3px;font-weight:600}
 .fc{display:flex;gap:8px;padding:0 16px 14px;overflow-x:auto}
 .fc::-webkit-scrollbar{display:none}
-.fcd{background:#f0f6ff;border-radius:var(--r12);padding:12px 14px;text-align:center;flex-shrink:0}
-.fcn{font-size:10px;color:#5a8ab0;font-weight:700;font-family:'Barlow Condensed',sans-serif}
+.fcd{background:#151f2e;border-radius:var(--r12);padding:12px 14px;text-align:center;flex-shrink:0}
+.fcn{font-size:10px;color:#4a6080;font-weight:700;font-family:'Barlow Condensed',sans-serif}
 .fci{font-size:20px;margin:4px 0}
-.fct{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#185fa5}
+.fct{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#4a9eff}
 
 /* RANKING */
-.rk-hdr{background:var(--g1);padding:22px 18px;text-align:center;flex-shrink:0}
+.rk-hdr{background:var(--c1);padding:22px 18px;text-align:center;flex-shrink:0}
 .pos-b{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;flex-shrink:0}
 .p1{background:#faeeda;color:#7a4a0a}.p2{background:#d3d1c7;color:#3a3a38}.p3{background:#f5c4b3;color:#8a3218}.pn{background:var(--bg2);color:var(--tx2)}
 .av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;flex-shrink:0}
 
 /* PERFIL */
-.p-hdr{background:var(--g1);padding:24px 18px;text-align:center;flex-shrink:0}
-.p-av{width:82px;height:82px;border-radius:50%;background:var(--g3);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:#fff;border:3px solid rgba(143,206,90,.25)}
-.p-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(143,206,90,.08);margin-top:16px;border-radius:var(--r16);overflow:hidden}
-.ps{background:rgba(0,0,0,.2);padding:12px;text-align:center}
-.psv{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--g5)}
-.psl{font-size:9px;color:rgba(143,206,90,.35);letter-spacing:.3px}
+.p-hdr{background:var(--c1);padding:24px 18px;text-align:center;flex-shrink:0}
+.p-av{width:82px;height:82px;border-radius:50%;background:var(--c3);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:#fff;border:3px solid rgba(255,107,26,.3)}
+.p-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,107,26,.08);margin-top:16px;border-radius:var(--r16);overflow:hidden}
+.ps{background:rgba(0,0,0,.35);padding:12px;text-align:center}
+.psv{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--c4)}
+.psl{font-size:9px;color:rgba(255,107,26,.35);letter-spacing:.3px}
 
 /* TORNEOS / CANCHAS */
-.tc{background:var(--bg3);border-radius:var(--r22);border:0.5px solid var(--bd);overflow:hidden;margin-bottom:12px;box-shadow:var(--sh)}
-.tc-img{height:72px;display:flex;align-items:center;justify-content:center;font-size:32px;background:linear-gradient(135deg,var(--g1),var(--g2))}
+.tc{background:var(--bg2);border-radius:var(--r22);border:0.5px solid var(--bd);overflow:hidden;margin-bottom:12px;box-shadow:var(--sh)}
+.tc-img{height:72px;display:flex;align-items:center;justify-content:center;font-size:32px;background:linear-gradient(135deg,var(--c1),var(--c2))}
 .tc-b{padding:14px 16px}
 .tc-n{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;color:var(--tx)}
 .tc-m{font-size:12px;color:var(--tx2);margin-top:3px;line-height:1.5}
 
 /* EQUIPOS */
-.eq{background:var(--bg3);border-radius:var(--r22);border:0.5px solid var(--bd);padding:15px;margin-bottom:10px;box-shadow:var(--sh);display:flex;align-items:center;gap:13px}
+.eq{background:var(--bg2);border-radius:var(--r22);border:0.5px solid var(--bd);padding:15px;margin-bottom:10px;box-shadow:var(--sh);display:flex;align-items:center;gap:13px}
 .eq-lg{width:50px;height:50px;border-radius:var(--r12);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;flex-shrink:0}
 
 /* HISTORIAL */
 .hr{display:flex;align-items:center;padding:12px 0;border-bottom:0.5px solid var(--bd);gap:12px}
 .hr:last-child{border-bottom:none}
-.hr-i{width:38px;height:38px;border-radius:var(--r8);background:var(--g7);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.hr-i{width:38px;height:38px;border-radius:var(--r8);background:rgba(255,107,26,.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 
 /* LOADER / TOAST */
-.loader{position:absolute;inset:0;background:rgba(10,26,6,.88);display:none;align-items:center;justify-content:center;z-index:400;flex-direction:column;gap:12px}
+.loader{position:absolute;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:400;flex-direction:column;gap:12px}
 .loader.on{display:flex}
-.spin{width:36px;height:36px;border:3px solid rgba(143,206,90,.2);border-top-color:var(--g5);border-radius:50%;animation:spin .8s linear infinite}
+.spin{width:36px;height:36px;border:3px solid rgba(255,107,26,.2);border-top-color:var(--c4);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loader-t{color:var(--g5);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px}
-.toast{position:absolute;bottom:76px;left:50%;transform:translateX(-50%) translateY(6px);background:var(--g1);color:var(--g5);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;padding:10px 22px;border-radius:var(--rF);box-shadow:var(--sh2);white-space:nowrap;z-index:300;opacity:0;transition:all .22s;border:0.5px solid rgba(143,206,90,.2);pointer-events:none}
+.loader-t{color:var(--c4);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px}
+.toast{position:absolute;bottom:76px;left:50%;transform:translateX(-50%) translateY(6px);background:var(--c1);color:var(--c4);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;padding:10px 22px;border-radius:var(--rF);box-shadow:var(--sh2);white-space:nowrap;z-index:300;opacity:0;transition:all .22s;border:0.5px solid rgba(255,107,26,.25);pointer-events:none}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .empty{text-align:center;padding:32px 16px}
 .empty-i{font-size:36px;margin-bottom:8px}
@@ -221,7 +223,7 @@ body{display:flex;align-items:center;justify-content:center}
         <div class="auth-err" id="auth-err"></div>
         <div class="auth-ok" id="auth-ok"></div>
         <button class="btn-main" id="auth-btn" onclick="doAuth()">INGRESAR</button>
-        <div style="margin-top:16px;text-align:center;font-size:12px;color:rgba(143,206,90,.25)">🌍 89 canchas · 312 jugadores · Sudamérica</div>
+        <div style="margin-top:16px;text-align:center;font-size:12px;color:rgba(255,107,26,.25)">🌍 89 canchas · 312 jugadores · Sudamérica</div>
       </div>
     </div>
 
@@ -241,10 +243,10 @@ body{display:flex;align-items:center;justify-content:center}
       </div>
       <button class="fab" onclick="go('sc-scorecard')"><span style="font-size:20px">⚽</span><span class="fab-t">NUEVA RONDA</span></button>
       <div class="quick">
-        <button class="qb" onclick="go('sc-gps')"><div class="qb-i" style="background:rgba(45,106,16,.1)">📍</div><span class="qb-l">GPS</span></button>
-        <button class="qb" onclick="go('sc-clima')"><div class="qb-i" style="background:rgba(24,95,165,.1)">🌤</div><span class="qb-l">CLIMA</span></button>
-        <button class="qb" onclick="go('sc-torneos')"><div class="qb-i" style="background:rgba(133,79,11,.1)">🏆</div><span class="qb-l">TORNEOS</span></button>
-        <button class="qb" onclick="go('sc-equipos')"><div class="qb-i" style="background:rgba(163,45,45,.1)">👥</div><span class="qb-l">EQUIPOS</span></button>
+        <button class="qb" onclick="go('sc-gps')"><div class="qb-i" style="background:rgba(255,107,26,.1)">📍</div><span class="qb-l">GPS</span></button>
+        <button class="qb" onclick="go('sc-clima')"><div class="qb-i" style="background:rgba(74,158,255,.1)">🌤</div><span class="qb-l">CLIMA</span></button>
+        <button class="qb" onclick="go('sc-torneos')"><div class="qb-i" style="background:rgba(232,160,32,.1)">🏆</div><span class="qb-l">TORNEOS</span></button>
+        <button class="qb" onclick="go('sc-equipos')"><div class="qb-i" style="background:rgba(232,80,80,.1)">👥</div><span class="qb-l">EQUIPOS</span></button>
       </div>
       <div class="divh"></div>
       <div class="sec">
@@ -256,13 +258,13 @@ body{display:flex;align-items:center;justify-content:center}
     </div>
 
     <!-- SCORECARD -->
-    <div class="sc flex" id="sc-scorecard" style="background:var(--g1)">
+    <div class="sc flex" id="sc-scorecard" style="background:var(--c1)">
       <div class="sc-hdr">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <button class="sc-back" onclick="go('sc-home')">← Inicio</button>
           <div style="text-align:right">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(143,206,90,.4);letter-spacing:.5px">LOS ÁLAMOS FG</div>
-            <div id="sc-top" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--g5)">E</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(255,107,26,.4);letter-spacing:.5px">LOS ÁLAMOS FG</div>
+            <div id="sc-top" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--c4)">E</div>
           </div>
         </div>
       </div>
@@ -284,7 +286,7 @@ body{display:flex;align-items:center;justify-content:center}
       <div class="sc-foot">
         <div class="sfi"><div class="sfv" id="sf-g">0</div><div class="sfl">GOLPES</div></div>
         <div class="sfi"><div class="sfv" id="sf-p">0</div><div class="sfl">PAR</div></div>
-        <div class="sfi"><div class="sfv" id="sf-s" style="color:var(--g5)">E</div><div class="sfl">SCORE</div></div>
+        <div class="sfi"><div class="sfv" id="sf-s" style="color:var(--c4)">E</div><div class="sfl">SCORE</div></div>
         <button class="save-b" onclick="saveRound()" id="save-btn">GUARDAR ✓</button>
       </div>
     </div>
@@ -293,12 +295,12 @@ body{display:flex;align-items:center;justify-content:center}
     <div class="sc" id="sc-gps">
       <div class="gps-hdr">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-          <div class="live" style="width:9px;height:9px;border-radius:50%;background:var(--g5)"></div>
-          <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:rgba(143,206,90,.45);letter-spacing:.8px">GPS EN VIVO</span>
-          <button onclick="getGPS()" style="margin-left:auto;background:rgba(143,206,90,.1);border:0.5px solid rgba(143,206,90,.2);border-radius:var(--r8);padding:5px 12px;color:var(--g5);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;cursor:pointer">📡 ACTIVAR</button>
+          <div class="live" style="width:9px;height:9px;border-radius:50%;background:var(--c4)"></div>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:rgba(255,107,26,.45);letter-spacing:.8px">GPS EN VIVO</span>
+          <button onclick="getGPS()" style="margin-left:auto;background:rgba(255,107,26,.1);border:0.5px solid rgba(255,107,26,.2);border-radius:var(--r8);padding:5px 12px;color:var(--c4);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;cursor:pointer">📡 ACTIVAR</button>
         </div>
         <div style="display:flex;align-items:flex-end;justify-content:space-between">
-          <div><div class="gps-big"><span id="gps-m">142</span><span style="font-size:28px;color:rgba(255,255,255,.3)">m</span></div><div style="font-size:12px;color:rgba(143,206,90,.4);margin-top:4px" id="gps-lbl">distancia al hoyo</div></div>
+          <div><div class="gps-big"><span id="gps-m">142</span><span style="font-size:28px;color:rgba(255,255,255,.3)">m</span></div><div style="font-size:12px;color:rgba(255,107,26,.4);margin-top:4px" id="gps-lbl">distancia al hoyo</div></div>
           <div style="text-align:right"><div style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;color:rgba(255,255,255,.6)" id="gps-pin">38m</div><div style="font-size:11px;color:rgba(255,255,255,.25)">al pin</div></div>
         </div>
         <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">
@@ -308,10 +310,10 @@ body{display:flex;align-items:center;justify-content:center}
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 16px">
-        <div style="background:var(--bg2);border-radius:var(--r12);padding:11px 6px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800" id="gps-h">H1</div><div style="font-size:10px;color:var(--tx3)">HOYO</div></div>
-        <div style="background:var(--bg2);border-radius:var(--r12);padding:11px 6px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800" id="gps-par">P4</div><div style="font-size:10px;color:var(--tx3)">PAR</div></div>
-        <div style="background:var(--bg2);border-radius:var(--r12);padding:11px 6px;text-align:center;border:0.5px solid var(--bg)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800" id="gps-temp">—°C</div><div style="font-size:10px;color:var(--tx3)">TEMP</div></div>
-        <div style="background:var(--bg2);border-radius:var(--r12);padding:11px 6px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800" id="gps-acc">—</div><div style="font-size:10px;color:var(--tx3)">SEÑAL</div></div>
+        <div style="background:var(--bg2);border-radius:var(--r12);padding:11px 6px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx)" id="gps-h">H1</div><div style="font-size:10px;color:var(--tx3)">HOYO</div></div>
+        <div style="background:var(--bg2);border-radius:var(--r12);padding:11px 6px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx)" id="gps-par">P4</div><div style="font-size:10px;color:var(--tx3)">PAR</div></div>
+        <div style="background:var(--bg2);border-radius:var(--r12);padding:11px 6px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx)" id="gps-temp">—°C</div><div style="font-size:10px;color:var(--tx3)">TEMP</div></div>
+        <div style="background:var(--bg2);border-radius:var(--r12);padding:11px 6px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx)" id="gps-acc">—</div><div style="font-size:10px;color:var(--tx3)">SEÑAL</div></div>
       </div>
       <div style="padding:0 16px 6px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2)">18 HOYOS — DISTANCIAS</div>
       <div id="gps-list" style="padding:0 16px 24px"></div>
@@ -343,7 +345,7 @@ body{display:flex;align-items:center;justify-content:center}
     <div class="sc" id="sc-historial">
       <div class="hdr"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Historial 📋</div></div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 16px">
-        <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800" id="h-tot">0</div><div style="font-size:10px;color:var(--tx2)">RONDAS</div></div>
+        <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--tx)" id="h-tot">0</div><div style="font-size:10px;color:var(--tx2)">RONDAS</div></div>
         <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--birdie)" id="h-best">—</div><div style="font-size:10px;color:var(--tx2)">MEJOR</div></div>
         <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--birdie)" id="h-avg">—</div><div style="font-size:10px;color:var(--tx2)">PROM.</div></div>
       </div>
@@ -353,8 +355,8 @@ body{display:flex;align-items:center;justify-content:center}
     <!-- RANKING -->
     <div class="sc" id="sc-ranking">
       <div class="rk-hdr">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:var(--g5);letter-spacing:1px">🏆 RANKING</div>
-        <div style="font-size:12px;color:rgba(143,206,90,.35);margin-top:4px">Temporada 2025 · Sudamérica</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:var(--c4);letter-spacing:1px">🏆 RANKING</div>
+        <div style="font-size:12px;color:rgba(255,107,26,.35);margin-top:4px">Temporada 2025 · Sudamérica</div>
       </div>
       <div class="sec sec-b"><div class="card" id="ranking-list"></div></div>
     </div>
@@ -391,8 +393,8 @@ body{display:flex;align-items:center;justify-content:center}
     <div class="sc" id="sc-perfil">
       <div class="p-hdr">
         <div class="p-av" id="p-av">?</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--g5)" id="p-name">—</div>
-        <div style="font-size:13px;color:rgba(143,206,90,.45);margin-top:5px" id="p-meta">—</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--c4)" id="p-name">—</div>
+        <div style="font-size:13px;color:rgba(255,107,26,.45);margin-top:5px" id="p-meta">—</div>
         <div class="p-stats">
           <div class="ps"><div class="psv" id="ps-hcp">—</div><div class="psl">HCP</div></div>
           <div class="ps"><div class="psv" id="ps-vict">0</div><div class="psl">VICTORIAS</div></div>
@@ -432,7 +434,7 @@ body{display:flex;align-items:center;justify-content:center}
 
 <script>
 // ═══ CONFIG ═══
-const SB_URL = 'https://cwcgltillatygutfqqna.supabase.co'
+const SB_URL = 'https://cwcgltiilatygutfqqna.supabase.co'
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3Y2dsdGlpbGF0eWd1dGZxcW5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTY5MTQsImV4cCI6MjA5NTk5MjkxNH0.nY5DPNYpEdG9YTkC3KtNp0yjUL-JRLyElu4YVBoN5pE'
 const SB = supabase.createClient(SB_URL, SB_KEY, {auth:{persistSession:true,storage:localStorage}})
 
@@ -496,14 +498,13 @@ async function doAuth(){
       if(!nombre||!apellido){stopLoad();showErr('Ingresá nombre y apellido');document.getElementById('auth-btn').disabled=false;return}
       const {data,error}=await SB.auth.signUp({email,password:pass})
       if(error){stopLoad();showErr(error.message);document.getElementById('auth-btn').disabled=false;return}
-      if(data.user){
-        await SB.from('jugadores').insert({id:data.user.id,nombre,apellido})
-        stopLoad()
-        okEl.textContent='✓ Cuenta creada. Revisá tu email para confirmar.'
-        okEl.style.display='block'
-        document.getElementById('auth-btn').disabled=false
-        return
-      }
+      // Guardar datos en localStorage para insertarlos después de confirmar email
+      localStorage.setItem('fg_pending_jugador', JSON.stringify({nombre, apellido}))
+      stopLoad()
+      okEl.textContent='✓ Cuenta creada. Revisá tu email para confirmar y luego ingresá.'
+      okEl.style.display='block'
+      document.getElementById('auth-btn').disabled=false
+      return
     }
   } catch(e){
     stopLoad(); showErr('Error de conexión'); document.getElementById('auth-btn').disabled=false
@@ -517,7 +518,22 @@ function showErr(msg){
 
 async function loadJugador(){
   const {data}=await SB.from('jugadores').select('*').eq('id',USER.id).single()
-  if(data) JUGADOR=data
+  if(data){
+    JUGADOR=data
+    return
+  }
+  // No existe en jugadores — puede ser cuenta recién confirmada
+  const pending=localStorage.getItem('fg_pending_jugador')
+  if(pending){
+    try{
+      const {nombre,apellido}=JSON.parse(pending)
+      const {data:nuevo,error}=await SB.from('jugadores').insert({id:USER.id,nombre,apellido}).select().single()
+      if(!error && nuevo){
+        JUGADOR=nuevo
+        localStorage.removeItem('fg_pending_jugador')
+      }
+    } catch(e){}
+  }
 }
 
 function showApp(){
@@ -561,7 +577,6 @@ async function loadDashboard(){
   document.getElementById('hdr-hi').textContent=`¡Hola, ${JUGADOR.nombre}! 👋`
   const hcp=JUGADOR.handicap
   document.getElementById('hdr-hcp').textContent=hcp!=null?(hcp>=0?'+'+parseFloat(hcp).toFixed(1):parseFloat(hcp).toFixed(1)):'—'
-  // Stats
   const {data:rondas}=await SB.from('rondas').select('score_vs_par,posicion_final,torneo_id').eq('jugador_id',USER.id).eq('completada',true)
   if(rondas&&rondas.length){
     const scores=rondas.map(r=>r.score_vs_par).filter(s=>s!==null)
@@ -573,7 +588,6 @@ async function loadDashboard(){
     document.getElementById('d-vict').textContent=vict
     document.getElementById('d-rondas').textContent=rondas.length
   }
-  // Torneos próximos
   const {data:torneos}=await SB.from('torneos').select('nombre,fecha_inicio,estado,ciudades(nombre)').gte('fecha_inicio',new Date().toISOString().split('T')[0]).order('fecha_inicio').limit(3)
   const tc=document.getElementById('d-torneos')
   if(torneos&&torneos.length){
@@ -581,12 +595,11 @@ async function loadDashboard(){
       const bc={'inscripciones':'bg','en_curso':'bb','programado':'bgr'}[t.estado]||'bgr'
       const bl={'inscripciones':'Inscribirse','en_curso':'En curso','programado':'Próximo'}[t.estado]||t.estado
       const f=new Date(t.fecha_inicio+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'})
-      return`<div class="li"><div style="width:8px;height:8px;border-radius:50%;background:var(--g4);flex-shrink:0"></div><div style="flex:1"><div style="font-size:14px;font-weight:500">${t.nombre}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${t.ciudades?.nombre||''}</div></div><span class="badge ${bc}">${bl}</span></div>`
+      return`<div class="li"><div style="width:8px;height:8px;border-radius:50%;background:var(--c4);flex-shrink:0"></div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${t.nombre}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${t.ciudades?.nombre||''}</div></div><span class="badge ${bc}">${bl}</span></div>`
     }).join('')
   } else {
     tc.innerHTML=demoTorneos()
   }
-  // Últimas rondas
   const {data:ultimas}=await SB.from('rondas').select('id,fecha,tipo,score_vs_par,canchas(nombre)').eq('jugador_id',USER.id).eq('completada',true).order('fecha',{ascending:false}).limit(5)
   const rl=document.getElementById('d-rondas-list')
   if(ultimas&&ultimas.length){
@@ -595,7 +608,7 @@ async function loadDashboard(){
       const col=svp<0?'var(--birdie)':svp>0?'var(--bogey)':'var(--tx)'
       const str=svp===0?'E':svp>0?'+'+svp:svp
       const f=new Date(r.fecha+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'})
-      return`<div class="li"><div style="flex:1"><div style="font-size:14px;font-weight:500">${r.canchas?.nombre||'Cancha'}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${r.tipo}</div></div><span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:${col}">${str??'—'}</span></div>`
+      return`<div class="li"><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${r.canchas?.nombre||'Cancha'}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${r.tipo}</div></div><span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:${col}">${str??'—'}</span></div>`
     }).join('')
   } else {
     rl.innerHTML=`<div class="empty"><div class="empty-i">⚽</div><div class="empty-t">Registrá tu primera ronda</div><div class="empty-s">Tocá NUEVA RONDA para empezar</div></div>`
@@ -607,7 +620,7 @@ function demoTorneos(){
     {n:'Copa Patagonia 2025',f:'15 Jun',c:'Gral. Roca',e:'bg',el:'Inscripto'},
     {n:'Open Nacional Argentina',f:'28 Jun',c:'Buenos Aires',e:'ba',el:'Pendiente'},
     {n:'South America Cup',f:'10 Jul',c:'São Paulo 🇧🇷',e:'bb',el:'Clasificado'},
-  ].map(t=>`<div class="li"><div style="width:8px;height:8px;border-radius:50%;background:var(--g4);flex-shrink:0"></div><div style="flex:1"><div style="font-size:14px;font-weight:500">${t.n}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${t.f} · ${t.c}</div></div><span class="badge ${t.e}">${t.el}</span></div>`).join('')
+  ].map(t=>`<div class="li"><div style="width:8px;height:8px;border-radius:50%;background:var(--c4);flex-shrink:0"></div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${t.n}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${t.f} · ${t.c}</div></div><span class="badge ${t.e}">${t.el}</span></div>`).join('')
 }
 
 // ═══ SCORECARD ═══
@@ -654,7 +667,7 @@ function renderScorecard(){
   document.getElementById('sf-g').textContent=tg||0
   document.getElementById('sf-p').textContent=tp||0
   document.getElementById('sf-s').textContent=str
-  document.getElementById('sf-s').style.color=done.length>0&&svpT<0?'var(--g5)':done.length>0&&svpT>0?'var(--bogey)':'var(--g5)'
+  document.getElementById('sf-s').style.color=done.length>0&&svpT<0?'var(--birdie)':done.length>0&&svpT>0?'var(--bogey)':'var(--c4)'
   document.getElementById('sc-top').textContent=str
 }
 function scSet(n){scores[hi]=n;if(hi<17)hi++;renderScorecard()}
@@ -703,9 +716,9 @@ function renderGPSList(){
   document.getElementById('gps-par').textContent='P'+h.par
   document.getElementById('gps-list').innerHTML=HOYOS.map((h,i)=>`
     <div onclick="ghi=${i};renderGPSList()" style="display:flex;align-items:center;padding:10px 0;border-bottom:0.5px solid var(--bd);gap:12px;cursor:pointer">
-      <div style="width:30px;height:30px;border-radius:50%;background:${i===ghi?'var(--g3)':'var(--bg2)'};display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:${i===ghi?'#fff':'var(--tx)'};flex-shrink:0">${h.n}</div>
+      <div style="width:30px;height:30px;border-radius:50%;background:${i===ghi?'var(--c3)':'var(--bg2)'};display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:${i===ghi?'#fff':'var(--tx)'};flex-shrink:0">${h.n}</div>
       <div style="flex:1"><div style="font-size:13px;color:var(--tx)">Par ${h.par}${h.obst!=='—'?' · '+h.obst:''}</div></div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;min-width:52px;text-align:right">${h.dist}m</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--tx);min-width:52px;text-align:right">${h.dist}m</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:${h.des>0?'var(--bogey)':h.des<0?'var(--blue)':'var(--tx2)'};min-width:36px;text-align:right">${h.des>0?'+':''}${h.des}m</div>
     </div>`).join('')
 }
@@ -738,7 +751,7 @@ async function loadClima(){
       document.getElementById('cl-vis').innerHTML=Math.round((d.visibility||10000)/1000)+'<span style="font-size:10px">km</span>'
       document.getElementById('cl-sens').textContent=Math.round(d.main.feels_like)+'°'
       const apto=d.main.temp>5&&d.main.temp<38&&v<50
-      document.getElementById('cl-apto').innerHTML=`<span style="background:${apto?'rgba(74,156,42,.2)':'rgba(163,45,45,.2)'};color:${apto?'var(--g5)':'#f09595'};font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;padding:6px 16px;border-radius:999px">${apto?'✓ Apto para jugar':'⚠ Condiciones difíciles'}</span>`
+      document.getElementById('cl-apto').innerHTML=`<span style="background:${apto?'rgba(255,107,26,.2)':'rgba(163,45,45,.2)'};color:${apto?'var(--c4)':'#f09595'};font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;padding:6px 16px;border-radius:999px">${apto?'✓ Apto para jugar':'⚠ Condiciones difíciles'}</span>`
       document.getElementById('gps-wind').textContent='Viento: '+v+' km/h'
       document.getElementById('gps-temp').textContent=Math.round(d.main.temp)+'°C'
     } catch(e){setClimaDefault()}
@@ -752,7 +765,7 @@ function setClimaDefault(){
   document.getElementById('cl-hum').innerHTML='42<span style="font-size:10px">%</span>'
   document.getElementById('cl-vis').innerHTML='18<span style="font-size:10px">km</span>'
   document.getElementById('cl-sens').textContent='16°'
-  document.getElementById('cl-apto').innerHTML='<span style="background:rgba(74,156,42,.2);color:var(--g5);font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;padding:6px 16px;border-radius:999px">✓ Apto para jugar</span>'
+  document.getElementById('cl-apto').innerHTML='<span style="background:rgba(255,107,26,.2);color:var(--c4);font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;padding:6px 16px;border-radius:999px">✓ Apto para jugar</span>'
   document.getElementById('cl-fc').innerHTML=['HOY ⛅ 18°','MAR ☀️ 22°','MIÉ ⛅ 19°','JUE 🌧 15°','VIE ⛅ 17°','SÁB ☀️ 24°'].map(d=>{const[n,i,t]=d.split(' ');return`<div class="fcd"><div class="fcn">${n}</div><div class="fci">${i}</div><div class="fct">${t}</div></div>`}).join('')
 }
 function askOWM(){
@@ -762,7 +775,6 @@ function askOWM(){
 
 // ═══ TORNEOS ═══
 async function renderStaticData(){
-  // Torneos
   const {data:t}=await SB.from('torneos').select('*,ciudades(nombre)').order('fecha_inicio').limit(10).catch(()=>({data:null}))
   const tl=document.getElementById('torneos-list')
   const items=t&&t.length?t:[
@@ -776,7 +788,6 @@ async function renderStaticData(){
     const f=it.fecha_inicio?new Date(it.fecha_inicio+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'}):'—'
     return`<div class="tc"><div class="tc-img">${it.emoji||'🏆'}</div><div class="tc-b"><div class="tc-n">${it.nombre}</div><div class="tc-m">📍 ${it.ciudades?.nombre||''}</div><div class="tc-m">📅 ${f} · ${it.formato||it.tipo}</div><div style="margin-top:9px;display:flex;gap:6px"><span class="badge ${bc}">${bl}</span><span class="badge bgr">${it.tipo}</span></div></div></div>`
   }).join('')
-  // Canchas
   const {data:ca}=await SB.from('canchas').select('*,ciudades(nombre,paises(bandera))').eq('activa',true).order('nombre').catch(()=>({data:null}))
   window._allCanchas=ca&&ca.length?ca.map(c=>({nombre:c.nombre,ciudad:c.ciudades?.nombre||'',pais:c.ciudades?.paises?.bandera||'🌍',hoyos:c.total_hoyos,par:c.par_total,dif:c.dificultad})):[
     {nombre:'Los Álamos FootGolf',ciudad:'General Roca, Río Negro',pais:'🇦🇷',hoyos:18,par:72,dif:'media'},
@@ -786,32 +797,31 @@ async function renderStaticData(){
     {nombre:'Montevideo FootGolf',ciudad:'Montevideo',pais:'🇺🇾',hoyos:18,par:71,dif:'media'},
   ]
   renderCanchas('')
-  // Equipos
   renderEquipos()
 }
 
 function renderCanchas(f){
   const items=(window._allCanchas||[]).filter(c=>!f||c.nombre.toLowerCase().includes(f.toLowerCase())||c.ciudad.toLowerCase().includes(f.toLowerCase()))
   const difC={facil:'bg',media:'ba','difícil':'br',experto:'br'}
-  document.getElementById('canchas-list').innerHTML=items.map(c=>`<div class="tc"><div class="tc-img" style="background:linear-gradient(135deg,#1a3a1a,#0f2010)">⛳</div><div class="tc-b"><div class="tc-n">${c.nombre}</div><div class="tc-m">${c.pais} ${c.ciudad}</div><div style="display:flex;gap:6px;margin-top:8px"><span class="badge bgr">${c.hoyos} hoyos</span><span class="badge bgr">Par ${c.par}</span><span class="badge ${difC[c.dif]||'bgr'}">${c.dif}</span></div></div></div>`).join('')
+  document.getElementById('canchas-list').innerHTML=items.map(c=>`<div class="tc"><div class="tc-img" style="background:linear-gradient(135deg,#1a1a1a,#0d0d0d)">⛳</div><div class="tc-b"><div class="tc-n">${c.nombre}</div><div class="tc-m">${c.pais} ${c.ciudad}</div><div style="display:flex;gap:6px;margin-top:8px"><span class="badge bgr">${c.hoyos} hoyos</span><span class="badge bgr">Par ${c.par}</span><span class="badge ${difC[c.dif]||'bgr'}">${c.dif}</span></div></div></div>`).join('')
 }
 function filterCanchas(v){renderCanchas(v)}
 
 function renderEquipos(){
   const items=[
-    {i:'PR',n:'Patagonia Rangers',p:'🇦🇷',j:4,v:8,r:1,bg:'#eaf3de',c:'#3b6d11'},
-    {i:'RJ',n:'Rio Jaguares',p:'🇧🇷',j:4,v:6,r:2,bg:'#e6f1fb',c:'#185fa5'},
-    {i:'AM',n:'Andean Masters',p:'🇨🇱',j:3,v:4,r:3,bg:'#fbeaf0',c:'#72243e'},
-    {i:'PA',n:'Pampas Aces',p:'🇦🇷',j:4,v:3,r:4,bg:'#faeeda',c:'#854f0b'},
+    {i:'PR',n:'Patagonia Rangers',p:'🇦🇷',j:4,v:8,r:1,bg:'rgba(255,107,26,.15)',c:'#ff9561'},
+    {i:'RJ',n:'Rio Jaguares',p:'🇧🇷',j:4,v:6,r:2,bg:'rgba(74,158,255,.15)',c:'#4a9eff'},
+    {i:'AM',n:'Andean Masters',p:'🇨🇱',j:3,v:4,r:3,bg:'rgba(232,80,80,.15)',c:'#e85050'},
+    {i:'PA',n:'Pampas Aces',p:'🇦🇷',j:4,v:3,r:4,bg:'rgba(232,160,32,.15)',c:'#e8a020'},
   ]
   const pc=r=>r===1?'p1':r===2?'p2':r===3?'p3':'pn'
   document.getElementById('equipos-list').innerHTML=`
     ${items.map(e=>`<div class="eq"><div class="eq-lg" style="background:${e.bg};color:${e.c}">${e.i}</div><div style="flex:1"><div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:var(--tx)">${e.p} ${e.n}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${e.j} jugadores</div></div><div style="text-align:center;margin-right:8px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--birdie)">${e.v}</div><div style="font-size:10px;color:var(--tx3)">victorias</div></div><div class="pos-b ${pc(e.r)}">${e.r}</div></div>`).join('')}
     <div class="sec-b" style="padding:14px 0 0"><div class="card"><div class="ct">📋 Formatos</div>
-    <div class="li"><span style="flex:1;font-size:14px">Best Ball</span><span class="badge bg">Activo</span></div>
-    <div class="li"><span style="flex:1;font-size:14px">Scramble</span><span class="badge bg">Activo</span></div>
-    <div class="li"><span style="flex:1;font-size:14px">Match Play</span><span class="badge bb">Disponible</span></div>
-    <div class="li"><span style="flex:1;font-size:14px">Ryder Cup</span><span class="badge bb">Disponible</span></div>
+    <div class="li"><span style="flex:1;font-size:14px;color:var(--tx)">Best Ball</span><span class="badge bg">Activo</span></div>
+    <div class="li"><span style="flex:1;font-size:14px;color:var(--tx)">Scramble</span><span class="badge bg">Activo</span></div>
+    <div class="li"><span style="flex:1;font-size:14px;color:var(--tx)">Match Play</span><span class="badge bb">Disponible</span></div>
+    <div class="li"><span style="flex:1;font-size:14px;color:var(--tx)">Ryder Cup</span><span class="badge bb">Disponible</span></div>
     </div></div>`
 }
 
@@ -827,7 +837,7 @@ async function loadHistorial(){
   document.getElementById('hist-list').innerHTML=data.map(r=>{
     const svp=r.score_vs_par,col=svp<0?'var(--birdie)':svp>0?'var(--bogey)':'var(--tx)',str=svp===0?'E':svp>0?'+'+svp:svp
     const f=new Date(r.fecha+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'})
-    return`<div class="hr"><div class="hr-i">${r.tipo==='torneo'?'🏆':'⛳'}</div><div style="flex:1"><div style="font-size:14px;font-weight:500">${r.canchas?.nombre||'Cancha'}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${r.tipo}</div></div><span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:${col}">${str??'—'}</span></div>`
+    return`<div class="hr"><div class="hr-i">${r.tipo==='torneo'?'🏆':'⛳'}</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${r.canchas?.nombre||'Cancha'}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${r.tipo}</div></div><span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:${col}">${str??'—'}</span></div>`
   }).join('')
 }
 function setHistorialDemo(){
@@ -840,12 +850,12 @@ function setHistorialDemo(){
 // ═══ RANKING ═══
 async function loadRanking(){
   const {data}=await SB.from('ranking_global').select('*').order('posicion_global').limit(20).catch(()=>({data:null}))
-  const items=data&&data.length?data.map((j,i)=>({pos:j.posicion_global||i+1,ini:(j.jugador||'??').slice(0,2).toUpperCase(),n:j.jugador||'—',p:'🌍',cat:j.categoria||'—',hcp:j.handicap>=0?'+'+j.handicap:j.handicap,pts:j.puntos_totales||0,bg:'#eaf3de',c:'#3b6d11'})):[
-    {pos:1,ini:'GA',n:'Giovanni Anzisi',p:'🇦🇷',cat:'Elite',hcp:'+3.2',pts:1240,bg:'#eaf3de',c:'#3b6d11'},
-    {pos:2,ini:'JS',n:'João Silva',p:'🇧🇷',cat:'Elite',hcp:'+2.8',pts:1180,bg:'#e6f1fb',c:'#185fa5'},
-    {pos:3,ini:'LT',n:'Luis Torres',p:'🇲🇽',cat:'Masters',hcp:'+2.1',pts:1050,bg:'#fbeaf0',c:'#72243e'},
-    {pos:4,ini:'AG',n:'Ana García',p:'🇺🇾',cat:'Masters',hcp:'+1.9',pts:980,bg:'#faeeda',c:'#854f0b'},
-    {pos:5,ini:'PR',n:'Pedro Rojas',p:'🇨🇱',cat:'Abierta',hcp:'+0.5',pts:860,bg:'#f1efea',c:'#5f5e5a'},
+  const items=data&&data.length?data.map((j,i)=>({pos:j.posicion_global||i+1,ini:(j.jugador||'??').slice(0,2).toUpperCase(),n:j.jugador||'—',p:'🌍',cat:j.categoria||'—',hcp:j.handicap>=0?'+'+j.handicap:j.handicap,pts:j.puntos_totales||0,bg:'rgba(255,107,26,.15)',c:'#ff9561'})):[
+    {pos:1,ini:'GA',n:'Giovanni Anzisi',p:'🇦🇷',cat:'Elite',hcp:'+3.2',pts:1240,bg:'rgba(255,107,26,.18)',c:'#ff9561'},
+    {pos:2,ini:'JS',n:'João Silva',p:'🇧🇷',cat:'Elite',hcp:'+2.8',pts:1180,bg:'rgba(74,158,255,.15)',c:'#4a9eff'},
+    {pos:3,ini:'LT',n:'Luis Torres',p:'🇲🇽',cat:'Masters',hcp:'+2.1',pts:1050,bg:'rgba(232,80,80,.15)',c:'#e85050'},
+    {pos:4,ini:'AG',n:'Ana García',p:'🇺🇾',cat:'Masters',hcp:'+1.9',pts:980,bg:'rgba(232,160,32,.15)',c:'#e8a020'},
+    {pos:5,ini:'PR',n:'Pedro Rojas',p:'🇨🇱',cat:'Abierta',hcp:'+0.5',pts:860,bg:'rgba(255,255,255,.07)',c:'var(--tx2)'},
   ]
   const pc=p=>p===1?'p1':p===2?'p2':p===3?'p3':'pn'
   document.getElementById('ranking-list').innerHTML=items.map(r=>`
@@ -853,7 +863,7 @@ async function loadRanking(){
       <div class="pos-b ${pc(r.pos)}">${r.pos}</div>
       <div class="av" style="background:${r.bg};color:${r.c}">${r.ini}</div>
       <div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${r.p} ${r.n}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${r.cat} · HCP ${r.hcp}</div></div>
-      <div style="text-align:right"><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--g3)">${r.pts}</div><div style="font-size:10px;color:var(--tx3)">pts</div></div>
+      <div style="text-align:right"><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--c4)">${r.pts}</div><div style="font-size:10px;color:var(--tx3)">pts</div></div>
     </div>`).join('')
 }
 
@@ -870,7 +880,6 @@ async function loadPerfil(){
   if(stats&&stats.length){
     document.getElementById('ps-vict').textContent=stats.filter(r=>r.posicion_final===1).length
     document.getElementById('ps-torn').textContent=stats.filter(r=>r.torneo_id).length
-    const {data:sc}=await SB.from('scorecard').select('resultado').eq('ronda_id',stats[0]?.id)
     document.getElementById('p-golpes').innerHTML=`
       <div class="li"><span style="flex:1;font-size:13px;color:var(--tx2)">🦅 Eagles</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--eagle)">cargando...</span></div>`
   }
