@@ -1160,12 +1160,12 @@ async function saveRound(){
         if(nv) canchaId=nv.id
       }
     }catch(_){}
-    const ins={jugador_id:USER.id,fecha:new Date().toISOString().split('T')[0],tipo:'practica',total_golpes:tg,score_vs_par:svp,completada:done.length===H.length}
+    const ins={jugador_id:USER.id,fecha:new Date().toISOString().split('T')[0],tipo:_tourMode?'torneo':'practica',total_golpes:tg,score_vs_par:svp,completada:done.length===H.length}
     if(canchaId) ins.cancha_id=canchaId
     const {data:ronda,error}=await SB.from('rondas').insert(ins).select().single()
     if(error) throw error
     try{
-      const rows=H.filter((_,i)=>allSc[i]!==null).map(h=>({ronda_id:ronda.id,hoyo_numero:h.n,par:h.par,golpes:allSc[H.indexOf(h)],distancia_metros:h.dist}))
+      const rows=H.map((h,i)=>allSc[i]===null?null:{ronda_id:ronda.id,hoyo_numero:h.n,par:h.par,golpes:allSc[i],distancia_metros:h.dist}).filter(Boolean)
       if(rows.length) await SB.from('scorecard').insert(rows)
     }catch(se){console.warn('scorecard:',se)}
     if(statusEl){statusEl.style.background='rgba(26,122,58,.15)';statusEl.style.color='#4ade80';statusEl.textContent='✓ Ronda guardada correctamente'}
