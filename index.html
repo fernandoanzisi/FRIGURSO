@@ -494,12 +494,19 @@ async function doAuth(){
       if(!nombre||!apellido){stopLoad();showErr('Ingresá nombre y apellido');document.getElementById('auth-btn').disabled=false;return}
       const {data,error}=await SB.auth.signUp({email,password:pass})
       if(error){stopLoad();showErr(error.message);document.getElementById('auth-btn').disabled=false;return}
-      localStorage.setItem('fg_pending_jugador', JSON.stringify({nombre, apellido}))
-      stopLoad()
-      okEl.textContent='✓ Cuenta creada. Revisá tu email para confirmar y luego ingresá.'
-      okEl.style.display='block'
-      document.getElementById('auth-btn').disabled=false
-      return
+      if(data.session){
+        // Confirmación de email desactivada — sesión inmediata
+        await SB.from('jugadores').insert({id:data.user.id,nombre,apellido})
+        // onAuthStateChange dispara showApp()
+      } else {
+        // Confirmación de email activada — guardar para después
+        localStorage.setItem('fg_pending_jugador', JSON.stringify({nombre, apellido}))
+        stopLoad()
+        okEl.textContent='✓ Cuenta creada. Revisá tu email para confirmar y luego ingresá.'
+        okEl.style.display='block'
+        document.getElementById('auth-btn').disabled=false
+        return
+      }
     }
   } catch(e){
     stopLoad(); showErr('Error de conexión'); document.getElementById('auth-btn').disabled=false
