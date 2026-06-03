@@ -758,10 +758,7 @@ function setClimaDefault(){
   document.getElementById('cl-apto').innerHTML='<span style="background:rgba(37,99,235,.2);color:var(--c5);font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;padding:6px 16px;border-radius:999px">✓ Apto para jugar</span>'
   document.getElementById('cl-fc').innerHTML=['HOY ⛅ 18°','MAR ☀️ 22°','MIÉ ⛅ 19°','JUE 🌧 15°','VIE ⛅ 17°','SÁB ☀️ 24°'].map(d=>{const[n,i,t]=d.split(' ');return`<div class="fcd"><div class="fcn">${n}</div><div class="fci">${i}</div><div class="fct">${t}</div></div>`}).join('')
 }
-function askOWM(){
-  const k=prompt('Para clima real, ingresá tu API key gratuita de openweathermap.org/api:')
-  if(k&&k.length>10){localStorage.setItem('fg_owm',k);loadClima()}
-}
+function askOWM(){}
 
 async function renderStaticData(){
   const {data:t}=await SB.from('torneos').select('*,ciudades(nombre)').order('fecha_inicio').limit(10).catch(()=>({data:null}))
