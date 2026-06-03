@@ -295,54 +295,103 @@ body{display:flex;align-items:center;justify-content:center}
     </div>
 
     <!-- COURSE SELECTOR -->
-    <div class="sc" id="sc-selector" style="background:var(--c1)">
-      <div class="sel-wrap">
-        <div style="background:var(--c1);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
-          <button onclick="go('sc-home')" style="background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:var(--r8);padding:7px 12px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:none">← Inicio</button>
+    <div class="sc flex" id="sc-selector" style="background:var(--c1)">
+      <!-- Cabecera fija -->
+      <div style="background:var(--c1);padding:14px 18px 0;flex-shrink:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <button onclick="go('sc-home')" style="background:rgba(255,255,255,.1);border-radius:var(--r8);padding:7px 14px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:none">← Inicio</button>
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;letter-spacing:.5px">NUEVA RONDA</div>
           <div style="width:72px"></div>
         </div>
-        <div style="padding:0 18px">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(147,197,253,.4);letter-spacing:1px;margin-bottom:10px">MODO DE JUEGO</div>
-          <div class="tog-wrap">
-            <button class="tog-opt on" id="tog-prac" onclick="toggleTourMode('practica')">⛳ PRÁCTICA</button>
-            <button class="tog-opt" id="tog-torn" onclick="toggleTourMode('torneo')">🏆 TORNEO</button>
+        <!-- Buscador siempre visible -->
+        <input id="sel-search" class="inp" placeholder="🔍 Buscar cancha o ciudad..." oninput="renderSelector()" style="margin-bottom:8px">
+        <!-- Filtros por país -->
+        <div style="display:flex;gap:7px;overflow-x:auto;padding-bottom:10px" id="sel-filters">
+          <button class="sel-fp on" onclick="setSFilter('',this)">🌍 Todas</button>
+          <button class="sel-fp" onclick="setSFilter('🇦🇷',this)">🇦🇷 Argentina</button>
+          <button class="sel-fp" onclick="setSFilter('🇲🇽',this)">🇲🇽 México</button>
+          <button class="sel-fp" onclick="setSFilter('🇧🇷',this)">🇧🇷 Brasil</button>
+          <button class="sel-fp" onclick="setSFilter('🇺🇾',this)">🇺🇾 Uruguay</button>
+          <button class="sel-fp" onclick="setSFilter('🇨🇱',this)">🇨🇱 Chile</button>
+          <button class="sel-fp" onclick="setSFilter('🇨🇴',this)">🇨🇴 Colombia</button>
+          <button class="sel-fp" onclick="setSFilter('🇺🇸',this)">🇺🇸 USA</button>
+          <button class="sel-fp" onclick="setSFilter('🌍EUR',this)">🌍 Europa</button>
+        </div>
+      </div>
+
+      <!-- Contenido scrolleable -->
+      <div style="flex:1;overflow-y:auto;padding:0 18px 8px">
+        <!-- Modo + Jugadores en una fila -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:rgba(147,197,253,.35);letter-spacing:1px;margin-bottom:6px">MODO</div>
+            <div class="tog-wrap" style="margin-bottom:0">
+              <button class="tog-opt on" id="tog-prac" onclick="toggleTourMode('practica')">⛳ PRÁCT.</button>
+              <button class="tog-opt" id="tog-torn" onclick="toggleTourMode('torneo')">🏆 TORN.</button>
+            </div>
           </div>
-          <div class="mundial-banner" id="mundial-banner">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#ffc107;letter-spacing:.5px">🌍 FIFG WORLD CUP ACAPULCO 2026</div>
-            <div style="font-size:12px;color:rgba(255,193,7,.6);margin-top:3px">Tu ronda se registrará en el torneo mundial</div>
-          </div>
-          <!-- GRUPO -->
-          <div style="margin-bottom:16px">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(147,197,253,.4);letter-spacing:1px;margin-bottom:10px">JUGADORES</div>
-            <div class="tog-wrap" style="margin-bottom:12px">
-              <button class="tog-opt on" id="tog-solo" onclick="toggleGroupMode(false)">👤 INDIVIDUAL</button>
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:rgba(147,197,253,.35);letter-spacing:1px;margin-bottom:6px">JUGADORES</div>
+            <div class="tog-wrap" style="margin-bottom:0">
+              <button class="tog-opt on" id="tog-solo" onclick="toggleGroupMode(false)">👤 SOLO</button>
               <button class="tog-opt" id="tog-grupo" onclick="toggleGroupMode(true)">👥 GRUPO</button>
             </div>
-            <div id="group-inputs" style="display:none">
-              <input class="inp" id="gp0" placeholder="Jugador 1 (vos)" style="margin-bottom:8px">
-              <input class="inp" id="gp1" placeholder="Jugador 2" style="margin-bottom:8px">
-              <input class="inp" id="gp2" placeholder="Jugador 3" style="margin-bottom:8px">
-              <input class="inp" id="gp3" placeholder="Jugador 4 (opcional)" style="margin-bottom:8px">
-              <button onclick="loadTournamentPlayers()" style="width:100%;background:rgba(147,197,253,.1);border:0.5px solid rgba(147,197,253,.2);border-radius:var(--r8);padding:10px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">📋 CARGAR PARTICIPANTES DEL TORNEO</button>
-            </div>
           </div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(147,197,253,.4);letter-spacing:1px;margin-bottom:8px">SELECCIONÁ UNA CANCHA</div>
-          <input id="sel-search" class="inp" placeholder="🔍 Buscar cancha o ciudad..." oninput="renderSelector()" style="margin-bottom:10px">
-          <div style="display:flex;gap:7px;overflow-x:auto;padding-bottom:10px;margin-bottom:2px" id="sel-filters">
-            <button class="sel-fp on" onclick="setSFilter('',this)">🌍 Todas</button>
-            <button class="sel-fp" onclick="setSFilter('🇦🇷',this)">🇦🇷 Argentina</button>
-            <button class="sel-fp" onclick="setSFilter('🇲🇽',this)">🇲🇽 México</button>
-            <button class="sel-fp" onclick="setSFilter('🇧🇷',this)">🇧🇷 Brasil</button>
-            <button class="sel-fp" onclick="setSFilter('🇺🇾',this)">🇺🇾 Uruguay</button>
-            <button class="sel-fp" onclick="setSFilter('🇨🇱',this)">🇨🇱 Chile</button>
-            <button class="sel-fp" onclick="setSFilter('🇨🇴',this)">🇨🇴 Colombia</button>
-            <button class="sel-fp" onclick="setSFilter('🇺🇸',this)">🇺🇸 USA</button>
-            <button class="sel-fp" onclick="setSFilter('🌍EUR',this)">🌍 Europa</button>
-          </div>
-          <div id="sel-courses"></div>
-          <button onclick="startRound()" style="width:100%;background:var(--c3);border:none;border-radius:var(--r16);padding:16px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 24px rgba(37,99,235,.45);margin-top:6px">⚽ COMENZAR RONDA</button>
         </div>
+        <div class="mundial-banner" id="mundial-banner" style="margin-bottom:10px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#ffc107;letter-spacing:.5px">🌍 FIFG WORLD CUP ACAPULCO 2026</div>
+          <div style="font-size:12px;color:rgba(255,193,7,.6);margin-top:3px">Tu ronda se registrará en el torneo mundial</div>
+        </div>
+        <!-- Inputs de grupo (se muestran solo en modo grupo) -->
+        <div id="group-inputs" style="display:none;margin-bottom:10px;background:rgba(255,255,255,.05);border-radius:var(--r12);padding:12px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(147,197,253,.4);letter-spacing:1px;margin-bottom:10px">NOMBRES DEL GRUPO</div>
+          <input class="inp" id="gp0" placeholder="Jugador 1 (vos)" style="margin-bottom:8px">
+          <input class="inp" id="gp1" placeholder="Jugador 2" style="margin-bottom:8px">
+          <input class="inp" id="gp2" placeholder="Jugador 3" style="margin-bottom:8px">
+          <input class="inp" id="gp3" placeholder="Jugador 4 (opcional)" style="margin-bottom:8px">
+          <button onclick="loadTournamentPlayers()" style="width:100%;background:rgba(147,197,253,.08);border:0.5px solid rgba(147,197,253,.2);border-radius:var(--r8);padding:9px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">📋 CARGAR PARTICIPANTES DEL TORNEO</button>
+        </div>
+        <!-- Lista de canchas -->
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:rgba(147,197,253,.35);letter-spacing:1px;margin-bottom:8px" id="sel-count"></div>
+        <div id="sel-courses"></div>
+        <!-- Agregar cancha propia -->
+        <button onclick="toggleAddCourse()" style="width:100%;background:rgba(255,255,255,.05);border:1.5px dashed rgba(147,197,253,.2);border-radius:var(--r16);padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:rgba(147,197,253,.5);cursor:pointer;margin-top:6px">➕ Agregar cancha que no está en la lista</button>
+        <div id="add-course-form" style="display:none;background:rgba(255,255,255,.06);border:1.5px solid rgba(147,197,253,.2);border-radius:var(--r16);padding:16px;margin-top:8px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;margin-bottom:14px;letter-spacing:.5px">➕ NUEVA CANCHA</div>
+          <div class="inp-lbl">NOMBRE DE LA CANCHA</div>
+          <input class="inp" id="ac-nombre" placeholder="Ej: Club de Golf Las Rosas">
+          <div class="inp-lbl">CIUDAD / PROVINCIA</div>
+          <input class="inp" id="ac-ciudad" placeholder="Ej: Mendoza">
+          <div class="inp-lbl">PAÍS</div>
+          <select class="inp" id="ac-pais" style="color:#fff;background:rgba(255,255,255,.08)">
+            <option value="🇦🇷">🇦🇷 Argentina</option>
+            <option value="🇲🇽">🇲🇽 México</option>
+            <option value="🇧🇷">🇧🇷 Brasil</option>
+            <option value="🇺🇾">🇺🇾 Uruguay</option>
+            <option value="🇨🇱">🇨🇱 Chile</option>
+            <option value="🇨🇴">🇨🇴 Colombia</option>
+            <option value="🇵🇾">🇵🇾 Paraguay</option>
+            <option value="🇵🇪">🇵🇪 Perú</option>
+            <option value="🇺🇸">🇺🇸 USA</option>
+            <option value="🇪🇸">🇪🇸 España</option>
+            <option value="🌍">🌍 Otro país</option>
+          </select>
+          <div class="inp-lbl">CANTIDAD DE HOYOS</div>
+          <div class="tog-wrap" style="margin-bottom:14px">
+            <button class="tog-opt on" id="ac-h9" onclick="setAcHoyos(9)">9 hoyos · Par 36</button>
+            <button class="tog-opt" id="ac-h18" onclick="setAcHoyos(18)">18 hoyos · Par 72</button>
+          </div>
+          <div class="inp-lbl">PAR TOTAL <span id="ac-par-hint" style="font-weight:400;text-transform:none">(podés ajustar)</span></div>
+          <input class="inp" id="ac-par" type="number" value="36" min="27" max="82">
+          <button onclick="submitAddCourse()" style="width:100%;background:var(--c3);border:none;border-radius:var(--r12);padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#fff;cursor:pointer;margin-bottom:8px">✓ GUARDAR CANCHA</button>
+          <button onclick="toggleAddCourse()" style="width:100%;background:rgba(255,255,255,.06);border:none;border-radius:var(--r12);padding:10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:rgba(147,197,253,.4);cursor:pointer">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- Botón iniciar siempre visible abajo -->
+      <div style="padding:10px 18px 14px;background:var(--c1);flex-shrink:0;border-top:0.5px solid rgba(147,197,253,.08)">
+        <div id="sel-cur" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:rgba(147,197,253,.4);margin-bottom:8px;text-align:center"></div>
+        <button onclick="startRound()" style="width:100%;background:var(--c3);border:none;border-radius:var(--r16);padding:16px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 24px rgba(37,99,235,.45)">⚽ COMENZAR RONDA</button>
       </div>
     </div>
 
@@ -704,6 +753,7 @@ const GP_COLORS=['#1a56db','#1a7a3a','#854f0b','#a32d2d']
 
 window.addEventListener('load', async ()=>{
   load('Iniciando...')
+  loadCustomCourses()
   // Render estático siempre (no depende de sesión)
   renderScorecard(); renderGPSList(); renderSelector(); renderStaticData(); loadClima()
   try{
@@ -1206,22 +1256,69 @@ function renderSelector(){
     if(Object.keys(grouped).length>1) html+=`<div class="sel-country-hdr">${flag} ${countryNames[flag]||''}</div>`
     courses.forEach(c=>{
       html+=`<div class="sel-course-card${_selCourse.id===c.id?' on':''}" onclick="selectCourse('${c.id}')">
-        <div class="sel-course-name">${c.emoji} ${c.nombre}</div>
+        <div class="sel-course-name">${c.emoji} ${c.nombre}${c.custom?'<span style="font-size:11px;color:rgba(147,197,253,.4);font-weight:600;margin-left:6px">MÍA</span>':''}</div>
         <div class="sel-course-meta">${c.ciudad} · ${c.hoyos} hoyos · Par ${c.par}</div>
-        ${c.info?`<div style="font-size:11px;color:rgba(147,197,253,.5);margin-top:4px">📌 ${c.info}</div>`:''}
+        ${c.info&&!c.custom?`<div style="font-size:11px;color:rgba(147,197,253,.5);margin-top:4px">📌 ${c.info}</div>`:''}
         ${c.mundial?`<div class="sel-world-badge">🌍 FIFG World Cup 2026</div>`:''}
         ${_selCourse.id===c.id?`<div class="sel-check">✓</div>`:''}
       </div>`
     })
   })
-  if(!html) html='<div style="text-align:center;padding:24px;font-size:13px;color:rgba(147,197,253,.3)">Sin resultados</div>'
+  if(!html) html='<div style="text-align:center;padding:24px;font-size:13px;color:rgba(147,197,253,.3)">Sin resultados. Podés agregar la cancha abajo ↓</div>'
   document.getElementById('sel-courses').innerHTML=html
+  const countEl=document.getElementById('sel-count')
+  if(countEl) countEl.textContent=filtered.length+' cancha'+(filtered.length!==1?'s':'')+(q||_selFilter?' encontradas':'s disponibles')
+  const curEl=document.getElementById('sel-cur')
+  if(curEl) curEl.textContent='Cancha seleccionada: '+_selCourse.nombre
 }
 
 function selectCourse(id){
   _selCourse=COURSES.find(c=>c.id===id)||COURSES[0]
   scores=new Array(getCourseHoles(_selCourse).length).fill(null);hi=0
   renderSelector()
+}
+
+let _acHoyos=9
+function setAcHoyos(n){
+  _acHoyos=n
+  document.getElementById('ac-h9').classList.toggle('on',n===9)
+  document.getElementById('ac-h18').classList.toggle('on',n===18)
+  document.getElementById('ac-par').value=n===9?36:72
+}
+function toggleAddCourse(){
+  const f=document.getElementById('add-course-form')
+  f.style.display=f.style.display==='none'?'block':'none'
+  if(f.style.display==='block') f.scrollIntoView({behavior:'smooth'})
+}
+function submitAddCourse(){
+  const nombre=document.getElementById('ac-nombre').value.trim()
+  const ciudad=document.getElementById('ac-ciudad').value.trim()
+  const pais=document.getElementById('ac-pais').value
+  const par=parseInt(document.getElementById('ac-par').value)||(_acHoyos===9?36:72)
+  if(!nombre||!ciudad){toast('Ingresá nombre y ciudad');return}
+  const id='custom_'+Date.now()
+  const course={id,nombre,ciudad,pais,par,hoyos:_acHoyos,emoji:'⛳',mundial:false,info:'Cancha agregada por usuario',custom:true}
+  COURSES.push(course)
+  // Guardar en localStorage
+  try{
+    const saved=JSON.parse(localStorage.getItem('fg_custom_courses')||'[]')
+    saved.push(course)
+    localStorage.setItem('fg_custom_courses',JSON.stringify(saved))
+  }catch(_){}
+  // Intentar guardar en Supabase
+  if(USER) SB.from('canchas').insert({nombre,par_total:par,total_hoyos:_acHoyos,activa:true}).catch(()=>{})
+  _selCourse=course
+  document.getElementById('add-course-form').style.display='none'
+  document.getElementById('ac-nombre').value=''
+  document.getElementById('ac-ciudad').value=''
+  renderSelector()
+  toast('✓ Cancha "'+nombre+'" agregada')
+}
+function loadCustomCourses(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('fg_custom_courses')||'[]')
+    saved.forEach(c=>{if(!COURSES.find(x=>x.id===c.id))COURSES.push(c)})
+  }catch(_){}
 }
 
 function toggleTourMode(m){
