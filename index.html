@@ -404,6 +404,7 @@ body{display:flex;align-items:center;justify-content:center}
           </div>
         </div>
       </div>
+      <div id="save-error" style="display:none;background:rgba(163,45,45,.18);border-top:1px solid rgba(163,45,45,.35);padding:10px 16px;font-size:12px;color:#f09595;font-family:'Barlow Condensed',sans-serif;font-weight:700;flex-shrink:0"></div>
       <div class="sc-foot">
         <div class="sfi"><div class="sfv" id="sf-g">0</div><div class="sfl">GOLPES</div></div>
         <div class="sfi"><div class="sfv" id="sf-p">0</div><div class="sfl">PAR</div></div>
@@ -988,7 +989,7 @@ function renderScorecard(){
   document.getElementById('ggrid').innerHTML=Array.from({length:15},(_,i)=>{
     const n=i+1,cls=g===n?scCls(n-h.par):''
     return`<button class="gb ${cls}" onclick="scSet(${n})" style="${g===n&&_groupEnabled?'border-color:'+GP_COLORS[_activePlayer]+';color:'+GP_COLORS[_activePlayer]:''}">${n}</button>`
-  }).join('')
+  }).join('')+(g!==null?`<button onclick="clearHole()" style="width:100%;margin-top:8px;background:rgba(163,45,45,.08);border:1.5px solid rgba(163,45,45,.3);border-radius:var(--r12);padding:9px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--dbl);cursor:pointer">✕ Borrar anotación del Hoyo ${h.n}</button>`:'')
   document.getElementById('sc-prev').disabled=hi===0
   document.getElementById('sc-next').disabled=hi===last
   const done=sc.filter(s=>s!==null)
@@ -1004,10 +1005,12 @@ function renderScorecard(){
   renderPlayerTabs()
 }
 function scSet(n){
-  const sc=getCurScores(); sc[hi]=n
-  if(hi<getCourseHoles(_selCourse).length-1) hi++
+  const sc=getCurScores()
+  if(sc[hi]===n){ sc[hi]=null }  // tocar el mismo número borra
+  else { sc[hi]=n; if(hi<getCourseHoles(_selCourse).length-1) hi++ }
   renderScorecard()
 }
+function clearHole(){ const sc=getCurScores(); sc[hi]=null; renderScorecard() }
 function scSel(i){hi=i;renderScorecard()}
 function scMove(d){hi=Math.max(0,Math.min(getCourseHoles(_selCourse).length-1,hi+d));renderScorecard()}
 
@@ -1041,32 +1044,52 @@ async function saveRound(){
     return
   }
   document.getElementById('save-btn').disabled=true
+  document.getElementById('save-error').style.display='none'
   load('Guardando ronda...')
   try{
-    // Save player 0's scores (the logged-in user)
+    // Buscar cancha_id en la DB por nombre
+    let canchaId=null
+    try{
+      const nm=_selCourse.nombre.split(' ').slice(0,2).join(' ')
+      const {data:ca}=await SB.from('canchas').select('id').ilike('nombre','%'+nm+'%').limit(1)
+      if(ca&&ca.length) canchaId=ca[0].id
+      else {
+        // Intentar crear la cancha
+        const {data:nueva}=await SB.from('canchas').insert({
+          nombre:_selCourse.nombre,par_total:_selCourse.par,total_hoyos:_selCourse.hoyos,activa:true
+        }).select('id').single()
+        if(nueva) canchaId=nueva.id
+      }
+    }catch(ce){ /* cancha_id puede ser nullable */ }
+
+    // Guardar scores del jugador 0 (el logueado)
     const p0sc=_groupEnabled?_gScores[0]:sc
     const p0done=p0sc.filter(s=>s!==null)
-    if(p0done.length){
-      const p0tg=p0done.reduce((a,b)=>a+b,0)
-      const p0tp=H.filter((_,i)=>p0sc[i]!==null).reduce((a,h)=>a+h.par,0)
-      const {data:ronda,error}=await SB.from('rondas').insert({
-        jugador_id:USER.id,fecha:new Date().toISOString().split('T')[0],
-        tipo:'practica',total_golpes:p0tg,score_vs_par:p0tg-p0tp,completada:p0done.length===H.length
-      }).select().single()
-      if(error) throw error
-      const rows=H.filter((_,i)=>p0sc[i]!==null).map(h=>({
+    if(!p0done.length){stopLoad();document.getElementById('save-btn').disabled=false;toast('Ingresá al menos un hoyo');return}
+    const p0tg=p0done.reduce((a,b)=>a+b,0)
+    const p0tp=H.filter((_,i)=>p0sc[i]!==null).reduce((a,h)=>a+h.par,0)
+    const insertData={jugador_id:USER.id,fecha:new Date().toISOString().split('T')[0],
+      tipo:'practica',total_golpes:p0tg,score_vs_par:p0tg-p0tp,completada:p0done.length===H.length}
+    if(canchaId) insertData.cancha_id=canchaId
+    const {data:ronda,error}=await SB.from('rondas').insert(insertData).select().single()
+    if(error) throw error
+    // Guardar hoyo por hoyo
+    try{
+      const rows=H.filter((_,i)=>p0sc[i]!==null).map((h,_,arr)=>({
         ronda_id:ronda.id,hoyo_numero:h.n,par:h.par,golpes:p0sc[H.indexOf(h)],distancia_metros:h.dist
       }))
       if(rows.length) await SB.from('scorecard').insert(rows)
-    }
+    }catch(se){ console.warn('scorecard insert:',se) /* no bloquear si falla */ }
     stopLoad()
     showSummary()
     scores=new Array(18).fill(null); _gScores=[...Array(4)].map(()=>new Array(18).fill(null)); hi=0; renderScorecard()
     loadDashboard()
   } catch(e){
     stopLoad()
-    const msg=e?.message||e?.error_description||'Error desconocido'
-    toast('Error: '+msg.substring(0,60))
+    const msg=e?.message||e?.error_description||e?.code||JSON.stringify(e)||'Error desconocido'
+    const errEl=document.getElementById('save-error')
+    errEl.textContent='⚠ Error al guardar: '+msg
+    errEl.style.display='block'
     console.error('saveRound error:',e)
   }
   document.getElementById('save-btn').disabled=false
