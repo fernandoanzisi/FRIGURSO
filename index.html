@@ -396,7 +396,8 @@ body{display:flex;align-items:center;justify-content:center}
             <div id="sc-res"></div>
           </div>
           <div id="sc-info"></div>
-          <div style="font-size:12px;color:var(--tx2);font-weight:600;margin-top:8px;margin-bottom:4px">¿CUÁNTOS GOLPES?</div>
+          <div id="sc-group-table"></div>
+          <div style="font-size:12px;color:var(--tx2);font-weight:600;margin-top:8px;margin-bottom:4px" id="sc-golpes-lbl">¿CUÁNTOS GOLPES?</div>
           <div class="g-grid" id="ggrid"></div>
           <div class="sc-nav">
             <button class="sc-nb" id="sc-prev" onclick="scMove(-1)">◀ Anterior</button>
@@ -550,6 +551,7 @@ body{display:flex;align-items:center;justify-content:center}
     <div style="margin-top:14px;font-size:13px;color:rgba(147,197,253,.5)" id="sum-course-lbl">—</div>
     <div class="sum-chips" id="sum-chips"></div>
     <div id="sum-tour-note" style="display:none;background:rgba(255,193,7,.1);border:0.5px solid rgba(255,193,7,.25);border-radius:var(--r8);padding:9px 16px;font-size:13px;color:#ffc107;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:18px">🌍 Registrada en FIFG World Cup 2026</div>
+    <div id="sum-save-status" style="display:none;width:100%;border-radius:var(--r8);padding:10px 14px;font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:4px;text-align:left"></div>
     <div style="display:flex;gap:10px;width:100%;margin-top:8px">
       <button onclick="shareRound()" style="flex:1;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.15);border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer">📤 COMPARTIR</button>
       <button onclick="closeSummary()" style="flex:1.6;background:var(--c3);border:none;border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(37,99,235,.4)">✓ CONTINUAR</button>
@@ -934,24 +936,66 @@ const scLbl=s=>s<=-2?'EAGLE':s===-1?'BIRDIE':s===0?'PAR':s===1?'BOGEY':'DOBLE+'
 
 function getCurScores(){ return _groupEnabled ? _gScores[_activePlayer] : scores }
 
+function getGroupNames(){
+  // nombres activos: input del selector, o nombre del jugador para slot 0
+  return [0,1,2,3].map(pi=>{
+    const n=_groupNames[pi]||''
+    if(n) return n
+    if(pi===0&&JUGADOR) return `${JUGADOR.nombre} ${JUGADOR.apellido}`
+    return ''
+  })
+}
+
 function renderPlayerTabs(){
+  // tabs mínimas en el strip (encima del scorecard) — solo cuando hay grupo
   const tabs=document.getElementById('player-tabs')
-  if(!_groupEnabled||_groupNames.filter(n=>n).length<2){tabs.style.display='none';return}
+  if(!_groupEnabled){tabs.style.display='none';return}
+  const names=getGroupNames()
+  const active=names.filter(n=>n)
+  if(active.length<1){tabs.style.display='none';return}
   tabs.style.display='block'
   const H=getCourseHoles(_selCourse)
-  tabs.innerHTML=_groupNames.map((nm,pi)=>{
-    if(!nm&&pi>0) return''
+  tabs.innerHTML=names.map((nm,pi)=>{
+    if(!nm) return''
     const sc=_gScores[pi]
     const done=sc.filter(s=>s!==null)
     const svp=done.reduce((a,b)=>a+b,0)-H.filter((_,i)=>sc[i]!==null).reduce((a,h)=>a+h.par,0)
     const str=done.length===0?'—':svp===0?'E':svp>0?'+'+svp:svp
     const col=GP_COLORS[pi]
     const on=pi===_activePlayer
-    const lbl=nm||(pi===0&&JUGADOR?`${JUGADOR.nombre}`:'J'+(pi+1))
-    return`<button onclick="setActivePlayer(${pi})" style="display:inline-flex;align-items:center;gap:6px;background:${on?col+'22':'rgba(255,255,255,.05)'};border:1.5px solid ${on?col:'rgba(255,255,255,.08)'};border-radius:20px;padding:5px 12px;margin-right:7px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:${on?col:'rgba(147,197,253,.4)'}">
-      <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>${lbl}<span style="color:${on?col:'rgba(147,197,253,.3)'}">${str}</span>
+    return`<button onclick="setActivePlayer(${pi})" style="display:inline-flex;align-items:center;gap:5px;background:${on?col+'28':'rgba(255,255,255,.05)'};border:1.5px solid ${on?col:'rgba(255,255,255,.08)'};border-radius:20px;padding:5px 11px;margin-right:6px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:${on?col:'rgba(147,197,253,.35)'}">
+      <span style="width:7px;height:7px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>${nm.split(' ')[0]}<span style="opacity:.7">${str}</span>
     </button>`
   }).join('')
+}
+
+function renderGroupTable(){
+  const tbl=document.getElementById('sc-group-table')
+  const lbl=document.getElementById('sc-golpes-lbl')
+  if(!_groupEnabled||!tbl){if(tbl)tbl.innerHTML='';return}
+  const names=getGroupNames()
+  const active=names.filter(n=>n)
+  if(!active.length){tbl.innerHTML='';return}
+  const H=getCourseHoles(_selCourse)
+  const h=H[hi]
+  const nm=names[_activePlayer]||('Jugador '+(_activePlayer+1))
+  if(lbl) lbl.textContent=`¿CUÁNTOS GOLPES? — ${nm.split(' ')[0].toUpperCase()}`
+  tbl.innerHTML=`<div style="margin:12px 0 6px">
+    ${names.map((n,pi)=>{
+      if(!n) return''
+      const col=GP_COLORS[pi]
+      const g=_gScores[pi][hi]
+      const svp=g!==null?g-h.par:null
+      const gcol=g!==null?(svp<=-2?'var(--eagle)':svp===-1?'var(--birdie)':svp===0?'var(--tx)':svp===1?'var(--bogey)':'var(--dbl)'):'var(--tx3)'
+      const on=pi===_activePlayer
+      return`<div onclick="setActivePlayer(${pi})" style="display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:var(--r12);background:${on?col+'12':'var(--bg2)'};border:1.5px solid ${on?col:'var(--bd)'};margin-bottom:6px;cursor:pointer">
+        <div style="width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0"></div>
+        <div style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:${on?800:600};color:${on?'var(--tx)':'var(--tx2)'};">${n}</div>
+        ${on?`<div style="font-size:11px;color:${col};font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:.3px">✎ ANOTAR</div>`:''}
+        <div style="width:38px;height:38px;border-radius:50%;background:${g!==null?col+'18':'var(--bg)'};border:2px solid ${g!==null?col:'var(--bd2)'};display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:${g!==null?'20':'13'}px;font-weight:800;color:${g!==null?gcol:'var(--tx3)'};">${g!==null?g:'—'}</div>
+      </div>`
+    }).join('')}
+  </div>`
 }
 
 function setActivePlayer(pi){_activePlayer=pi;renderScorecard()}
@@ -1003,6 +1047,7 @@ function renderScorecard(){
   document.getElementById('sf-s').style.color=_groupEnabled?pCol:done.length>0&&svpT<0?'var(--birdie)':done.length>0&&svpT>0?'var(--bogey)':'var(--c5)'
   document.getElementById('sc-top').textContent=str
   renderPlayerTabs()
+  renderGroupTable()
 }
 function scSet(n){
   const sc=getCurScores()
@@ -1017,82 +1062,69 @@ function scMove(d){hi=Math.max(0,Math.min(getCourseHoles(_selCourse).length-1,hi
 async function saveRound(){
   const H=getCourseHoles(_selCourse)
   const sc=getCurScores()
-  const done=sc.filter(s=>s!==null)
+  const allSc=_groupEnabled?_gScores[0]:sc
+  const done=allSc.filter(s=>s!==null)
   if(!done.length){toast('Ingresá al menos un hoyo');return}
   const tg=done.reduce((a,b)=>a+b,0)
-  const tp=H.filter((_,i)=>sc[i]!==null).reduce((a,h)=>a+h.par,0)
+  const tp=H.filter((_,i)=>allSc[i]!==null).reduce((a,h)=>a+h.par,0)
   const svp=tg-tp
   const str=svp===0?'E':svp>0?'+'+svp:svp
   const tally={eagle:0,birdie:0,par:0,bogey:0,dbl:0}
-  H.forEach((h,i)=>{if(sc[i]===null)return;const d=sc[i]-h.par;if(d<=-2)tally.eagle++;else if(d===-1)tally.birdie++;else if(d===0)tally.par++;else if(d===1)tally.bogey++;else tally.dbl++})
-  // Build group summary if enabled
+  H.forEach((h,i)=>{if(allSc[i]===null)return;const d=allSc[i]-h.par;if(d<=-2)tally.eagle++;else if(d===-1)tally.birdie++;else if(d===0)tally.par++;else if(d===1)tally.bogey++;else tally.dbl++})
+  // Resumen de grupo
   let groupSummary=null
   if(_groupEnabled){
-    const names=_groupNames.map((n,i)=>n||(i===0&&JUGADOR?`${JUGADOR.nombre} ${JUGADOR.apellido}`:'')).filter(n=>n)
-    groupSummary=_gScores.slice(0,names.length).map((gsc,pi)=>{
+    const names=getGroupNames()
+    groupSummary=names.map((n,pi)=>{
+      if(!n&&pi>0) return null
+      const gsc=_gScores[pi]
       const gd=gsc.filter(s=>s!==null)
       const gtg=gd.reduce((a,b)=>a+b,0)
       const gtp=H.filter((_,i)=>gsc[i]!==null).reduce((a,h)=>a+h.par,0)
       const gsvp=gtg-gtp
-      return{name:names[pi],str:gd.length===0?'—':gsvp===0?'E':gsvp>0?'+'+gsvp:gsvp,svp:gsvp,tg:gtg,color:GP_COLORS[pi],haScores:gd.length>0}
-    })
+      return{name:n||('J'+(pi+1)),str:gd.length===0?'—':gsvp===0?'E':gsvp>0?'+'+gsvp:gsvp,svp:gsvp,tg:gtg,color:GP_COLORS[pi]}
+    }).filter(Boolean)
   }
   _lastRoundData={str,svp,tg,tp,tally,course:_selCourse,tourMode:_tourMode,groupSummary}
-  if(!USER){
-    showSummary()
-    scores=new Array(18).fill(null); _gScores=[...Array(4)].map(()=>new Array(18).fill(null)); hi=0; renderScorecard()
-    return
-  }
-  document.getElementById('save-btn').disabled=true
-  document.getElementById('save-error').style.display='none'
-  load('Guardando ronda...')
+
+  // 1. Mostrar resumen SIEMPRE primero (UX inmediata)
+  showSummary()
+  // 2. Resetear scorecard
+  scores=new Array(getCourseHoles(_selCourse).length).fill(null)
+  _gScores=[...Array(4)].map(()=>new Array(18).fill(null))
+  hi=0; renderScorecard()
+
+  if(!USER) return
+
+  // 3. Guardar en DB en segundo plano
+  const statusEl=document.getElementById('sum-save-status')
+  if(statusEl){statusEl.style.display='block';statusEl.style.background='rgba(147,197,253,.12)';statusEl.style.color='rgba(147,197,253,.7)';statusEl.textContent='⏳ Guardando en base de datos...'}
   try{
-    // Buscar cancha_id en la DB por nombre
+    // Buscar cancha_id
     let canchaId=null
     try{
-      const nm=_selCourse.nombre.split(' ').slice(0,2).join(' ')
-      const {data:ca}=await SB.from('canchas').select('id').ilike('nombre','%'+nm+'%').limit(1)
+      const {data:ca}=await SB.from('canchas').select('id').ilike('nombre','%'+_selCourse.nombre.split(' ').slice(0,2).join(' ')+'%').limit(1)
       if(ca&&ca.length) canchaId=ca[0].id
-      else {
-        // Intentar crear la cancha
-        const {data:nueva}=await SB.from('canchas').insert({
-          nombre:_selCourse.nombre,par_total:_selCourse.par,total_hoyos:_selCourse.hoyos,activa:true
-        }).select('id').single()
-        if(nueva) canchaId=nueva.id
+      if(!canchaId){
+        const {data:nv}=await SB.from('canchas').insert({nombre:_selCourse.nombre,par_total:_selCourse.par,total_hoyos:_selCourse.hoyos,activa:true}).select('id').single()
+        if(nv) canchaId=nv.id
       }
-    }catch(ce){ /* cancha_id puede ser nullable */ }
-
-    // Guardar scores del jugador 0 (el logueado)
-    const p0sc=_groupEnabled?_gScores[0]:sc
-    const p0done=p0sc.filter(s=>s!==null)
-    if(!p0done.length){stopLoad();document.getElementById('save-btn').disabled=false;toast('Ingresá al menos un hoyo');return}
-    const p0tg=p0done.reduce((a,b)=>a+b,0)
-    const p0tp=H.filter((_,i)=>p0sc[i]!==null).reduce((a,h)=>a+h.par,0)
-    const insertData={jugador_id:USER.id,fecha:new Date().toISOString().split('T')[0],
-      tipo:'practica',total_golpes:p0tg,score_vs_par:p0tg-p0tp,completada:p0done.length===H.length}
-    if(canchaId) insertData.cancha_id=canchaId
-    const {data:ronda,error}=await SB.from('rondas').insert(insertData).select().single()
+    }catch(_){}
+    const ins={jugador_id:USER.id,fecha:new Date().toISOString().split('T')[0],tipo:'practica',total_golpes:tg,score_vs_par:svp,completada:done.length===H.length}
+    if(canchaId) ins.cancha_id=canchaId
+    const {data:ronda,error}=await SB.from('rondas').insert(ins).select().single()
     if(error) throw error
-    // Guardar hoyo por hoyo
     try{
-      const rows=H.filter((_,i)=>p0sc[i]!==null).map((h,_,arr)=>({
-        ronda_id:ronda.id,hoyo_numero:h.n,par:h.par,golpes:p0sc[H.indexOf(h)],distancia_metros:h.dist
-      }))
+      const rows=H.filter((_,i)=>allSc[i]!==null).map(h=>({ronda_id:ronda.id,hoyo_numero:h.n,par:h.par,golpes:allSc[H.indexOf(h)],distancia_metros:h.dist}))
       if(rows.length) await SB.from('scorecard').insert(rows)
-    }catch(se){ console.warn('scorecard insert:',se) /* no bloquear si falla */ }
-    stopLoad()
-    showSummary()
-    scores=new Array(18).fill(null); _gScores=[...Array(4)].map(()=>new Array(18).fill(null)); hi=0; renderScorecard()
+    }catch(se){console.warn('scorecard:',se)}
+    if(statusEl){statusEl.style.background='rgba(26,122,58,.15)';statusEl.style.color='#4ade80';statusEl.textContent='✓ Ronda guardada correctamente'}
     loadDashboard()
-  } catch(e){
-    stopLoad()
+  }catch(e){
     const msg=e?.message||e?.error_description||e?.code||JSON.stringify(e)||'Error desconocido'
-    const errEl=document.getElementById('save-error')
-    errEl.textContent='⚠ Error al guardar: '+msg
-    errEl.style.display='block'
-    console.error('saveRound error:',e)
+    if(statusEl){statusEl.style.background='rgba(163,45,45,.18)';statusEl.style.color='#f09595';statusEl.textContent='⚠ No se guardó: '+msg}
+    console.error('saveRound:',e)
   }
-  document.getElementById('save-btn').disabled=false
 }
 
 function showSummary(){
@@ -1200,16 +1232,11 @@ function toggleTourMode(m){
 }
 
 function startRound(){
-  if(_groupEnabled){
-    _groupNames=[0,1,2,3].map(i=>{
-      const el=document.getElementById('gp'+i)
-      return el?el.value.trim():''
-    })
-    // Auto-fill player 0 from logged-in user if blank
-    if(!_groupNames[0]&&JUGADOR) _groupNames[0]=`${JUGADOR.nombre} ${JUGADOR.apellido}`
-    _gScores=[...Array(4)].map(()=>new Array(getCourseHoles(_selCourse).length).fill(null))
-    _activePlayer=0
-  }
+  // Siempre leer nombres del grupo (aunque no esté en modo grupo)
+  _groupNames=[0,1,2,3].map(i=>{const el=document.getElementById('gp'+i);return el?el.value.trim():''})
+  if(!_groupNames[0]&&JUGADOR) _groupNames[0]=`${JUGADOR.nombre} ${JUGADOR.apellido}`
+  _gScores=[...Array(4)].map(()=>new Array(getCourseHoles(_selCourse).length).fill(null))
+  _activePlayer=0
   scores=new Array(getCourseHoles(_selCourse).length).fill(null)
   renderScorecard()
   go('sc-scorecard')
