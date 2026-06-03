@@ -722,43 +722,80 @@ function getGPS(){
   )
 }
 
+function wcEmoji(c){
+  if(c===0)return'☀️'
+  if(c<=2)return'⛅'
+  if(c===3)return'☁️'
+  if(c<=48)return'🌫️'
+  if(c<=55)return'🌦️'
+  if(c<=67)return'🌧️'
+  if(c<=77)return'🌨️'
+  if(c<=82)return'🌦️'
+  if(c<=86)return'🌨️'
+  return'⛈️'
+}
+function wcDesc(c){
+  if(c===0)return'Despejado'
+  if(c===1)return'Mayormente despejado'
+  if(c===2)return'Parcialmente nublado'
+  if(c===3)return'Nublado'
+  if(c<=48)return'Niebla'
+  if(c<=55)return'Llovizna'
+  if(c<=67)return'Lluvia'
+  if(c<=77)return'Nieve'
+  if(c<=82)return'Chubascos'
+  return'Tormenta'
+}
+
 async function loadClima(){
   if(!navigator.geolocation){setClimaDefault();return}
   navigator.geolocation.getCurrentPosition(async pos=>{
     const {latitude:lat,longitude:lon}=pos.coords
-    const OWM=localStorage.getItem('fg_owm')||''
-    if(!OWM){setClimaDefault();askOWM();return}
     try{
-      const r=await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OWM}&units=metric&lang=es`)
-      const d=await r.json()
-      if(d.cod!==200){setClimaDefault();return}
-      const v=Math.round((d.wind?.speed||0)*3.6)
-      document.getElementById('cl-temp').textContent=Math.round(d.main.temp)+'°'
-      document.getElementById('cl-desc').textContent=d.weather[0].description
-      document.getElementById('cl-city').textContent='📍 '+d.name
+      const [wr,gr]=await Promise.all([
+        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,visibility,weather_code&daily=weather_code,temperature_2m_max&timezone=auto&forecast_days=6`).then(r=>r.json()),
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`).then(r=>r.json()).catch(()=>({}))
+      ])
+      if(!wr.current) throw new Error()
+      const cur=wr.current
+      const v=Math.round(cur.wind_speed_10m)
+      const temp=Math.round(cur.temperature_2m)
+      const emoji=wcEmoji(cur.weather_code)
+      const city=gr.address?.city||gr.address?.town||gr.address?.village||''
+      const state=gr.address?.state||''
+      document.getElementById('cl-temp').textContent=temp+'°'
+      document.getElementById('cl-desc').textContent=emoji+' '+wcDesc(cur.weather_code)
+      document.getElementById('cl-city').textContent='📍 '+(city?city+(state?', '+state:''):'Tu ubicación')
       document.getElementById('cl-viento').innerHTML=v+'<span style="font-size:10px">km/h</span>'
-      document.getElementById('cl-hum').innerHTML=d.main.humidity+'<span style="font-size:10px">%</span>'
-      document.getElementById('cl-vis').innerHTML=Math.round((d.visibility||10000)/1000)+'<span style="font-size:10px">km</span>'
-      document.getElementById('cl-sens').textContent=Math.round(d.main.feels_like)+'°'
-      const apto=d.main.temp>5&&d.main.temp<38&&v<50
+      document.getElementById('cl-hum').innerHTML=cur.relative_humidity_2m+'<span style="font-size:10px">%</span>'
+      document.getElementById('cl-vis').innerHTML=Math.round((cur.visibility||10000)/1000)+'<span style="font-size:10px">km</span>'
+      document.getElementById('cl-sens').textContent=Math.round(cur.apparent_temperature)+'°'
+      const apto=temp>5&&temp<38&&v<50
       document.getElementById('cl-apto').innerHTML=`<span style="background:${apto?'rgba(37,99,235,.2)':'rgba(163,45,45,.2)'};color:${apto?'var(--c5)':'#f09595'};font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;padding:6px 16px;border-radius:999px">${apto?'✓ Apto para jugar':'⚠ Condiciones difíciles'}</span>`
       document.getElementById('gps-wind').textContent='Viento: '+v+' km/h'
-      document.getElementById('gps-temp').textContent=Math.round(d.main.temp)+'°C'
-    } catch(e){setClimaDefault()}
+      document.getElementById('gps-temp').textContent=temp+'°C'
+      const dias=['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB']
+      const hoy=new Date().getDay()
+      document.getElementById('cl-fc').innerHTML=(wr.daily.time||[]).slice(0,6).map((t,i)=>{
+        const lbl=i===0?'HOY':dias[(hoy+i)%7]
+        const max=Math.round(wr.daily.temperature_2m_max[i])
+        return`<div class="fcd"><div class="fcn">${lbl}</div><div class="fci">${wcEmoji(wr.daily.weather_code[i])}</div><div class="fct">${max}°</div></div>`
+      }).join('')
+    }catch(e){setClimaDefault()}
   },()=>setClimaDefault())
 }
+
 function setClimaDefault(){
-  document.getElementById('cl-temp').textContent='18°'
-  document.getElementById('cl-desc').textContent='⛅ Parcialmente nublado'
-  document.getElementById('cl-city').textContent='📍 General Roca, Río Negro'
-  document.getElementById('cl-viento').innerHTML='12<span style="font-size:10px">km/h</span>'
-  document.getElementById('cl-hum').innerHTML='42<span style="font-size:10px">%</span>'
-  document.getElementById('cl-vis').innerHTML='18<span style="font-size:10px">km</span>'
-  document.getElementById('cl-sens').textContent='16°'
-  document.getElementById('cl-apto').innerHTML='<span style="background:rgba(37,99,235,.2);color:var(--c5);font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;padding:6px 16px;border-radius:999px">✓ Apto para jugar</span>'
-  document.getElementById('cl-fc').innerHTML=['HOY ⛅ 18°','MAR ☀️ 22°','MIÉ ⛅ 19°','JUE 🌧 15°','VIE ⛅ 17°','SÁB ☀️ 24°'].map(d=>{const[n,i,t]=d.split(' ');return`<div class="fcd"><div class="fcn">${n}</div><div class="fci">${i}</div><div class="fct">${t}</div></div>`}).join('')
+  document.getElementById('cl-temp').textContent='—°'
+  document.getElementById('cl-desc').textContent='Activá la ubicación para ver el clima'
+  document.getElementById('cl-city').textContent='📍 Ubicación no disponible'
+  document.getElementById('cl-viento').innerHTML='—'
+  document.getElementById('cl-hum').innerHTML='—'
+  document.getElementById('cl-vis').innerHTML='—'
+  document.getElementById('cl-sens').textContent='—'
+  document.getElementById('cl-apto').innerHTML=''
+  document.getElementById('cl-fc').innerHTML=''
 }
-function askOWM(){}
 
 async function renderStaticData(){
   const {data:t}=await SB.from('torneos').select('*,ciudades(nombre)').order('fecha_inicio').limit(10).catch(()=>({data:null}))
