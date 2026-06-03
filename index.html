@@ -189,6 +189,38 @@ body{display:flex;align-items:center;justify-content:center}
 .empty-i{font-size:36px;margin-bottom:8px}
 .empty-t{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--tx);margin-bottom:4px}
 .empty-s{font-size:13px;color:var(--tx2)}
+
+/* COURSE SELECTOR */
+.sel-wrap{background:var(--c1);min-height:100%;padding:0 0 32px}
+.sel-course-card{background:rgba(255,255,255,.06);border:1.5px solid transparent;border-radius:var(--r16);padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all .18s;position:relative}
+.sel-course-card.on{background:rgba(37,99,235,.18);border-color:rgba(147,197,253,.4)}
+.sel-course-card:active{transform:scale(.98)}
+.sel-course-name{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;color:#fff}
+.sel-course-meta{font-size:12px;color:rgba(147,197,253,.45);margin-top:3px}
+.sel-world-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,193,7,.12);color:#ffc107;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;margin-top:7px;letter-spacing:.3px}
+.sel-check{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:50%;background:var(--c3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff}
+.tog-wrap{display:flex;background:rgba(255,255,255,.07);border-radius:var(--r12);padding:3px;margin-bottom:16px}
+.tog-opt{flex:1;padding:9px;border-radius:var(--r8);border:none;background:none;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:rgba(147,197,253,.4);cursor:pointer;transition:all .18s;letter-spacing:.5px}
+.tog-opt.on{background:var(--c3);color:#fff}
+.mundial-banner{background:linear-gradient(90deg,rgba(255,193,7,.15),rgba(255,193,7,.08));border:0.5px solid rgba(255,193,7,.3);border-radius:var(--r12);padding:12px 14px;margin-bottom:14px;display:none}
+.mundial-banner.on{display:block}
+
+/* ROUND SUMMARY OVERLAY */
+.sum-overlay{position:absolute;inset:0;background:var(--c1);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center}
+.sum-overlay.on{display:flex}
+.sum-score{font-family:'Barlow Condensed',sans-serif;font-size:108px;font-weight:800;line-height:1}
+.sum-lbl{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;margin-top:4px}
+.sum-chips{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:20px 0}
+.sum-chip{background:rgba(255,255,255,.08);border-radius:var(--r8);padding:8px 14px;text-align:center}
+.sum-chip-v{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:#fff}
+.sum-chip-l{font-size:10px;color:rgba(147,197,253,.4);margin-top:2px}
+
+/* STAT BARS */
+.sbar-row{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.sbar-lbl{font-size:12px;color:var(--tx2);width:58px;text-align:right;flex-shrink:0;font-weight:600}
+.sbar-bg{flex:1;height:9px;background:var(--bg2);border-radius:5px;overflow:hidden}
+.sbar-fill{height:100%;border-radius:5px;transition:width .6s ease}
+.sbar-n{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--tx);width:24px;text-align:left;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -227,6 +259,31 @@ body{display:flex;align-items:center;justify-content:center}
       </div>
     </div>
 
+    <!-- COURSE SELECTOR -->
+    <div class="sc" id="sc-selector" style="background:var(--c1)">
+      <div class="sel-wrap">
+        <div style="background:var(--c1);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+          <button onclick="go('sc-home')" style="background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:var(--r8);padding:7px 12px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:none">← Inicio</button>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;letter-spacing:.5px">NUEVA RONDA</div>
+          <div style="width:72px"></div>
+        </div>
+        <div style="padding:0 18px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(147,197,253,.4);letter-spacing:1px;margin-bottom:10px">MODO DE JUEGO</div>
+          <div class="tog-wrap">
+            <button class="tog-opt on" id="tog-prac" onclick="toggleTourMode('practica')">⛳ PRÁCTICA</button>
+            <button class="tog-opt" id="tog-torn" onclick="toggleTourMode('torneo')">🏆 TORNEO</button>
+          </div>
+          <div class="mundial-banner" id="mundial-banner">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#ffc107;letter-spacing:.5px">🌍 FIFG WORLD CUP ACAPULCO 2026</div>
+            <div style="font-size:12px;color:rgba(255,193,7,.6);margin-top:3px">Tu ronda se registrará en el torneo mundial</div>
+          </div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(147,197,253,.4);letter-spacing:1px;margin-bottom:10px">SELECCIONÁ UNA CANCHA</div>
+          <div id="sel-courses"></div>
+          <button onclick="startRound()" style="width:100%;background:var(--c3);border:none;border-radius:var(--r16);padding:16px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 24px rgba(37,99,235,.45);margin-top:6px">⚽ COMENZAR RONDA</button>
+        </div>
+      </div>
+    </div>
+
     <!-- HOME -->
     <div class="sc" id="sc-home">
       <div class="hdr">
@@ -241,7 +298,7 @@ body{display:flex;align-items:center;justify-content:center}
         <div class="met"><div class="met-v" id="d-vict" style="color:var(--amber)">0</div><div class="met-l">Victorias</div></div>
         <div class="met"><div class="met-v" id="d-rondas" style="color:var(--blue)">0</div><div class="met-l">Rondas</div></div>
       </div>
-      <button class="fab" onclick="go('sc-scorecard')"><span style="font-size:20px">⚽</span><span class="fab-t">NUEVA RONDA</span></button>
+      <button class="fab" onclick="openSelector()"><span style="font-size:20px">⚽</span><span class="fab-t">NUEVA RONDA</span></button>
       <div class="quick">
         <button class="qb" onclick="go('sc-gps')"><div class="qb-i" style="background:rgba(37,99,235,.1)">📍</div><span class="qb-l">GPS</span></button>
         <button class="qb" onclick="go('sc-clima')"><div class="qb-i" style="background:rgba(14,165,233,.1)">🌤</div><span class="qb-l">CLIMA</span></button>
@@ -261,9 +318,9 @@ body{display:flex;align-items:center;justify-content:center}
     <div class="sc flex" id="sc-scorecard" style="background:var(--c1)">
       <div class="sc-hdr">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <button class="sc-back" onclick="go('sc-home')">← Inicio</button>
+          <button class="sc-back" onclick="go('sc-selector')">← Canchas</button>
           <div style="text-align:right">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(147,197,253,.45);letter-spacing:.5px">LOS ÁLAMOS FG</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(147,197,253,.45);letter-spacing:.5px" id="sc-course-name">—</div>
             <div id="sc-top" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:#fff">E</div>
           </div>
         </div>
@@ -419,6 +476,20 @@ body{display:flex;align-items:center;justify-content:center}
 
   </div>
 
+  <!-- ROUND SUMMARY -->
+  <div class="sum-overlay" id="sum-overlay">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(147,197,253,.35);letter-spacing:1.5px;font-weight:700;margin-bottom:10px">RONDA COMPLETADA</div>
+    <div class="sum-score" id="sum-score">E</div>
+    <div class="sum-lbl" id="sum-lbl" style="color:rgba(147,197,253,.5)">AL PAR</div>
+    <div style="margin-top:14px;font-size:13px;color:rgba(147,197,253,.5)" id="sum-course-lbl">—</div>
+    <div class="sum-chips" id="sum-chips"></div>
+    <div id="sum-tour-note" style="display:none;background:rgba(255,193,7,.1);border:0.5px solid rgba(255,193,7,.25);border-radius:var(--r8);padding:9px 16px;font-size:13px;color:#ffc107;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:18px">🌍 Registrada en FIFG World Cup 2026</div>
+    <div style="display:flex;gap:10px;width:100%;margin-top:8px">
+      <button onclick="shareRound()" style="flex:1;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.15);border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer">📤 COMPARTIR</button>
+      <button onclick="closeSummary()" style="flex:1.6;background:var(--c3);border:none;border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(37,99,235,.4)">✓ CONTINUAR</button>
+    </div>
+  </div>
+
   <!-- NAVBAR -->
   <div class="nb" id="navbar" style="display:none">
     <button class="nbi on" data-sc="sc-home" onclick="tab(this,'sc-home')"><span class="nbi-i">🏠</span><span class="nbi-l">INICIO</span></button>
@@ -446,6 +517,19 @@ const SB = supabase.createClient(SB_URL, SB_KEY, {auth:{persistSession:true,stor
 
 let USER=null, JUGADOR=null
 
+const COURSES=[
+  {id:'tres_vidas',nombre:'Tres Vidas Golf Club',ciudad:'Acapulco, Guerrero',pais:'🇲🇽',par:72,hoyos:18,emoji:'🌊',mundial:true,info:'Sede FIFG World Cup 2026',
+   holes:[{n:1,par:4,dist:155,des:+2,obst:'Vista al mar'},{n:2,par:4,dist:140,des:-1,obst:'Bunker izq.'},{n:3,par:5,dist:220,des:+5,obst:'Lago'},{n:4,par:3,dist:95,des:0,obst:'—'},{n:5,par:4,dist:160,des:+1,obst:'Árbol der.'},{n:6,par:4,dist:165,des:-2,obst:'Curva'},{n:7,par:3,dist:88,des:0,obst:'Bunker'},{n:8,par:5,dist:215,des:+8,obst:'Colina'},{n:9,par:4,dist:148,des:+1,obst:'—'},{n:10,par:4,dist:152,des:0,obst:'Árbol izq.'},{n:11,par:4,dist:158,des:+2,obst:'—'},{n:12,par:3,dist:92,des:-3,obst:'Bunker'},{n:13,par:5,dist:218,des:+6,obst:'Lago'},{n:14,par:4,dist:163,des:0,obst:'Curva'},{n:15,par:4,dist:145,des:+1,obst:'Vista'},{n:16,par:3,dist:90,des:-2,obst:'Árbol'},{n:17,par:5,dist:212,des:+4,obst:'Colina'},{n:18,par:4,dist:155,des:+3,obst:'Vista al Pacífico'}]},
+  {id:'turtle_dunes',nombre:'Turtle Dunes Country Club',ciudad:'Acapulco, Guerrero',pais:'🇲🇽',par:72,hoyos:18,emoji:'🐢',mundial:true,info:'Sede FIFG World Cup 2026 · Fairmont Princess',
+   holes:[{n:1,par:4,dist:150,des:0,obst:'Bunker'},{n:2,par:5,dist:225,des:+3,obst:'Curva'},{n:3,par:3,dist:92,des:-2,obst:'—'},{n:4,par:4,dist:162,des:+1,obst:'Árbol'},{n:5,par:4,dist:145,des:0,obst:'Bunker der.'},{n:6,par:3,dist:85,des:-4,obst:'—'},{n:7,par:5,dist:222,des:+7,obst:'Colina'},{n:8,par:4,dist:155,des:+1,obst:'Árbol izq.'},{n:9,par:4,dist:148,des:0,obst:'Vista playa'},{n:10,par:4,dist:165,des:+2,obst:'Bunker'},{n:11,par:3,dist:88,des:-1,obst:'—'},{n:12,par:5,dist:218,des:+5,obst:'Lago'},{n:13,par:4,dist:155,des:0,obst:'Curva'},{n:14,par:4,dist:160,des:+3,obst:'—'},{n:15,par:3,dist:95,des:-3,obst:'Bunker'},{n:16,par:5,dist:210,des:+6,obst:'Colina'},{n:17,par:4,dist:148,des:0,obst:'Árbol'},{n:18,par:4,dist:158,des:+2,obst:'Vista al Pacífico'}]},
+  {id:'los_alamos',nombre:'Los Álamos FootGolf',ciudad:'General Roca, Río Negro',pais:'🇦🇷',par:72,hoyos:18,emoji:'⛳',mundial:false,info:'',
+   holes:[{n:1,par:4,dist:142,des:+2,obst:'Árbol izq.'},{n:2,par:3,dist:88,des:-1,obst:'Bunker'},{n:3,par:5,dist:215,des:+5,obst:'Lago'},{n:4,par:4,dist:135,des:0,obst:'—'},{n:5,par:4,dist:172,des:+1,obst:'Curva'},{n:6,par:4,dist:178,des:-2,obst:'—'},{n:7,par:5,dist:230,des:+8,obst:'Colina'},{n:8,par:3,dist:72,des:-5,obst:'—'},{n:9,par:4,dist:155,des:0,obst:'Árbol der.'},{n:10,par:4,dist:148,des:+1,obst:'Bunker'},{n:11,par:3,dist:91,des:-2,obst:'—'},{n:12,par:5,dist:220,des:+4,obst:'Lago'},{n:13,par:4,dist:138,des:0,obst:'—'},{n:14,par:4,dist:162,des:+2,obst:'Curva'},{n:15,par:3,dist:84,des:-4,obst:'—'},{n:16,par:5,dist:210,des:+6,obst:'Colina'},{n:17,par:4,dist:145,des:0,obst:'—'},{n:18,par:4,dist:158,des:+1,obst:'Vista al lago'}]},
+  {id:'club_arabe',nombre:'Club Árabe FootGolf',ciudad:'Buenos Aires',pais:'🇦🇷',par:70,hoyos:18,emoji:'⛳',mundial:false,info:'',
+   holes:[{n:1,par:4,dist:148,des:0,obst:'—'},{n:2,par:3,dist:82,des:-2,obst:'Bunker'},{n:3,par:4,dist:152,des:+1,obst:'Árbol'},{n:4,par:5,dist:218,des:+4,obst:'Lago'},{n:5,par:4,dist:138,des:0,obst:'—'},{n:6,par:3,dist:78,des:-3,obst:'—'},{n:7,par:4,dist:162,des:+2,obst:'Curva'},{n:8,par:4,dist:145,des:0,obst:'Bunker'},{n:9,par:4,dist:130,des:-1,obst:'—'},{n:10,par:4,dist:155,des:+1,obst:'Árbol izq.'},{n:11,par:4,dist:140,des:0,obst:'—'},{n:12,par:3,dist:85,des:-2,obst:'Bunker'},{n:13,par:4,dist:158,des:+3,obst:'—'},{n:14,par:4,dist:148,des:0,obst:'Árbol'},{n:15,par:5,dist:215,des:+5,obst:'Lago'},{n:16,par:3,dist:80,des:-4,obst:'—'},{n:17,par:4,dist:165,des:+2,obst:'Curva'},{n:18,par:4,dist:150,des:+1,obst:'—'}]}
+]
+
+let _selCourse=COURSES[0], _tourMode=false, _lastRoundData=null
+
 window.addEventListener('load', async ()=>{
   load('Iniciando...')
   SB.auth.onAuthStateChange(async (event, session)=>{
@@ -462,6 +546,7 @@ window.addEventListener('load', async ()=>{
   if(!session) stopLoad()
   renderScorecard()
   renderGPSList()
+  renderSelector()
   renderStaticData()
   loadClima()
 })
@@ -616,31 +701,23 @@ function demoTorneos(){
   ].map(t=>`<div class="li"><div style="width:8px;height:8px;border-radius:50%;background:var(--c4);flex-shrink:0"></div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${t.n}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${t.f} · ${t.c}</div></div><span class="badge ${t.e}">${t.el}</span></div>`).join('')
 }
 
-const HOYOS=[
-  {n:1,par:4,dist:142,des:+2,obst:'Árbol izq.'},{n:2,par:3,dist:88,des:-1,obst:'Bunker'},
-  {n:3,par:5,dist:215,des:+5,obst:'Lago'},{n:4,par:4,dist:135,des:0,obst:'—'},
-  {n:5,par:3,dist:95,des:-3,obst:'Viento'},{n:6,par:4,dist:178,des:+1,obst:'Curva'},
-  {n:7,par:5,dist:230,des:+8,obst:'Colina'},{n:8,par:3,dist:72,des:-5,obst:'—'},
-  {n:9,par:4,dist:155,des:0,obst:'Árbol der.'},{n:10,par:4,dist:148,des:+1,obst:'Bunker'},
-  {n:11,par:3,dist:91,des:-2,obst:'—'},{n:12,par:5,dist:220,des:+4,obst:'Lago'},
-  {n:13,par:4,dist:138,des:0,obst:'—'},{n:14,par:4,dist:162,des:+2,obst:'Curva'},
-  {n:15,par:3,dist:84,des:-4,obst:'—'},{n:16,par:5,dist:210,des:+6,obst:'Colina'},
-  {n:17,par:4,dist:145,des:0,obst:'—'},{n:18,par:4,dist:158,des:+1,obst:'Vista al lago'}
-]
 let scores=new Array(18).fill(null),hi=0
 const scCol=s=>s<=-2?'var(--eagle)':s===-1?'var(--birdie)':s===0?'var(--tx)':s===1?'var(--bogey)':'var(--dbl)'
 const scCls=s=>s<=-2?'ge':s===-1?'gbi':s===0?'gp':s===1?'gbo':'gd'
 const scLbl=s=>s<=-2?'EAGLE':s===-1?'BIRDIE':s===0?'PAR':s===1?'BOGEY':'DOBLE+'
 
 function renderScorecard(){
-  document.getElementById('strip').innerHTML=HOYOS.map((h,i)=>{
+  const H=_selCourse.holes
+  const last=H.length-1
+  document.getElementById('sc-course-name').textContent=_selCourse.nombre.toUpperCase()
+  document.getElementById('strip').innerHTML=H.map((h,i)=>{
     const g=scores[i],svp=g!==null?g-h.par:null
     const ball=g!==null?`<div class="hs" style="background:${scCol(svp)}20;color:${scCol(svp)}">${g}</div>`:''
     return`<div class="hchip${i===hi?' on':''}" onclick="scSel(${i})"><div class="hn">H${h.n}</div><div class="hp">P${h.par}</div>${ball}</div>`
   }).join('')
   const chips=document.getElementById('strip').querySelectorAll('.hchip')
   if(chips[hi]) chips[hi].scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'})
-  const h=HOYOS[hi]
+  const h=H[hi]
   document.getElementById('sc-hn').textContent=`Hoyo ${h.n}`
   document.getElementById('sc-hi').textContent=`Par ${h.par} · ${h.dist}m${h.obst!=='—'?' · '+h.obst:''}`
   const g=scores[hi],svp=g!==null?g-h.par:null
@@ -650,10 +727,10 @@ function renderScorecard(){
     return`<button class="gb ${cls}" onclick="scSet(${n})">${n}</button>`
   }).join('')
   document.getElementById('sc-prev').disabled=hi===0
-  document.getElementById('sc-next').disabled=hi===17
+  document.getElementById('sc-next').disabled=hi===last
   const done=scores.filter(s=>s!==null)
   const tg=done.reduce((a,b)=>a+b,0)
-  const tp=HOYOS.filter((_,i)=>scores[i]!==null).reduce((a,h)=>a+h.par,0)
+  const tp=H.filter((_,i)=>scores[i]!==null).reduce((a,h)=>a+h.par,0)
   const svpT=tg-tp
   const str=done.length===0?'E':svpT===0?'E':svpT>0?'+'+svpT:svpT
   document.getElementById('sf-g').textContent=tg||0
@@ -662,50 +739,131 @@ function renderScorecard(){
   document.getElementById('sf-s').style.color=done.length>0&&svpT<0?'var(--birdie)':done.length>0&&svpT>0?'var(--bogey)':'var(--c5)'
   document.getElementById('sc-top').textContent=str
 }
-function scSet(n){scores[hi]=n;if(hi<17)hi++;renderScorecard()}
+function scSet(n){scores[hi]=n;if(hi<_selCourse.holes.length-1)hi++;renderScorecard()}
 function scSel(i){hi=i;renderScorecard()}
-function scMove(d){hi=Math.max(0,Math.min(17,hi+d));renderScorecard()}
+function scMove(d){hi=Math.max(0,Math.min(_selCourse.holes.length-1,hi+d));renderScorecard()}
 
 async function saveRound(){
+  const H=_selCourse.holes
   const done=scores.filter(s=>s!==null)
   if(!done.length){toast('Ingresá al menos un hoyo');return}
   const tg=done.reduce((a,b)=>a+b,0)
-  const tp=HOYOS.filter((_,i)=>scores[i]!==null).reduce((a,h)=>a+h.par,0)
+  const tp=H.filter((_,i)=>scores[i]!==null).reduce((a,h)=>a+h.par,0)
   const svp=tg-tp
   const str=svp===0?'E':svp>0?'+'+svp:svp
-  if(!USER){toast('✓ Ronda guardada (modo demo) · Score '+str);setTimeout(()=>{scores=new Array(18).fill(null);hi=0;renderScorecard();go('sc-home')},1500);return}
+  // Tally hole results
+  const tally={eagle:0,birdie:0,par:0,bogey:0,dbl:0}
+  H.forEach((h,i)=>{if(scores[i]===null)return;const d=scores[i]-h.par;if(d<=-2)tally.eagle++;else if(d===-1)tally.birdie++;else if(d===0)tally.par++;else if(d===1)tally.bogey++;else tally.dbl++})
+  _lastRoundData={str,svp,tg,tp,tally,course:_selCourse,tourMode:_tourMode}
+  if(!USER){
+    showSummary();
+    setTimeout(()=>{scores=new Array(18).fill(null);hi=0;renderScorecard()},200)
+    return
+  }
   document.getElementById('save-btn').disabled=true
   load('Guardando ronda...')
   try{
     const {data:ronda,error}=await SB.from('rondas').insert({
       jugador_id:USER.id,fecha:new Date().toISOString().split('T')[0],
-      tipo:'practica',total_golpes:tg,score_vs_par:svp,completada:done.length===18
+      tipo:_tourMode?'torneo':'practica',total_golpes:tg,score_vs_par:svp,completada:done.length===H.length
     }).select().single()
     if(error) throw error
-    const rows=HOYOS.filter((_,i)=>scores[i]!==null).map(h=>({
-      ronda_id:ronda.id,hoyo_numero:h.n,par:h.par,golpes:scores[HOYOS.indexOf(h)],distancia_metros:h.dist
+    const rows=H.filter((_,i)=>scores[i]!==null).map(h=>({
+      ronda_id:ronda.id,hoyo_numero:h.n,par:h.par,golpes:scores[H.indexOf(h)],distancia_metros:h.dist
     }))
     await SB.from('scorecard').insert(rows)
     stopLoad()
-    toast(`✓ Ronda guardada · Score ${str}`)
+    showSummary()
     scores=new Array(18).fill(null);hi=0;renderScorecard()
-    setTimeout(()=>{go('sc-home');loadDashboard()},1500)
+    loadDashboard()
   } catch(e){
     stopLoad(); toast('Error al guardar')
   }
   document.getElementById('save-btn').disabled=false
 }
 
+function showSummary(){
+  const d=_lastRoundData
+  if(!d) return
+  const col=d.svp<0?'var(--birdie)':d.svp>0?'var(--bogey)':'#fff'
+  const lbl=d.svp<-5?'¡EXTRAORDINARIO!':d.svp<-2?'¡EXCELENTE!':d.svp<0?'BAJO EL PAR':d.svp===0?'AL PAR':d.svp===1?'SOBRE EL PAR':'SOBRE EL PAR'
+  document.getElementById('sum-score').textContent=d.str
+  document.getElementById('sum-score').style.color=col
+  document.getElementById('sum-lbl').textContent=lbl
+  document.getElementById('sum-course-lbl').textContent=`${d.course.emoji} ${d.course.nombre} · ${d.course.ciudad} · ${d.tg} golpes · Par ${d.tp}`
+  const tn=document.getElementById('sum-tour-note')
+  tn.style.display=d.tourMode?'block':'none'
+  document.getElementById('sum-chips').innerHTML=[
+    {e:'🦅',l:'EAGLE',v:d.tally.eagle,c:'var(--eagle)'},
+    {e:'🐦',l:'BIRDIE',v:d.tally.birdie,c:'var(--birdie)'},
+    {e:'⛳',l:'PAR',v:d.tally.par,c:'var(--tx)'},
+    {e:'📍',l:'BOGEY',v:d.tally.bogey,c:'var(--bogey)'},
+    {e:'✌',l:'DOBLE+',v:d.tally.dbl,c:'var(--dbl)'},
+  ].filter(x=>x.v>0).map(x=>`<div class="sum-chip"><div class="sum-chip-v" style="color:${x.c}">${x.e} ${x.v}</div><div class="sum-chip-l">${x.l}</div></div>`).join('')
+  document.getElementById('sum-overlay').classList.add('on')
+}
+
+function closeSummary(){
+  document.getElementById('sum-overlay').classList.remove('on')
+  go('sc-home')
+}
+
+function shareRound(){
+  const d=_lastRoundData
+  if(!d) return
+  const txt=`⚽ FRIGURSO FootGolf\n🏌 ${d.course.nombre}\n📍 ${d.course.ciudad}\n\nScore: ${d.str} (${d.tg} golpes · Par ${d.tp})\n🦅 Eagles: ${d.tally.eagle} · 🐦 Birdies: ${d.tally.birdie} · ⛳ Pares: ${d.tally.par}\n${d.tourMode?'🌍 FIFG World Cup Acapulco 2026\n':''}\nhttps://frigurso.vercel.app`
+  if(navigator.share){
+    navigator.share({title:'Mi ronda — FRIGURSO',text:txt}).catch(()=>{})
+  } else {
+    navigator.clipboard?.writeText(txt).then(()=>toast('📋 Copiado al portapapeles')).catch(()=>toast('Compartir no disponible'))
+  }
+}
+
+function openSelector(){
+  scores=new Array(_selCourse.holes.length).fill(null);hi=0
+  renderSelector()
+  go('sc-selector')
+}
+
+function renderSelector(){
+  document.getElementById('sel-courses').innerHTML=COURSES.map((c,i)=>`
+    <div class="sel-course-card${_selCourse.id===c.id?' on':''}" onclick="selectCourse(${i})">
+      <div class="sel-course-name">${c.emoji} ${c.nombre}</div>
+      <div class="sel-course-meta">${c.pais} ${c.ciudad} · ${c.hoyos} hoyos · Par ${c.par}</div>
+      ${c.mundial?`<div class="sel-world-badge">🌍 FIFG World Cup 2026</div>`:''}
+      ${_selCourse.id===c.id?`<div class="sel-check">✓</div>`:''}
+    </div>`).join('')
+}
+
+function selectCourse(i){
+  _selCourse=COURSES[i]
+  scores=new Array(_selCourse.holes.length).fill(null);hi=0
+  renderSelector()
+}
+
+function toggleTourMode(m){
+  _tourMode=m==='torneo'
+  document.getElementById('tog-prac').classList.toggle('on',!_tourMode)
+  document.getElementById('tog-torn').classList.toggle('on',_tourMode)
+  document.getElementById('mundial-banner').classList.toggle('on',_tourMode)
+}
+
+function startRound(){
+  renderScorecard()
+  go('sc-scorecard')
+}
+
 let ghi=0
 function renderGPSList(){
-  const h=HOYOS[ghi]
+  const H=_selCourse.holes
+  const h=H[ghi]
   document.getElementById('gps-m').textContent=h.dist
   document.getElementById('gps-pin').textContent=Math.round(h.dist*.27)+'m'
   document.getElementById('gps-des').textContent=`Desnivel: ${h.des>0?'+':''}${h.des}m`
   document.getElementById('gps-sug').textContent=h.dist>200?'Kick potente':h.dist>140?'Kick largo':h.dist>90?'Kick medio':h.dist>50?'Chip':'Putt'
   document.getElementById('gps-h').textContent='H'+h.n
   document.getElementById('gps-par').textContent='P'+h.par
-  document.getElementById('gps-list').innerHTML=HOYOS.map((h,i)=>`
+  document.getElementById('gps-list').innerHTML=H.map((h,i)=>`
     <div onclick="ghi=${i};renderGPSList()" style="display:flex;align-items:center;padding:10px 0;border-bottom:0.5px solid var(--bd);gap:12px;cursor:pointer">
       <div style="width:30px;height:30px;border-radius:50%;background:${i===ghi?'var(--c3)':'var(--bg2)'};display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:${i===ghi?'#fff':'var(--tx)'};flex-shrink:0">${h.n}</div>
       <div style="flex:1"><div style="font-size:13px;color:var(--tx)">Par ${h.par}${h.obst!=='—'?' · '+h.obst:''}</div></div>
@@ -899,15 +1057,32 @@ async function loadPerfil(){
   const ini=`${JUGADOR.nombre?.[0]||'?'}${JUGADOR.apellido?.[0]||''}`
   document.getElementById('p-av').textContent=ini
   document.getElementById('p-name').textContent=`${JUGADOR.nombre} ${JUGADOR.apellido}`
-  document.getElementById('p-meta').textContent=`${JUGADOR.categoria||'Aficionado'} · ${JUGADOR.ciudad||'Sin ciudad'}`
+  document.getElementById('p-meta').textContent=`${JUGADOR.categoria||'Aficionado'} · ${JUGADOR.ciudad||'Argentina'}`
   const hcp=JUGADOR.handicap
   document.getElementById('ps-hcp').textContent=hcp!=null?(hcp>=0?'+'+parseFloat(hcp).toFixed(1):parseFloat(hcp).toFixed(1)):'—'
-  const {data:stats}=await SB.from('rondas').select('score_vs_par,posicion_final,torneo_id').eq('jugador_id',USER.id).eq('completada',true)
-  if(stats&&stats.length){
-    document.getElementById('ps-vict').textContent=stats.filter(r=>r.posicion_final===1).length
-    document.getElementById('ps-torn').textContent=stats.filter(r=>r.torneo_id).length
-    document.getElementById('p-golpes').innerHTML=`
-      <div class="li"><span style="flex:1;font-size:13px;color:var(--tx2)">🦅 Eagles</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--eagle)">cargando...</span></div>`
+  const {data:rondas}=await SB.from('rondas').select('id,score_vs_par,posicion_final,torneo_id').eq('jugador_id',USER.id).eq('completada',true)
+  if(rondas&&rondas.length){
+    document.getElementById('ps-vict').textContent=rondas.filter(r=>r.posicion_final===1).length
+    document.getElementById('ps-torn').textContent=rondas.filter(r=>r.torneo_id).length
+    // Load hole-by-hole for stat bars
+    const ids=rondas.map(r=>r.id)
+    const {data:holes}=await SB.from('scorecard').select('golpes,par').in('ronda_id',ids).catch(()=>({data:null}))
+    if(holes&&holes.length){
+      const t={eagle:0,birdie:0,par:0,bogey:0,dbl:0}
+      holes.forEach(h=>{const d=h.golpes-h.par;if(d<=-2)t.eagle++;else if(d===-1)t.birdie++;else if(d===0)t.par++;else if(d===1)t.bogey++;else t.dbl++})
+      const tot=holes.length||1
+      document.getElementById('p-golpes').innerHTML=`
+        <div class="sbar-row"><div class="sbar-lbl" style="color:var(--eagle)">🦅 Eagle</div><div class="sbar-bg"><div class="sbar-fill" style="width:${(t.eagle/tot*100).toFixed(1)}%;background:var(--eagle)"></div></div><div class="sbar-n">${t.eagle}</div></div>
+        <div class="sbar-row"><div class="sbar-lbl" style="color:var(--birdie)">🐦 Birdie</div><div class="sbar-bg"><div class="sbar-fill" style="width:${(t.birdie/tot*100).toFixed(1)}%;background:var(--birdie)"></div></div><div class="sbar-n">${t.birdie}</div></div>
+        <div class="sbar-row"><div class="sbar-lbl">⛳ Par</div><div class="sbar-bg"><div class="sbar-fill" style="width:${(t.par/tot*100).toFixed(1)}%;background:var(--tx3)"></div></div><div class="sbar-n">${t.par}</div></div>
+        <div class="sbar-row"><div class="sbar-lbl" style="color:var(--bogey)">📍 Bogey</div><div class="sbar-bg"><div class="sbar-fill" style="width:${(t.bogey/tot*100).toFixed(1)}%;background:var(--bogey)"></div></div><div class="sbar-n">${t.bogey}</div></div>
+        <div class="sbar-row"><div class="sbar-lbl" style="color:var(--dbl)">✌ Doble+</div><div class="sbar-bg"><div class="sbar-fill" style="width:${(t.dbl/tot*100).toFixed(1)}%;background:var(--dbl)"></div></div><div class="sbar-n">${t.dbl}</div></div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:10px;text-align:right">${tot} hoyos totales registrados</div>`
+    } else {
+      document.getElementById('p-golpes').innerHTML='<div class="empty"><div class="empty-i">⚽</div><div class="empty-t">Jugá tu primera ronda</div></div>'
+    }
+  } else {
+    document.getElementById('p-golpes').innerHTML='<div class="empty"><div class="empty-i">⚽</div><div class="empty-t">Jugá tu primera ronda</div></div>'
   }
 }
 
