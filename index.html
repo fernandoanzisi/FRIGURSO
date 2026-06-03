@@ -416,6 +416,29 @@ body{display:flex;align-items:center;justify-content:center}
         <button class="qb" onclick="go('sc-torneos')"><div class="qb-i" style="background:rgba(133,79,11,.1)">🏆</div><span class="qb-l">TORNEOS</span></button>
         <button class="qb" onclick="go('sc-equipos')"><div class="qb-i" style="background:rgba(163,45,45,.1)">👥</div><span class="qb-l">EQUIPOS</span></button>
       </div>
+      <!-- RONDA SUSPENDIDA -->
+      <div id="draft-card" style="display:none;margin:0 16px 16px;border-radius:18px;overflow:hidden;box-shadow:0 0 0 1.5px rgba(251,191,36,.35),0 8px 32px rgba(251,191,36,.12)">
+        <div style="background:linear-gradient(135deg,rgba(120,53,15,.9) 0%,rgba(92,38,5,.95) 100%);padding:16px 18px 14px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;box-shadow:0 0 8px #fbbf24;animation:pulse 1.5s infinite"></div>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#fbbf24;letter-spacing:1.5px">RONDA SUSPENDIDA</span>
+          </div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px" id="draft-course-name">—</div>
+          <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:#fbbf24" id="draft-score">—</div>
+            <div>
+              <div style="font-size:13px;color:rgba(255,255,255,.7)" id="draft-holes">— hoyos jugados</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.4)" id="draft-time">—</div>
+            </div>
+          </div>
+          <div id="draft-players" style="display:none;margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap"></div>
+          <div style="display:flex;gap:10px">
+            <button onclick="resumeDraft()" style="flex:2;background:#fbbf24;border:none;border-radius:12px;padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#000;cursor:pointer;letter-spacing:.3px">▶ CONTINUAR RONDA</button>
+            <button onclick="discardDraft()" style="flex:1;background:rgba(255,255,255,.08);border:0.5px solid rgba(255,255,255,.15);border-radius:12px;padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,.4);cursor:pointer">× Descartar</button>
+          </div>
+        </div>
+      </div>
+
       <div class="divh"></div>
       <div class="sec">
         <div class="card"><div class="ct">📅 Próximos torneos</div><div id="d-torneos"></div></div>
@@ -430,9 +453,12 @@ body{display:flex;align-items:center;justify-content:center}
       <div class="sc-hdr">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <button class="sc-back" onclick="go('sc-selector')">← Canchas</button>
-          <div style="text-align:right">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(147,197,253,.45);letter-spacing:.5px" id="sc-course-name">—</div>
-            <div id="sc-top" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:#fff">E</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div id="autosave-pill" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:#fbbf24;letter-spacing:.8px;transition:opacity .4s"></div>
+            <div style="text-align:right">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(147,197,253,.45);letter-spacing:.5px" id="sc-course-name">—</div>
+              <div id="sc-top" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:#fff">E</div>
+            </div>
           </div>
         </div>
       </div>
@@ -459,7 +485,10 @@ body{display:flex;align-items:center;justify-content:center}
         <div class="sfi"><div class="sfv" id="sf-g">0</div><div class="sfl">GOLPES</div></div>
         <div class="sfi"><div class="sfv" id="sf-p">0</div><div class="sfl">PAR</div></div>
         <div class="sfi"><div class="sfv" id="sf-s" style="color:var(--c5)">E</div><div class="sfl">SCORE</div></div>
-        <button class="save-b" onclick="saveRound()" id="save-btn">GUARDAR ✓</button>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <button class="save-b" onclick="saveRound()" id="save-btn">GUARDAR ✓</button>
+          <button onclick="suspendRound()" style="background:rgba(251,191,36,.12);border:0.5px solid rgba(251,191,36,.3);border-radius:10px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:#fbbf24;cursor:pointer;white-space:nowrap">⏸ SUSPENDER</button>
+        </div>
       </div>
     </div>
 
@@ -756,6 +785,7 @@ window.addEventListener('load', async ()=>{
   loadCustomCourses()
   // Render estático siempre (no depende de sesión)
   renderScorecard(); renderGPSList(); renderSelector(); renderStaticData(); loadClima()
+  checkDraft()
   try{
     const {data:{session}} = await SB.auth.getSession()
     if(session){
@@ -1101,13 +1131,132 @@ function renderScorecard(){
 }
 function scSet(n){
   const sc=getCurScores()
-  if(sc[hi]===n){ sc[hi]=null }  // tocar el mismo número borra
+  if(sc[hi]===n){ sc[hi]=null }
   else { sc[hi]=n; if(hi<getCourseHoles(_selCourse).length-1) hi++ }
   renderScorecard()
+  autoSaveDraft()
 }
-function clearHole(){ const sc=getCurScores(); sc[hi]=null; renderScorecard() }
+function clearHole(){ const sc=getCurScores(); sc[hi]=null; renderScorecard(); autoSaveDraft() }
 function scSel(i){hi=i;renderScorecard()}
 function scMove(d){hi=Math.max(0,Math.min(getCourseHoles(_selCourse).length-1,hi+d));renderScorecard()}
+
+// ══════════════════════════════════════════════════════════════
+// RONDA SUSPENDIDA — auto-save + resume
+// ══════════════════════════════════════════════════════════════
+const DRAFT_KEY='fg_round_draft'
+
+function autoSaveDraft(){
+  if(!_selCourse) return
+  const H=getCourseHoles(_selCourse)
+  // Score vs par hasta ahora
+  let tg=0,tp=0
+  H.forEach((h,i)=>{ if(scores[i]!==null){tg+=scores[i];tp+=h.par} })
+  const svp=tg-tp
+  const played=scores.filter(s=>s!==null).length
+  if(played===0) return  // nada que guardar todavía
+  const draft={
+    savedAt:new Date().toISOString(),
+    course:_selCourse,
+    scores:[...scores],
+    hi,
+    tourMode:_tourMode,
+    groupEnabled:_groupEnabled,
+    groupNames:[..._groupNames],
+    gScores:_gScores.map(a=>[...a]),
+    activePlayer:_activePlayer,
+    holesPlayed:played,
+    totalHoles:H.length,
+    svp
+  }
+  localStorage.setItem(DRAFT_KEY,JSON.stringify(draft))
+  // Indicador visual breve
+  const pill=document.getElementById('autosave-pill')
+  if(pill){
+    pill.style.display='block'
+    pill.textContent='● AUTO'
+    pill.style.opacity='1'
+    clearTimeout(pill._t)
+    pill._t=setTimeout(()=>{pill.style.opacity='0';setTimeout(()=>{pill.style.display='none'},400)},1200)
+  }
+}
+
+function checkDraft(){
+  const raw=localStorage.getItem(DRAFT_KEY)
+  const card=document.getElementById('draft-card')
+  if(!card) return
+  if(!raw){ card.style.display='none'; return }
+  try{
+    const d=JSON.parse(raw)
+    if(!d.course||!d.scores){ card.style.display='none'; return }
+    // Mostrar card
+    card.style.display='block'
+    const cn=document.getElementById('draft-course-name')
+    const ds=document.getElementById('draft-score')
+    const dh=document.getElementById('draft-holes')
+    const dt=document.getElementById('draft-time')
+    if(cn) cn.textContent=d.course.nombre||'Cancha'
+    if(ds){
+      const str=d.svp===0?'E':d.svp>0?'+'+d.svp:String(d.svp)
+      ds.textContent=str
+      ds.style.color=d.svp<0?'#4ade80':d.svp>0?'#f87171':'#fbbf24'
+    }
+    if(dh) dh.textContent=d.holesPlayed+'/'+d.totalHoles+' hoyos · '+(d.tourMode?'🏆 Torneo':'⛳ Práctica')
+    if(dt){
+      const diff=Math.round((Date.now()-new Date(d.savedAt).getTime())/60000)
+      dt.textContent='Guardada '+(diff<1?'hace un momento':diff<60?'hace '+diff+' min':'hace '+(Math.round(diff/60))+'h')
+    }
+    // Jugadores grupo
+    const dp=document.getElementById('draft-players')
+    if(dp&&d.groupEnabled){
+      const names=(d.groupNames||[]).filter(Boolean)
+      if(names.length>1){
+        dp.style.display='flex'
+        dp.innerHTML=names.map((n,i)=>`<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:rgba(255,255,255,.1);color:#fff">${n}</span>`).join('')
+      }
+    }
+  }catch(e){ localStorage.removeItem(DRAFT_KEY); card.style.display='none' }
+}
+
+function resumeDraft(){
+  const raw=localStorage.getItem(DRAFT_KEY)
+  if(!raw) return
+  try{
+    const d=JSON.parse(raw)
+    _selCourse=d.course
+    scores=[...d.scores]
+    hi=d.hi||0
+    _tourMode=!!d.tourMode
+    _groupEnabled=!!d.groupEnabled
+    _groupNames=d.groupNames||['','','','']
+    _gScores=d.gScores?d.gScores.map(a=>[...a]):[...Array(4)].map(()=>new Array(18).fill(null))
+    _activePlayer=d.activePlayer||0
+    localStorage.removeItem(DRAFT_KEY)
+    document.getElementById('draft-card').style.display='none'
+    renderScorecard()
+    go('sc-scorecard')
+    toast('▶ Continuando ronda en hoyo '+(hi+1))
+  }catch(e){ toast('Error al cargar la ronda guardada') }
+}
+
+function discardDraft(){
+  if(!confirm('¿Descartás la ronda suspendida? Esto no se puede deshacer.')) return
+  localStorage.removeItem(DRAFT_KEY)
+  document.getElementById('draft-card').style.display='none'
+  toast('Ronda descartada')
+}
+
+function suspendRound(){
+  const played=scores.filter(s=>s!==null).length
+  if(!played){ toast('Anotá al menos un hoyo antes de suspender'); return }
+  autoSaveDraft()
+  // Limpiar scorecard activo sin guardarlo en BD
+  scores=new Array(getCourseHoles(_selCourse).length).fill(null)
+  _gScores=[...Array(4)].map(()=>new Array(18).fill(null))
+  hi=0
+  go('sc-home')
+  checkDraft()
+  toast('⏸ Ronda suspendida — aparece en el inicio para continuar mañana')
+}
 
 async function saveRound(){
   const H=getCourseHoles(_selCourse)
@@ -1139,7 +1288,10 @@ async function saveRound(){
 
   // 1. Mostrar resumen SIEMPRE primero (UX inmediata)
   showSummary()
-  // 2. Resetear scorecard
+  // 2. Limpiar draft (ronda completada, ya no se puede retomar)
+  localStorage.removeItem(DRAFT_KEY)
+  document.getElementById('draft-card') && (document.getElementById('draft-card').style.display='none')
+  // 3. Resetear scorecard
   scores=new Array(getCourseHoles(_selCourse).length).fill(null)
   _gScores=[...Array(4)].map(()=>new Array(18).fill(null))
   hi=0; renderScorecard()
