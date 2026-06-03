@@ -245,24 +245,49 @@ body{display:flex;align-items:center;justify-content:center}
         <div class="auth-logo">⚽</div>
         <div class="auth-title">FRIGURSO</div>
         <div class="auth-sub">La app de footgolf más completa del mundo</div>
-        <div class="auth-tabs">
+        <!-- Tabs login/registro -->
+        <div class="auth-tabs" id="auth-tabs">
           <button class="auth-tab on" id="tab-in" onclick="switchTab('login')">INGRESAR</button>
           <button class="auth-tab" id="tab-reg" onclick="switchTab('reg')">REGISTRARSE</button>
         </div>
+
+        <!-- Campos registro -->
         <div id="reg-fields" style="display:none;width:100%">
           <div class="inp-row">
             <div style="flex:1"><div class="inp-lbl">NOMBRE</div><input class="inp" id="r-nombre" placeholder="Giovanni"></div>
             <div style="flex:1"><div class="inp-lbl">APELLIDO</div><input class="inp" id="r-apellido" placeholder="Anzisi"></div>
           </div>
         </div>
-        <div class="inp-lbl">EMAIL</div>
-        <input class="inp" id="a-email" type="email" placeholder="tu@email.com" autocomplete="email">
-        <div class="inp-lbl">CONTRASEÑA</div>
-        <input class="inp" id="a-pass" type="password" placeholder="Mínimo 8 caracteres">
+
+        <!-- Campos login/registro -->
+        <div id="login-fields" style="width:100%">
+          <div class="inp-lbl">EMAIL</div>
+          <input class="inp" id="a-email" type="email" placeholder="tu@email.com" autocomplete="email">
+          <div class="inp-lbl" id="pass-lbl">CONTRASEÑA</div>
+          <input class="inp" id="a-pass" type="password" placeholder="Mínimo 8 caracteres">
+        </div>
+
+        <!-- Formulario olvidé contraseña -->
+        <div id="forgot-fields" style="display:none;width:100%">
+          <div style="font-size:13px;color:rgba(147,197,253,.5);margin-bottom:16px;text-align:center;line-height:1.5">Te enviamos un link a tu email para restablecer la contraseña</div>
+          <div class="inp-lbl">TU EMAIL</div>
+          <input class="inp" id="forgot-email" type="email" placeholder="tu@email.com">
+        </div>
+
+        <!-- Formulario nueva contraseña (recovery) -->
+        <div id="reset-fields" style="display:none;width:100%">
+          <div style="font-size:13px;color:rgba(147,197,253,.5);margin-bottom:16px;text-align:center;line-height:1.5">Ingresá tu nueva contraseña</div>
+          <div class="inp-lbl">NUEVA CONTRASEÑA</div>
+          <input class="inp" id="new-pass" type="password" placeholder="Mínimo 8 caracteres">
+          <div class="inp-lbl">REPETIR CONTRASEÑA</div>
+          <input class="inp" id="new-pass2" type="password" placeholder="Repetí la contraseña">
+        </div>
+
         <div class="auth-err" id="auth-err"></div>
         <div class="auth-ok" id="auth-ok"></div>
         <button class="btn-main" id="auth-btn" onclick="doAuth()">INGRESAR</button>
-        <div style="margin-top:16px;text-align:center;font-size:12px;color:rgba(147,197,253,.3)">🌍 89 canchas · 312 jugadores · Sudamérica</div>
+        <button id="forgot-link" onclick="switchTab('forgot')" style="background:none;border:none;color:rgba(147,197,253,.4);font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline">¿Olvidaste tu contraseña?</button>
+        <div style="margin-top:12px;text-align:center;font-size:12px;color:rgba(147,197,253,.3)">🌍 89 canchas · 312 jugadores · Sudamérica</div>
       </div>
     </div>
 
@@ -283,6 +308,21 @@ body{display:flex;align-items:center;justify-content:center}
           <div class="mundial-banner" id="mundial-banner">
             <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#ffc107;letter-spacing:.5px">🌍 FIFG WORLD CUP ACAPULCO 2026</div>
             <div style="font-size:12px;color:rgba(255,193,7,.6);margin-top:3px">Tu ronda se registrará en el torneo mundial</div>
+          </div>
+          <!-- GRUPO -->
+          <div style="margin-bottom:16px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(147,197,253,.4);letter-spacing:1px;margin-bottom:10px">JUGADORES</div>
+            <div class="tog-wrap" style="margin-bottom:12px">
+              <button class="tog-opt on" id="tog-solo" onclick="toggleGroupMode(false)">👤 INDIVIDUAL</button>
+              <button class="tog-opt" id="tog-grupo" onclick="toggleGroupMode(true)">👥 GRUPO</button>
+            </div>
+            <div id="group-inputs" style="display:none">
+              <input class="inp" id="gp0" placeholder="Jugador 1 (vos)" style="margin-bottom:8px">
+              <input class="inp" id="gp1" placeholder="Jugador 2" style="margin-bottom:8px">
+              <input class="inp" id="gp2" placeholder="Jugador 3" style="margin-bottom:8px">
+              <input class="inp" id="gp3" placeholder="Jugador 4 (opcional)" style="margin-bottom:8px">
+              <button onclick="loadTournamentPlayers()" style="width:100%;background:rgba(147,197,253,.1);border:0.5px solid rgba(147,197,253,.2);border-radius:var(--r8);padding:10px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">📋 CARGAR PARTICIPANTES DEL TORNEO</button>
+            </div>
           </div>
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(147,197,253,.4);letter-spacing:1px;margin-bottom:10px">SELECCIONÁ UNA CANCHA</div>
           <div id="sel-courses"></div>
@@ -333,6 +373,7 @@ body{display:flex;align-items:center;justify-content:center}
         </div>
       </div>
       <div class="strip" id="strip"></div>
+      <div id="player-tabs" style="display:none;background:rgba(9,24,55,.85);padding:8px 14px 6px;flex-shrink:0;overflow-x:auto;white-space:nowrap"></div>
       <div class="sc-body">
         <div class="sc-card">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -538,6 +579,9 @@ const COURSES=[
 ]
 
 let _selCourse=COURSES[0], _tourMode=false, _lastRoundData=null
+let _groupEnabled=false, _groupNames=['','','','']
+let _gScores=[...Array(4)].map(()=>new Array(18).fill(null)), _activePlayer=0
+const GP_COLORS=['#1a56db','#1a7a3a','#854f0b','#a32d2d']
 
 window.addEventListener('load', async ()=>{
   load('Iniciando...')
@@ -557,8 +601,15 @@ window.addEventListener('load', async ()=>{
     stopLoad()
     go('sc-auth')
   }
-  // onAuthStateChange solo para manejar logout automático
+  // onAuthStateChange solo para manejar logout automático y password recovery
   SB.auth.onAuthStateChange((event, session)=>{
+    if(event==='PASSWORD_RECOVERY'){
+      stopLoad()
+      document.getElementById('navbar').style.display='none'
+      go('sc-auth')
+      switchTab('reset')
+      return
+    }
     if(!session && USER){USER=null;JUGADOR=null;hideApp()}
   })
 })
@@ -566,13 +617,24 @@ window.addEventListener('load', async ()=>{
 let authMode='login'
 function switchTab(m){
   authMode=m
-  document.getElementById('tab-in').classList.toggle('on',m==='login')
-  document.getElementById('tab-reg').classList.toggle('on',m==='reg')
-  document.getElementById('reg-fields').style.display=m==='reg'?'block':'none'
-  document.getElementById('auth-btn').textContent=m==='login'?'INGRESAR':'CREAR CUENTA GRATIS'
+  const isL=m==='login',isR=m==='reg',isF=m==='forgot',isRst=m==='reset'
+  document.getElementById('auth-tabs').style.display=(isF||isRst)?'none':'flex'
+  document.getElementById('tab-in').classList.toggle('on',isL)
+  document.getElementById('tab-reg').classList.toggle('on',isR)
+  document.getElementById('reg-fields').style.display=isR?'block':'none'
+  document.getElementById('login-fields').style.display=(isL||isR)?'block':'none'
+  document.getElementById('forgot-fields').style.display=isF?'block':'none'
+  document.getElementById('reset-fields').style.display=isRst?'block':'none'
+  document.getElementById('forgot-link').style.display=(isF||isRst)?'none':''
+  document.getElementById('auth-err').style.display='none'
+  document.getElementById('auth-ok').style.display='none'
+  const txt={login:'INGRESAR',reg:'CREAR CUENTA GRATIS',forgot:'ENVIAR LINK',reset:'GUARDAR CONTRASEÑA'}
+  document.getElementById('auth-btn').textContent=txt[m]||'INGRESAR'
 }
 
 async function doAuth(){
+  if(authMode==='forgot') return doForgot()
+  if(authMode==='reset') return doReset()
   const email=document.getElementById('a-email').value.trim()
   const pass=document.getElementById('a-pass').value
   const errEl=document.getElementById('auth-err')
@@ -610,6 +672,38 @@ async function doAuth(){
   } catch(e){
     stopLoad(); showErr('Error de conexión'); document.getElementById('auth-btn').disabled=false
   }
+}
+
+async function doForgot(){
+  const email=document.getElementById('forgot-email').value.trim()
+  const errEl=document.getElementById('auth-err'),okEl=document.getElementById('auth-ok')
+  errEl.style.display='none'; okEl.style.display='none'
+  if(!email){showErr('Ingresá tu email');return}
+  document.getElementById('auth-btn').disabled=true
+  load('Enviando link...')
+  const {error}=await SB.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin})
+  stopLoad(); document.getElementById('auth-btn').disabled=false
+  if(error){showErr('No se pudo enviar. Revisá el email');return}
+  okEl.textContent='✓ Link enviado. Abrilo desde este mismo celular.'
+  okEl.style.display='block'
+}
+
+async function doReset(){
+  const np=document.getElementById('new-pass').value
+  const np2=document.getElementById('new-pass2').value
+  const errEl=document.getElementById('auth-err'),okEl=document.getElementById('auth-ok')
+  errEl.style.display='none'; okEl.style.display='none'
+  if(!np||!np2){showErr('Completá ambos campos');return}
+  if(np!==np2){showErr('Las contraseñas no coinciden');return}
+  if(np.length<8){showErr('Mínimo 8 caracteres');return}
+  document.getElementById('auth-btn').disabled=true
+  load('Guardando contraseña...')
+  const {error}=await SB.auth.updateUser({password:np})
+  stopLoad(); document.getElementById('auth-btn').disabled=false
+  if(error){showErr('Error al cambiar. Intentá de nuevo');return}
+  okEl.textContent='✓ Contraseña cambiada. Ya podés ingresar.'
+  okEl.style.display='block'
+  setTimeout(()=>switchTab('login'),1800)
 }
 
 function showErr(msg){
@@ -721,12 +815,37 @@ const scCol=s=>s<=-2?'var(--eagle)':s===-1?'var(--birdie)':s===0?'var(--tx)':s==
 const scCls=s=>s<=-2?'ge':s===-1?'gbi':s===0?'gp':s===1?'gbo':'gd'
 const scLbl=s=>s<=-2?'EAGLE':s===-1?'BIRDIE':s===0?'PAR':s===1?'BOGEY':'DOBLE+'
 
+function getCurScores(){ return _groupEnabled ? _gScores[_activePlayer] : scores }
+
+function renderPlayerTabs(){
+  const tabs=document.getElementById('player-tabs')
+  if(!_groupEnabled||_groupNames.filter(n=>n).length<2){tabs.style.display='none';return}
+  tabs.style.display='block'
+  const H=_selCourse.holes
+  tabs.innerHTML=_groupNames.map((nm,pi)=>{
+    if(!nm&&pi>0) return''
+    const sc=_gScores[pi]
+    const done=sc.filter(s=>s!==null)
+    const svp=done.reduce((a,b)=>a+b,0)-H.filter((_,i)=>sc[i]!==null).reduce((a,h)=>a+h.par,0)
+    const str=done.length===0?'—':svp===0?'E':svp>0?'+'+svp:svp
+    const col=GP_COLORS[pi]
+    const on=pi===_activePlayer
+    const lbl=nm||(pi===0&&JUGADOR?`${JUGADOR.nombre}`:'J'+(pi+1))
+    return`<button onclick="setActivePlayer(${pi})" style="display:inline-flex;align-items:center;gap:6px;background:${on?col+'22':'rgba(255,255,255,.05)'};border:1.5px solid ${on?col:'rgba(255,255,255,.08)'};border-radius:20px;padding:5px 12px;margin-right:7px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:${on?col:'rgba(147,197,253,.4)'}">
+      <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>${lbl}<span style="color:${on?col:'rgba(147,197,253,.3)'}">${str}</span>
+    </button>`
+  }).join('')
+}
+
+function setActivePlayer(pi){_activePlayer=pi;renderScorecard()}
+
 function renderScorecard(){
   const H=_selCourse.holes
+  const sc=getCurScores()
   const last=H.length-1
   document.getElementById('sc-course-name').textContent=_selCourse.nombre.toUpperCase()
   document.getElementById('strip').innerHTML=H.map((h,i)=>{
-    const g=scores[i],svp=g!==null?g-h.par:null
+    const g=sc[i],svp=g!==null?g-h.par:null
     const ball=g!==null?`<div class="hs" style="background:${scCol(svp)}20;color:${scCol(svp)}">${g}</div>`:''
     return`<div class="hchip${i===hi?' on':''}" onclick="scSel(${i})"><div class="hn">H${h.n}</div><div class="hp">P${h.par}</div>${ball}</div>`
   }).join('')
@@ -735,9 +854,9 @@ function renderScorecard(){
   const h=H[hi]
   document.getElementById('sc-hn').textContent=`Hoyo ${h.n}`
   document.getElementById('sc-hi').textContent=`Par ${h.par} · ${h.dist}m`
-  const g=scores[hi],svp=g!==null?g-h.par:null
+  const g=sc[hi],svp=g!==null?g-h.par:null
+  const pCol=_groupEnabled?GP_COLORS[_activePlayer]:'var(--c3)'
   document.getElementById('sc-res').innerHTML=g!==null?`<div style="background:${scCol(svp)}18;border-radius:999px;padding:5px 13px"><span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:${scCol(svp)}">${scLbl(svp)}</span></div>`:''
-  // Info strip: clima + hoyo
   const kickSug=h.dist>200?'Kick potente':h.dist>140?'Kick largo':h.dist>90?'Kick medio':h.dist>50?'Chip':'Putt'
   const desCol=h.des>0?'#e07a2a':h.des<0?'#2a8ae0':'var(--tx2)'
   const desIcon=h.des>0?'↑':h.des<0?'↓':'→'
@@ -752,60 +871,87 @@ function renderScorecard(){
     </div>`
   document.getElementById('ggrid').innerHTML=Array.from({length:15},(_,i)=>{
     const n=i+1,cls=g===n?scCls(n-h.par):''
-    return`<button class="gb ${cls}" onclick="scSet(${n})">${n}</button>`
+    return`<button class="gb ${cls}" onclick="scSet(${n})" style="${g===n&&_groupEnabled?'border-color:'+GP_COLORS[_activePlayer]+';color:'+GP_COLORS[_activePlayer]:''}">${n}</button>`
   }).join('')
   document.getElementById('sc-prev').disabled=hi===0
   document.getElementById('sc-next').disabled=hi===last
-  const done=scores.filter(s=>s!==null)
+  const done=sc.filter(s=>s!==null)
   const tg=done.reduce((a,b)=>a+b,0)
-  const tp=H.filter((_,i)=>scores[i]!==null).reduce((a,h)=>a+h.par,0)
+  const tp=H.filter((_,i)=>sc[i]!==null).reduce((a,h)=>a+h.par,0)
   const svpT=tg-tp
   const str=done.length===0?'E':svpT===0?'E':svpT>0?'+'+svpT:svpT
   document.getElementById('sf-g').textContent=tg||0
   document.getElementById('sf-p').textContent=tp||0
   document.getElementById('sf-s').textContent=str
-  document.getElementById('sf-s').style.color=done.length>0&&svpT<0?'var(--birdie)':done.length>0&&svpT>0?'var(--bogey)':'var(--c5)'
+  document.getElementById('sf-s').style.color=_groupEnabled?pCol:done.length>0&&svpT<0?'var(--birdie)':done.length>0&&svpT>0?'var(--bogey)':'var(--c5)'
   document.getElementById('sc-top').textContent=str
+  renderPlayerTabs()
 }
-function scSet(n){scores[hi]=n;if(hi<_selCourse.holes.length-1)hi++;renderScorecard()}
+function scSet(n){
+  const sc=getCurScores(); sc[hi]=n
+  if(hi<_selCourse.holes.length-1) hi++
+  renderScorecard()
+}
 function scSel(i){hi=i;renderScorecard()}
 function scMove(d){hi=Math.max(0,Math.min(_selCourse.holes.length-1,hi+d));renderScorecard()}
 
 async function saveRound(){
   const H=_selCourse.holes
-  const done=scores.filter(s=>s!==null)
+  const sc=getCurScores()
+  const done=sc.filter(s=>s!==null)
   if(!done.length){toast('Ingresá al menos un hoyo');return}
   const tg=done.reduce((a,b)=>a+b,0)
-  const tp=H.filter((_,i)=>scores[i]!==null).reduce((a,h)=>a+h.par,0)
+  const tp=H.filter((_,i)=>sc[i]!==null).reduce((a,h)=>a+h.par,0)
   const svp=tg-tp
   const str=svp===0?'E':svp>0?'+'+svp:svp
-  // Tally hole results
   const tally={eagle:0,birdie:0,par:0,bogey:0,dbl:0}
-  H.forEach((h,i)=>{if(scores[i]===null)return;const d=scores[i]-h.par;if(d<=-2)tally.eagle++;else if(d===-1)tally.birdie++;else if(d===0)tally.par++;else if(d===1)tally.bogey++;else tally.dbl++})
-  _lastRoundData={str,svp,tg,tp,tally,course:_selCourse,tourMode:_tourMode}
+  H.forEach((h,i)=>{if(sc[i]===null)return;const d=sc[i]-h.par;if(d<=-2)tally.eagle++;else if(d===-1)tally.birdie++;else if(d===0)tally.par++;else if(d===1)tally.bogey++;else tally.dbl++})
+  // Build group summary if enabled
+  let groupSummary=null
+  if(_groupEnabled){
+    const names=_groupNames.map((n,i)=>n||(i===0&&JUGADOR?`${JUGADOR.nombre} ${JUGADOR.apellido}`:'')).filter(n=>n)
+    groupSummary=_gScores.slice(0,names.length).map((gsc,pi)=>{
+      const gd=gsc.filter(s=>s!==null)
+      const gtg=gd.reduce((a,b)=>a+b,0)
+      const gtp=H.filter((_,i)=>gsc[i]!==null).reduce((a,h)=>a+h.par,0)
+      const gsvp=gtg-gtp
+      return{name:names[pi],str:gd.length===0?'—':gsvp===0?'E':gsvp>0?'+'+gsvp:gsvp,svp:gsvp,tg:gtg,color:GP_COLORS[pi],haScores:gd.length>0}
+    })
+  }
+  _lastRoundData={str,svp,tg,tp,tally,course:_selCourse,tourMode:_tourMode,groupSummary}
   if(!USER){
-    showSummary();
-    setTimeout(()=>{scores=new Array(18).fill(null);hi=0;renderScorecard()},200)
+    showSummary()
+    scores=new Array(18).fill(null); _gScores=[...Array(4)].map(()=>new Array(18).fill(null)); hi=0; renderScorecard()
     return
   }
   document.getElementById('save-btn').disabled=true
   load('Guardando ronda...')
   try{
-    const {data:ronda,error}=await SB.from('rondas').insert({
-      jugador_id:USER.id,fecha:new Date().toISOString().split('T')[0],
-      tipo:_tourMode?'torneo':'practica',total_golpes:tg,score_vs_par:svp,completada:done.length===H.length
-    }).select().single()
-    if(error) throw error
-    const rows=H.filter((_,i)=>scores[i]!==null).map(h=>({
-      ronda_id:ronda.id,hoyo_numero:h.n,par:h.par,golpes:scores[H.indexOf(h)],distancia_metros:h.dist
-    }))
-    await SB.from('scorecard').insert(rows)
+    // Save player 0's scores (the logged-in user)
+    const p0sc=_groupEnabled?_gScores[0]:sc
+    const p0done=p0sc.filter(s=>s!==null)
+    if(p0done.length){
+      const p0tg=p0done.reduce((a,b)=>a+b,0)
+      const p0tp=H.filter((_,i)=>p0sc[i]!==null).reduce((a,h)=>a+h.par,0)
+      const {data:ronda,error}=await SB.from('rondas').insert({
+        jugador_id:USER.id,fecha:new Date().toISOString().split('T')[0],
+        tipo:'practica',total_golpes:p0tg,score_vs_par:p0tg-p0tp,completada:p0done.length===H.length
+      }).select().single()
+      if(error) throw error
+      const rows=H.filter((_,i)=>p0sc[i]!==null).map(h=>({
+        ronda_id:ronda.id,hoyo_numero:h.n,par:h.par,golpes:p0sc[H.indexOf(h)],distancia_metros:h.dist
+      }))
+      if(rows.length) await SB.from('scorecard').insert(rows)
+    }
     stopLoad()
     showSummary()
-    scores=new Array(18).fill(null);hi=0;renderScorecard()
+    scores=new Array(18).fill(null); _gScores=[...Array(4)].map(()=>new Array(18).fill(null)); hi=0; renderScorecard()
     loadDashboard()
   } catch(e){
-    stopLoad(); toast('Error al guardar')
+    stopLoad()
+    const msg=e?.message||e?.error_description||'Error desconocido'
+    toast('Error: '+msg.substring(0,60))
+    console.error('saveRound error:',e)
   }
   document.getElementById('save-btn').disabled=false
 }
@@ -821,13 +967,22 @@ function showSummary(){
   document.getElementById('sum-course-lbl').textContent=`${d.course.emoji} ${d.course.nombre} · ${d.course.ciudad} · ${d.tg} golpes · Par ${d.tp}`
   const tn=document.getElementById('sum-tour-note')
   tn.style.display=d.tourMode?'block':'none'
-  document.getElementById('sum-chips').innerHTML=[
-    {e:'🦅',l:'EAGLE',v:d.tally.eagle,c:'var(--eagle)'},
-    {e:'🐦',l:'BIRDIE',v:d.tally.birdie,c:'var(--birdie)'},
-    {e:'⛳',l:'PAR',v:d.tally.par,c:'var(--tx)'},
-    {e:'📍',l:'BOGEY',v:d.tally.bogey,c:'var(--bogey)'},
-    {e:'✌',l:'DOBLE+',v:d.tally.dbl,c:'var(--dbl)'},
-  ].filter(x=>x.v>0).map(x=>`<div class="sum-chip"><div class="sum-chip-v" style="color:${x.c}">${x.e} ${x.v}</div><div class="sum-chip-l">${x.l}</div></div>`).join('')
+  if(d.groupSummary&&d.groupSummary.length>1){
+    document.getElementById('sum-chips').innerHTML=d.groupSummary.map(p=>`
+      <div class="sum-chip" style="min-width:80px">
+        <div style="width:10px;height:10px;border-radius:50%;background:${p.color};margin:0 auto 4px"></div>
+        <div class="sum-chip-v" style="color:${p.color};font-size:28px">${p.str}</div>
+        <div class="sum-chip-l">${p.name}</div>
+      </div>`).join('')
+  } else {
+    document.getElementById('sum-chips').innerHTML=[
+      {e:'🦅',l:'EAGLE',v:d.tally.eagle,c:'var(--eagle)'},
+      {e:'🐦',l:'BIRDIE',v:d.tally.birdie,c:'var(--birdie)'},
+      {e:'⛳',l:'PAR',v:d.tally.par,c:'var(--tx)'},
+      {e:'📍',l:'BOGEY',v:d.tally.bogey,c:'var(--bogey)'},
+      {e:'✌',l:'DOBLE+',v:d.tally.dbl,c:'var(--dbl)'},
+    ].filter(x=>x.v>0).map(x=>`<div class="sum-chip"><div class="sum-chip-v" style="color:${x.c}">${x.e} ${x.v}</div><div class="sum-chip-l">${x.l}</div></div>`).join('')
+  }
   document.getElementById('sum-overlay').classList.add('on')
 }
 
@@ -848,7 +1003,9 @@ function shareRound(){
 }
 
 function openSelector(){
-  scores=new Array(_selCourse.holes.length).fill(null);hi=0
+  scores=new Array(_selCourse.holes.length).fill(null)
+  _gScores=[...Array(4)].map(()=>new Array(18).fill(null))
+  _activePlayer=0; hi=0
   renderSelector()
   go('sc-selector')
 }
@@ -877,8 +1034,44 @@ function toggleTourMode(m){
 }
 
 function startRound(){
+  if(_groupEnabled){
+    _groupNames=[0,1,2,3].map(i=>{
+      const el=document.getElementById('gp'+i)
+      return el?el.value.trim():''
+    })
+    // Auto-fill player 0 from logged-in user if blank
+    if(!_groupNames[0]&&JUGADOR) _groupNames[0]=`${JUGADOR.nombre} ${JUGADOR.apellido}`
+    _gScores=[...Array(4)].map(()=>new Array(_selCourse.holes.length).fill(null))
+    _activePlayer=0
+  }
+  scores=new Array(_selCourse.holes.length).fill(null)
   renderScorecard()
   go('sc-scorecard')
+}
+
+function toggleGroupMode(enabled){
+  _groupEnabled=enabled
+  document.getElementById('tog-solo').classList.toggle('on',!enabled)
+  document.getElementById('tog-grupo').classList.toggle('on',enabled)
+  document.getElementById('group-inputs').style.display=enabled?'block':'none'
+  if(enabled&&JUGADOR){
+    const el=document.getElementById('gp0')
+    if(el&&!el.value) el.value=`${JUGADOR.nombre} ${JUGADOR.apellido}`
+  }
+}
+
+async function loadTournamentPlayers(){
+  load('Cargando participantes...')
+  const {data}=await SB.from('jugadores').select('nombre,apellido').order('nombre').limit(50).catch(()=>({data:null}))
+  stopLoad()
+  if(!data||!data.length){toast('No hay participantes registrados');return}
+  const names=data.map(j=>`${j.nombre} ${j.apellido}`)
+  let filled=0
+  for(let i=0;i<4&&filled<names.length;i++){
+    const el=document.getElementById('gp'+i)
+    if(el&&!el.value){el.value=names[filled];filled++}
+  }
+  toast(`✓ ${filled} participantes cargados`)
 }
 
 let ghi=0
