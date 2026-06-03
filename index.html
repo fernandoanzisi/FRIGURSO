@@ -349,7 +349,7 @@ body{display:flex;align-items:center;justify-content:center}
           <input class="inp" id="gp1" placeholder="Jugador 2" style="margin-bottom:8px">
           <input class="inp" id="gp2" placeholder="Jugador 3" style="margin-bottom:8px">
           <input class="inp" id="gp3" placeholder="Jugador 4 (opcional)" style="margin-bottom:8px">
-          <button onclick="loadTournamentPlayers()" style="width:100%;background:rgba(147,197,253,.08);border:0.5px solid rgba(147,197,253,.2);border-radius:var(--r8);padding:9px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">📋 CARGAR PARTICIPANTES DEL TORNEO</button>
+          <button id="btn-cargar-participantes" onclick="loadTournamentPlayers(this)" style="width:100%;background:rgba(147,197,253,.08);border:0.5px solid rgba(147,197,253,.2);border-radius:var(--r8);padding:9px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s">📋 CARGAR PARTICIPANTES DEL TORNEO</button>
         </div>
         <!-- Lista de canchas -->
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:rgba(147,197,253,.35);letter-spacing:1px;margin-bottom:8px" id="sel-count"></div>
@@ -542,15 +542,53 @@ body{display:flex;align-items:center;justify-content:center}
       <div class="sec sec-b" id="equipos-list"></div>
     </div>
 
-    <!-- HISTORIAL -->
+    <!-- HISTORIAL / ESTADÍSTICAS -->
     <div class="sc" id="sc-historial">
-      <div class="hdr"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Historial 📋</div></div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 16px">
-        <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--tx)" id="h-tot">0</div><div style="font-size:10px;color:var(--tx2)">RONDAS</div></div>
-        <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--birdie)" id="h-best">—</div><div style="font-size:10px;color:var(--tx2)">MEJOR</div></div>
-        <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--birdie)" id="h-avg">—</div><div style="font-size:10px;color:var(--tx2)">PROM.</div></div>
+      <div class="hdr"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Estadísticas 📊</div></div>
+
+      <!-- TABS -->
+      <div style="display:flex;gap:0;margin:0 16px 14px;background:var(--bg2);border-radius:var(--r12);padding:4px;border:0.5px solid var(--bd)">
+        <button id="stat-tab-0" onclick="statTab(0)" style="flex:1;background:var(--c3);border:none;border-radius:var(--r8);padding:9px 0;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.5px;transition:all .2s">📊 MI JUEGO</button>
+        <button id="stat-tab-1" onclick="statTab(1)" style="flex:1;background:none;border:none;border-radius:var(--r8);padding:9px 0;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--tx2);cursor:pointer;letter-spacing:.5px;transition:all .2s">📋 HISTORIAL</button>
+        <button id="stat-tab-2" onclick="statTab(2)" style="flex:1;background:none;border:none;border-radius:var(--r8);padding:9px 0;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--tx2);cursor:pointer;letter-spacing:.5px;transition:all .2s">📄 INFORME</button>
       </div>
-      <div class="sec sec-b"><div class="card"><div class="ct">📋 Todas las rondas</div><div id="hist-list"></div></div></div>
+
+      <!-- TAB 0: MI JUEGO -->
+      <div id="stat-panel-0">
+        <div id="stat-kpis" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 14px">
+          <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--tx)">—</div><div style="font-size:10px;color:var(--tx2)">RONDAS</div></div>
+          <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--birdie)">—</div><div style="font-size:10px;color:var(--tx2)">MEJOR</div></div>
+          <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--birdie)">—</div><div style="font-size:10px;color:var(--tx2)">PROM.</div></div>
+        </div>
+        <div class="sec"><div class="card">
+          <div class="ct">📈 Evolución del score</div>
+          <div id="chart-evo" style="min-height:40px"></div>
+        </div></div>
+        <div class="sec sec-b"><div class="card">
+          <div class="ct">🎯 Distribución de golpes</div>
+          <div id="chart-dist"><div class="empty"><div class="empty-i">⛳</div><div class="empty-t">Jugá tu primera ronda</div></div></div>
+        </div></div>
+      </div>
+
+      <!-- TAB 1: HISTORIAL -->
+      <div id="stat-panel-1" style="display:none">
+        <div class="sec sec-b"><div class="card">
+          <div class="ct">📋 Todas las rondas</div>
+          <div id="hist-list"><div class="empty"><div class="empty-i">📋</div><div class="empty-t">Sin rondas aún</div><div class="empty-s">Jugá tu primera ronda</div></div></div>
+        </div></div>
+      </div>
+
+      <!-- TAB 2: INFORME -->
+      <div id="stat-panel-2" style="display:none">
+        <div id="informe-content">
+          <div class="empty" style="padding:48px 0">
+            <div class="empty-i">📄</div>
+            <div class="empty-t">Seleccioná una ronda</div>
+            <div class="empty-s">Tocá cualquier ronda en el Historial</div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- RANKING -->
@@ -1517,18 +1555,34 @@ function toggleGroupMode(enabled){
   }
 }
 
-async function loadTournamentPlayers(){
-  load('Cargando participantes...')
-  const {data}=await SB.from('jugadores').select('nombre,apellido').order('nombre').limit(50).catch(()=>({data:null}))
-  stopLoad()
-  if(!data||!data.length){toast('No hay participantes registrados');return}
-  const names=data.map(j=>`${j.nombre} ${j.apellido}`)
+async function loadTournamentPlayers(btn){
+  const orig=btn?btn.innerHTML:''
+  if(btn){btn.disabled=true;btn.style.opacity='.5';btn.innerHTML='⏳ Cargando...'}
+  let data=null
+  try{
+    const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),5000))
+    const res=await Promise.race([
+      SB.from('jugadores').select('nombre,apellido').order('nombre').limit(50),
+      timeout
+    ])
+    data=res.data
+  }catch(e){
+    if(btn){btn.disabled=false;btn.style.opacity='1';btn.innerHTML=orig}
+    toast(e.message==='timeout'?'⏱ Tiempo agotado — ingresá los nombres manualmente':'Error al cargar participantes')
+    return
+  }
+  if(btn){btn.disabled=false;btn.style.opacity='1';btn.innerHTML=orig}
+  if(!data||!data.length){toast('Sin participantes — ingresá los nombres manualmente');return}
+  const ownName=JUGADOR?`${JUGADOR.nombre} ${JUGADOR.apellido}`.toLowerCase():''
+  const others=data.filter(j=>`${j.nombre} ${j.apellido}`.toLowerCase()!==ownName)
+  if(!others.length){toast('Solo se encontró tu perfil — ingresá los nombres manualmente');return}
+  const names=others.map(j=>`${j.nombre} ${j.apellido}`)
   let filled=0
   for(let i=0;i<4&&filled<names.length;i++){
     const el=document.getElementById('gp'+i)
     if(el&&!el.value){el.value=names[filled];filled++}
   }
-  toast(`✓ ${filled} participantes cargados`)
+  toast(filled?`✓ ${filled} participantes cargados`:'Ya tenés todos los campos completos')
 }
 
 let ghi=0
@@ -1692,25 +1746,221 @@ function renderEquipos(){
     </div></div>`
 }
 
+let _statData=null,_statHoles=null
+
 async function loadHistorial(){
   if(!USER){setHistorialDemo();return}
-  const {data}=await SB.from('rondas').select('*,canchas(nombre)').eq('jugador_id',USER.id).eq('completada',true).order('fecha',{ascending:false})
+  const {data}=await SB.from('rondas').select('*,canchas(nombre)').eq('jugador_id',USER.id).eq('completada',true).order('fecha',{ascending:false}).catch(()=>({data:null}))
   if(!data||!data.length){setHistorialDemo();return}
+  _statData=data
+  const ids=data.map(r=>r.id)
+  const {data:holes}=await SB.from('scorecard').select('golpes,par,hoyo,ronda_id').in('ronda_id',ids).catch(()=>({data:null}))
+  _statHoles=holes||[]
+  renderStatMiJuego()
+  renderStatHistorial()
+  statTab(0)
+}
+
+function setHistorialDemo(){
+  _statData=null;_statHoles=null
+  document.getElementById('stat-kpis').innerHTML=`
+    <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--tx)">0</div><div style="font-size:10px;color:var(--tx2)">RONDAS</div></div>
+    <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--tx)">—</div><div style="font-size:10px;color:var(--tx2)">MEJOR</div></div>
+    <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--tx)">—</div><div style="font-size:10px;color:var(--tx2)">PROM.</div></div>`
+  document.getElementById('chart-evo').innerHTML='<div class="empty" style="padding:20px 0"><div class="empty-i">📈</div><div class="empty-t">Sin datos aún</div></div>'
+  document.getElementById('chart-dist').innerHTML='<div class="empty"><div class="empty-i">⛳</div><div class="empty-t">Jugá tu primera ronda</div></div>'
+  document.getElementById('hist-list').innerHTML='<div class="empty"><div class="empty-i">📋</div><div class="empty-t">Sin rondas aún</div><div class="empty-s">Jugá tu primera ronda</div></div>'
+}
+
+function statTab(n){
+  [0,1,2].forEach(i=>{
+    document.getElementById('stat-panel-'+i).style.display=i===n?'':'none'
+    const btn=document.getElementById('stat-tab-'+i)
+    btn.style.background=i===n?'var(--c3)':'none'
+    btn.style.color=i===n?'#fff':'var(--tx2)'
+  })
+}
+
+function renderStatMiJuego(){
+  if(!_statData)return
+  const data=_statData,holes=_statHoles||[]
   const sc=data.map(r=>r.score_vs_par).filter(s=>s!==null)
-  document.getElementById('h-tot').textContent=data.length
-  document.getElementById('h-best').textContent=sc.length?Math.min(...sc):'—'
-  document.getElementById('h-avg').textContent=sc.length?(sc.reduce((a,b)=>a+b,0)/sc.length).toFixed(1):'—'
-  document.getElementById('hist-list').innerHTML=data.map(r=>{
+  const best=sc.length?Math.min(...sc):null
+  const avg=sc.length?(sc.reduce((a,b)=>a+b,0)/sc.length):null
+  const torneos=data.filter(r=>r.tipo==='torneo').length
+  const victorias=data.filter(r=>r.posicion_final===1).length
+  const hcp=JUGADOR?.handicap
+  const fmt=v=>v===0?'E':v>0?'+'+v:''+v
+  const fmtHcp=v=>v>=0?'+'+parseFloat(v).toFixed(1):parseFloat(v).toFixed(1)
+  const kpi=(val,lbl,col='var(--tx)')=>`<div style="background:var(--bg2);border-radius:var(--r12);padding:14px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:${col};line-height:1">${val}</div><div style="font-size:10px;color:var(--tx2);margin-top:4px;letter-spacing:.5px">${lbl}</div></div>`
+  document.getElementById('stat-kpis').innerHTML=
+    kpi(data.length,'RONDAS','var(--tx)')+
+    kpi(best!==null?fmt(best):'—','MEJOR',best!==null&&best<0?'var(--birdie)':best!==null&&best>0?'var(--bogey)':'var(--tx)')+
+    kpi(avg!==null?(avg>=0?'+'+avg.toFixed(1):avg.toFixed(1)):'—','PROM.',avg!==null&&avg<0?'var(--birdie)':avg!==null&&avg>0?'var(--bogey)':'var(--tx)')+
+    kpi(hcp!=null?fmtHcp(hcp):'—','HCP')+
+    kpi(torneos,'TORNEOS')+
+    kpi(victorias,'VICTORIAS',victorias?'var(--c3)':'var(--tx)')
+  const last10=[...data].reverse().slice(-10)
+  renderEvoChart(last10)
+  if(holes.length){
+    const t={eagle:0,birdie:0,par:0,bogey:0,dbl:0}
+    holes.forEach(h=>{const d=h.golpes-h.par;if(d<=-2)t.eagle++;else if(d===-1)t.birdie++;else if(d===0)t.par++;else if(d===1)t.bogey++;else t.dbl++})
+    renderDistChart(t,holes.length)
+  }
+}
+
+function renderEvoChart(rounds){
+  const el=document.getElementById('chart-evo')
+  const valid=(rounds||[]).filter(r=>r.score_vs_par!==null)
+  if(!valid.length){el.innerHTML='<div class="empty" style="padding:20px 0"><div class="empty-i">📈</div><div class="empty-t">Sin datos aún</div></div>';return}
+  const scores=valid.map(r=>r.score_vs_par)
+  const mn=Math.min(...scores,-3),mx=Math.max(...scores,3),range=mx-mn||1
+  const W=300,H=90,PX=18,PY=12
+  const pw=W-PX*2,ph=H-PY*2-14
+  const cx=i=>PX+(valid.length<2?pw/2:i/(valid.length-1)*pw)
+  const cy=v=>PY+(1-(v-mn)/range)*ph
+  const z=cy(0)
+  const pts=valid.map((r,i)=>`${cx(i).toFixed(1)},${cy(r.score_vs_par).toFixed(1)}`).join(' ')
+  const area=[`${cx(0).toFixed(1)},${z.toFixed(1)}`,...valid.map((r,i)=>`${cx(i).toFixed(1)},${cy(r.score_vs_par).toFixed(1)}`),`${cx(valid.length-1).toFixed(1)},${z.toFixed(1)}`].join(' ')
+  const dots=valid.map((r,i)=>{
+    const s=r.score_vs_par,col=s<0?'var(--birdie)':s>0?'var(--bogey)':'rgba(156,163,175,.6)'
+    const lbl=s===0?'E':s>0?'+'+s:''+s
+    const x=cx(i).toFixed(1),y=cy(s).toFixed(1),ly=(cy(s)-8).toFixed(1)
+    return`<circle cx="${x}" cy="${y}" r="4" fill="${col}" stroke="var(--bg1)" stroke-width="1.5"/><text x="${x}" y="${ly}" fill="${col}" font-size="8" font-family="'Barlow Condensed',sans-serif" font-weight="800" text-anchor="middle">${lbl}</text>`
+  }).join('')
+  const dlbls=valid.map((r,i)=>{
+    if(valid.length>6&&i%2!==0)return''
+    const d=new Date(r.fecha+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'})
+    return`<text x="${cx(i).toFixed(1)}" y="${H-2}" fill="var(--tx3)" font-size="7" font-family="'Barlow Condensed',sans-serif" text-anchor="middle">${d}</text>`
+  }).join('')
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;overflow:visible;margin-top:4px">
+    <defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--c3)" stop-opacity="0.18"/><stop offset="100%" stop-color="var(--c3)" stop-opacity="0"/></linearGradient></defs>
+    <line x1="${PX}" y1="${z.toFixed(1)}" x2="${(W-PX).toFixed(1)}" y2="${z.toFixed(1)}" stroke="rgba(156,163,175,.2)" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="${(W-PX+3).toFixed(1)}" y="${(z+3).toFixed(1)}" fill="var(--tx3)" font-size="7" font-family="'Barlow Condensed',sans-serif">PAR</text>
+    <polygon points="${area}" fill="url(#eg)"/>
+    <polyline points="${pts}" fill="none" stroke="var(--c3)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}${dlbls}</svg>`
+}
+
+function renderDistChart(t,total){
+  const el=document.getElementById('chart-dist')
+  const items=[
+    {k:'eagle',lbl:'Eagle',col:'#c4b5fd',icon:'🦅'},
+    {k:'birdie',lbl:'Birdie',col:'var(--birdie)',icon:'🐦'},
+    {k:'par',lbl:'Par',col:'rgba(156,163,175,.7)',icon:'⛳'},
+    {k:'bogey',lbl:'Bogey',col:'var(--bogey)',icon:'📍'},
+    {k:'dbl',lbl:'Doble+',col:'var(--dbl)',icon:'✌'},
+  ]
+  const R=70,CX=100,CY=100,circ=2*Math.PI*R
+  let acc=0
+  const slices=items.map(item=>{
+    const len=(t[item.k]/total)*circ
+    const s=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${item.col}" stroke-width="28" stroke-dasharray="${len.toFixed(2)} ${(circ-len).toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}" transform="rotate(-90 ${CX} ${CY})" opacity="${t[item.k]?'0.9':'0'}"/>`
+    acc+=len;return s
+  }).join('')
+  const maxV=Math.max(...items.map(item=>t[item.k]),1)
+  const legend=items.map(item=>{
+    const pct=(t[item.k]/total*100).toFixed(0)
+    const barW=(t[item.k]/maxV*100).toFixed(1)
+    return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
+      <div style="width:9px;height:9px;border-radius:2px;background:${item.col};flex-shrink:0"></div>
+      <div style="font-size:12px;color:var(--tx);width:58px;flex-shrink:0">${item.icon} ${item.lbl}</div>
+      <div style="flex:1;background:rgba(255,255,255,.06);border-radius:3px;height:5px;overflow:hidden"><div style="width:${barW}%;background:${item.col};height:100%;border-radius:3px"></div></div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:${item.col};min-width:28px;text-align:right">${t[item.k]}</div>
+      <div style="font-size:10px;color:var(--tx3);min-width:28px">${pct}%</div>
+    </div>`
+  }).join('')
+  el.innerHTML=`<div style="display:flex;align-items:center;gap:16px;margin-bottom:10px">
+    <div style="flex-shrink:0"><svg viewBox="0 0 200 200" style="width:96px;height:96px">
+      ${slices}
+      <circle cx="${CX}" cy="${CY}" r="44" fill="var(--bg1)"/>
+      <text x="${CX}" y="${CY-5}" fill="var(--tx)" font-size="20" font-family="'Barlow Condensed',sans-serif" font-weight="800" text-anchor="middle">${total}</text>
+      <text x="${CX}" y="${CY+12}" fill="var(--tx3)" font-size="9" font-family="'Barlow Condensed',sans-serif" text-anchor="middle">HOYOS</text>
+    </svg></div>
+    <div style="flex:1">${legend}</div>
+  </div>
+  <div style="font-size:11px;color:var(--tx3);text-align:right">${total} hoyos · ${(_statData?.length?Math.round(total/_statData.length):0)} por ronda promedio</div>`
+}
+
+function renderStatHistorial(){
+  const el=document.getElementById('hist-list')
+  if(!_statData||!_statData.length){el.innerHTML='<div class="empty"><div class="empty-i">📋</div><div class="empty-t">Sin rondas aún</div><div class="empty-s">Jugá tu primera ronda</div></div>';return}
+  el.innerHTML=_statData.map(r=>{
     const svp=r.score_vs_par,col=svp<0?'var(--birdie)':svp>0?'var(--bogey)':'var(--tx)',str=svp===0?'E':svp>0?'+'+svp:svp
-    const f=new Date(r.fecha+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'})
-    return`<div class="hr"><div class="hr-i">${r.tipo==='torneo'?'🏆':'⛳'}</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${r.canchas?.nombre||'Cancha'}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${r.tipo}</div></div><span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:${col}">${str??'—'}</span></div>`
+    const f=new Date(r.fecha+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'numeric'})
+    return`<div class="hr" onclick="loadInforme('${r.id}')" style="cursor:pointer;transition:background .15s">
+      <div class="hr-i">${r.tipo==='torneo'?'🏆':'⛳'}</div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${r.canchas?.nombre||'Cancha'}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${r.tipo}</div></div>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:${col}">${svp!==null?str:'—'}</span>
+      <span style="color:var(--tx3);margin-left:4px;font-size:12px">›</span>
+    </div>`
   }).join('')
 }
-function setHistorialDemo(){
-  document.getElementById('h-tot').textContent='0'
-  document.getElementById('h-best').textContent='—'
-  document.getElementById('h-avg').textContent='—'
-  document.getElementById('hist-list').innerHTML='<div class="empty"><div class="empty-i">📋</div><div class="empty-t">Sin rondas aún</div><div class="empty-s">Jugá tu primera ronda</div></div>'
+
+async function loadInforme(rondaId){
+  statTab(2)
+  const ic=document.getElementById('informe-content')
+  ic.innerHTML='<div class="empty" style="padding:40px 0"><div class="empty-i">⏳</div><div class="empty-t">Cargando informe...</div></div>'
+  const ronda=_statData?.find(r=>r.id===rondaId)
+  if(!ronda){ic.innerHTML='<div class="empty" style="padding:40px 0"><div class="empty-i">📄</div><div class="empty-t">Ronda no encontrada</div></div>';return}
+  let holes=(_statHoles||[]).filter(h=>h.ronda_id===rondaId)
+  if(!holes.length){
+    const {data}=await SB.from('scorecard').select('*').eq('ronda_id',rondaId).order('hoyo').catch(()=>({data:null}))
+    holes=data||[]
+  }else{
+    holes=[...holes].sort((a,b)=>a.hoyo-b.hoyo)
+  }
+  const svp=ronda.score_vs_par
+  const svpStr=svp===null?'—':svp===0?'E (PAR)':svp>0?'+'+svp:''+svp
+  const svpCol=svp===null?'var(--tx)':svp<0?'var(--birdie)':svp>0?'var(--bogey)':'var(--tx)'
+  const f=new Date(ronda.fecha+'T00:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+  const dist={eagle:0,birdie:0,par:0,bogey:0,dbl:0}
+  holes.forEach(h=>{const d=h.golpes-h.par;if(d<=-2)dist.eagle++;else if(d===-1)dist.birdie++;else if(d===0)dist.par++;else if(d===1)dist.bogey++;else dist.dbl++})
+  const sameCourseBest=_statData?.filter(r=>r.cancha_id===ronda.cancha_id&&r.id!==rondaId&&r.score_vs_par!==null).reduce((b,r)=>b===null?r.score_vs_par:Math.min(b,r.score_vs_par),null)
+  const tipoBadge=ronda.tipo==='torneo'?`<span style="background:rgba(251,191,36,.12);color:rgba(251,191,36,.85);border:0.5px solid rgba(251,191,36,.25);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">🏆 TORNEO</span>`:`<span style="background:rgba(52,211,153,.08);color:var(--birdie);border:0.5px solid rgba(52,211,153,.2);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">⛳ PRÁCTICA</span>`
+  const mejorLine=sameCourseBest!==null?`<div style="margin-top:6px;font-size:11px;color:var(--tx3)">Mejor en esta cancha: <span style="color:${sameCourseBest<0?'var(--birdie)':sameCourseBest>0?'var(--bogey)':'var(--tx)'};font-weight:700;font-family:'Barlow Condensed',sans-serif">${sameCourseBest>=0?'+'+sameCourseBest:sameCourseBest}</span></div>`:''
+  const miniChip=(n,lbl,col,show)=>show?`<div style="background:${col}20;border:0.5px solid ${col}40;border-radius:var(--r8);padding:8px 14px;text-align:center;flex-shrink:0"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:${col}">${n}</div><div style="font-size:9px;color:var(--tx3);letter-spacing:.5px;margin-top:2px">${lbl}</div></div>`:''
+  const tableRows=holes.map(h=>{
+    const d=h.golpes-h.par
+    let bg='',icon=''
+    if(d<=-2){bg='rgba(196,181,253,.12)';icon='🦅'}else if(d===-1){bg='rgba(52,211,153,.12)';icon='🐦'}else if(d===0){bg='rgba(255,255,255,.03)';icon='⛳'}else if(d===1){bg='rgba(251,146,60,.1)';icon='📍'}else{bg='rgba(239,68,68,.1)';icon='✌'}
+    const dStr=d===0?'E':d>0?'+'+d:''+d,dCol=d<0?'var(--birdie)':d>0?'var(--bogey)':'var(--tx2)'
+    return`<tr style="background:${bg};border-bottom:0.5px solid rgba(255,255,255,.04)">
+      <td style="padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx);text-align:center">${h.hoyo}</td>
+      <td style="padding:8px 10px;font-size:12px;color:var(--tx2);text-align:center">P${h.par}</td>
+      <td style="padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--tx);text-align:center">${h.golpes}</td>
+      <td style="padding:8px 10px;text-align:center"><span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:${dCol}">${dStr}</span> <span style="font-size:12px">${icon}</span></td>
+    </tr>`
+  }).join('')
+  ic.innerHTML=`
+    <div style="background:linear-gradient(135deg,rgba(37,99,235,.15),rgba(79,70,229,.1));border-radius:var(--r12);margin:0 16px 14px;padding:18px;border:0.5px solid rgba(147,197,253,.12)">
+      <div style="font-size:11px;color:var(--tx3);text-transform:capitalize;margin-bottom:4px">${f}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--tx);margin-bottom:10px">${ronda.canchas?.nombre||'Cancha'}</div>
+      <div style="display:flex;align-items:flex-start;gap:14px">
+        <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:54px;font-weight:800;color:${svpCol};line-height:1">${svpStr}</div><div style="font-size:9px;color:var(--tx3);letter-spacing:.5px;margin-top:2px">SCORE TOTAL</div></div>
+        <div style="flex:1;padding-top:4px">${tipoBadge}${mejorLine}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;padding:0 16px 14px;overflow-x:auto">
+      ${miniChip(dist.eagle,'EAGLE','#c4b5fd',dist.eagle>0)}
+      ${miniChip(dist.birdie,'BIRDIE','var(--birdie)',dist.birdie>0)}
+      ${miniChip(dist.par,'PAR','rgba(156,163,175,.7)',dist.par>0)}
+      ${miniChip(dist.bogey,'BOGEY','var(--bogey)',dist.bogey>0)}
+      ${miniChip(dist.dbl,'DOBLE+','var(--dbl)',dist.dbl>0)}
+    </div>
+    ${holes.length?`<div class="sec sec-b" style="padding-top:0"><div class="card" style="padding:0;overflow:hidden">
+      <div class="ct" style="padding:12px 14px;border-bottom:0.5px solid var(--bd)">📊 Hoyo a hoyo</div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:rgba(255,255,255,.05)">
+          <th style="padding:7px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--tx2);text-align:center">HOYO</th>
+          <th style="padding:7px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--tx2);text-align:center">PAR</th>
+          <th style="padding:7px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--tx2);text-align:center">GOLPES</th>
+          <th style="padding:7px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--tx2);text-align:center">RESULTADO</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div></div>`:'<div class="empty" style="padding:30px 0"><div class="empty-i">📊</div><div class="empty-t">Sin datos de hoyos</div><div class="empty-s">Los hoyos se guardan al completar la ronda</div></div>'}
+  `
 }
 
 async function loadRanking(){
