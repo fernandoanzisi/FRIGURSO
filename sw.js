@@ -1,8 +1,7 @@
-const CACHE = 'frigurso-v3'
+const CACHE = 'frigurso-v4'
 const PRECACHE = ['/', '/index.html', '/icon-192.png', '/icon-512.png', '/manifest.json']
 
 self.addEventListener('install', e => {
-  // Cachear individualmente — si algo falla no rompe todo
   e.waitUntil(
     caches.open(CACHE).then(c =>
       Promise.all(PRECACHE.map(url => c.add(url).catch(() => {})))
@@ -20,10 +19,27 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) return
+
+  // APIs externas: siempre red, cache como fallback offline
   if (e.request.url.includes('supabase') || e.request.url.includes('open-meteo') || e.request.url.includes('nominatim')) {
     e.respondWith(fetch(e.request).catch(() => caches.match(e.request)))
     return
   }
+
+  // index.html: siempre red primero para recibir actualizaciones; cache solo si offline
+  const url = new URL(e.request.url)
+  if (url.pathname === '/' || url.pathname === '/index.html') {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const clone = res.clone()
+        caches.open(CACHE).then(c => c.put(e.request, clone))
+        return res
+      }).catch(() => caches.match(e.request))
+    )
+    return
+  }
+
+  // Resto (íconos, manifest): cache first
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
       const clone = res.clone()

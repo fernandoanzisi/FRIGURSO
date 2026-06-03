@@ -1148,32 +1148,47 @@ async function saveRound(){
 
   // 3. Guardar en DB en segundo plano
   const statusEl=document.getElementById('sum-save-status')
-  if(statusEl){statusEl.style.display='block';statusEl.style.background='rgba(147,197,253,.12)';statusEl.style.color='rgba(147,197,253,.7)';statusEl.textContent='⏳ Guardando en base de datos...'}
+  const setStatus=(icon,bg,col,txt)=>{if(statusEl){statusEl.style.display='block';statusEl.style.background=bg;statusEl.style.color=col;statusEl.textContent=icon+' '+txt}}
+  setStatus('⏳','rgba(147,197,253,.12)','rgba(147,197,253,.7)','Guardando...')
   try{
-    // Buscar cancha_id
+    // Buscar cancha_id (no crítico si falla)
     let canchaId=null
     try{
-      const {data:ca}=await SB.from('canchas').select('id').ilike('nombre','%'+_selCourse.nombre.split(' ').slice(0,2).join(' ')+'%').limit(1)
+      const {data:ca,error:ce}=await SB.from('canchas').select('id').ilike('nombre','%'+_selCourse.nombre.split(' ').slice(0,2).join(' ')+'%').limit(1)
       if(ca&&ca.length) canchaId=ca[0].id
-      if(!canchaId){
+      if(!canchaId&&!ce){
         const {data:nv}=await SB.from('canchas').insert({nombre:_selCourse.nombre,par_total:_selCourse.par,total_hoyos:_selCourse.hoyos,activa:true}).select('id').single()
         if(nv) canchaId=nv.id
       }
     }catch(_){}
-    const ins={jugador_id:USER.id,fecha:new Date().toISOString().split('T')[0],tipo:_tourMode?'torneo':'practica',total_golpes:tg,score_vs_par:svp,completada:done.length===H.length}
+
+    const ins={
+      jugador_id:USER.id,
+      fecha:new Date().toISOString().split('T')[0],
+      tipo:_tourMode?'torneo':'practica',
+      total_golpes:tg,
+      score_vs_par:svp,
+      completada:done.length===H.length
+    }
     if(canchaId) ins.cancha_id=canchaId
+
+    setStatus('⏳','rgba(147,197,253,.12)','rgba(147,197,253,.7)','Insertando ronda (cancha:'+(canchaId?'ok':'sin id')+')')
     const {data:ronda,error}=await SB.from('rondas').insert(ins).select().single()
-    if(error) throw error
+    if(error){
+      // Mostrar código + mensaje completo para diagnóstico
+      const detail=[error.code,error.message,error.hint,error.details].filter(Boolean).join(' | ')
+      throw new Error(detail||JSON.stringify(error))
+    }
     try{
       const rows=H.map((h,i)=>allSc[i]===null?null:{ronda_id:ronda.id,hoyo_numero:h.n,par:h.par,golpes:allSc[i],distancia_metros:h.dist}).filter(Boolean)
       if(rows.length) await SB.from('scorecard').insert(rows)
-    }catch(se){console.warn('scorecard:',se)}
-    if(statusEl){statusEl.style.background='rgba(26,122,58,.15)';statusEl.style.color='#4ade80';statusEl.textContent='✓ Ronda guardada correctamente'}
+    }catch(se){console.warn('scorecard insert:',se)}
+    setStatus('✓','rgba(26,122,58,.15)','#4ade80','Ronda guardada correctamente')
     loadDashboard()
   }catch(e){
     const msg=e?.message||e?.error_description||e?.code||JSON.stringify(e)||'Error desconocido'
-    if(statusEl){statusEl.style.background='rgba(163,45,45,.18)';statusEl.style.color='#f09595';statusEl.textContent='⚠ No se guardó: '+msg}
-    console.error('saveRound:',e)
+    setStatus('⚠','rgba(163,45,45,.18)','#f09595','No se guardó: '+msg)
+    console.error('saveRound error:',e)
   }
 }
 
