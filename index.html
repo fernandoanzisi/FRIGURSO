@@ -532,23 +532,33 @@ let _selCourse=COURSES[0], _tourMode=false, _lastRoundData=null
 
 window.addEventListener('load', async ()=>{
   load('Iniciando...')
-  SB.auth.onAuthStateChange(async (event, session)=>{
-    if(session){
-      USER=session.user
-      await loadJugador()
-      showApp()
-    } else {
-      USER=null; JUGADOR=null
-      hideApp()
-    }
-  })
-  const {data:{session}} = await SB.auth.getSession()
-  if(!session) stopLoad()
-  renderScorecard()
-  renderGPSList()
-  renderSelector()
-  renderStaticData()
-  loadClima()
+  // Safety: si algo falla, parar el spinner a los 8s
+  const safetyTimer=setTimeout(()=>{stopLoad();go('sc-auth')},8000)
+  try{
+    SB.auth.onAuthStateChange(async (event, session)=>{
+      clearTimeout(safetyTimer)
+      if(session){
+        USER=session.user
+        await loadJugador()
+        showApp()
+      } else {
+        USER=null; JUGADOR=null
+        hideApp()
+      }
+    })
+    const {data:{session}} = await SB.auth.getSession()
+    clearTimeout(safetyTimer)
+    if(!session){stopLoad();go('sc-auth')}
+    renderScorecard()
+    renderGPSList()
+    renderSelector()
+    renderStaticData()
+    loadClima()
+  } catch(e){
+    clearTimeout(safetyTimer)
+    stopLoad()
+    go('sc-auth')
+  }
 })
 
 let authMode='login'
