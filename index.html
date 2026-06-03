@@ -801,9 +801,9 @@ async function renderStaticData(){
   const {data:t}=await SB.from('torneos').select('*,ciudades(nombre)').order('fecha_inicio').limit(10).catch(()=>({data:null}))
   const tl=document.getElementById('torneos-list')
   const items=t&&t.length?t:[
-    {nombre:'Copa Patagonia 2025',fecha_inicio:'2025-06-15',tipo:'individual',formato:'Stroke Play',estado:'inscripciones',ciudades:{nombre:'General Roca 🇦🇷'},emoji:'🏆'},
-    {nombre:'Open Nacional Argentina',fecha_inicio:'2025-06-28',tipo:'individual',formato:'Stroke · 36 hoyos',estado:'programado',ciudades:{nombre:'Buenos Aires 🇦🇷'},emoji:'⚽'},
-    {nombre:'South America Cup',fecha_inicio:'2025-07-10',tipo:'equipos',formato:'Best Ball',estado:'programado',ciudades:{nombre:'São Paulo 🇧🇷'},emoji:'🌍'},
+    {nombre:'FIFG World Cup Acapulco 2026',fecha_inicio:'2026-05-27',tipo:'individual',formato:'Stroke Play · 72 hoyos',estado:'en_curso',ciudades:{nombre:'Acapulco 🇲🇽'},emoji:'🌍'},
+    {nombre:'Copa Patagonia 2026',fecha_inicio:'2026-06-15',tipo:'individual',formato:'Stroke Play',estado:'programado',ciudades:{nombre:'General Roca 🇦🇷'},emoji:'🏆'},
+    {nombre:'Open Nacional Argentina',fecha_inicio:'2026-06-28',tipo:'individual',formato:'Stroke · 36 hoyos',estado:'programado',ciudades:{nombre:'Buenos Aires 🇦🇷'},emoji:'⚽'},
   ]
   tl.innerHTML=items.map(it=>{
     const bc={'inscripciones':'bg','en_curso':'bb','programado':'bgr'}[it.estado]||'bgr'
@@ -812,12 +812,18 @@ async function renderStaticData(){
     return`<div class="tc"><div class="tc-img">${it.emoji||'🏆'}</div><div class="tc-b"><div class="tc-n">${it.nombre}</div><div class="tc-m">📍 ${it.ciudades?.nombre||''}</div><div class="tc-m">📅 ${f} · ${it.formato||it.tipo}</div><div style="margin-top:9px;display:flex;gap:6px"><span class="badge ${bc}">${bl}</span><span class="badge bgr">${it.tipo}</span></div></div></div>`
   }).join('')
   const {data:ca}=await SB.from('canchas').select('*,ciudades(nombre,paises(bandera))').eq('activa',true).order('nombre').catch(()=>({data:null}))
-  window._allCanchas=ca&&ca.length?ca.map(c=>({nombre:c.nombre,ciudad:c.ciudades?.nombre||'',pais:c.ciudades?.paises?.bandera||'🌍',hoyos:c.total_hoyos,par:c.par_total,dif:c.dificultad})):[
-    {nombre:'Los Álamos FootGolf',ciudad:'General Roca, Río Negro',pais:'🇦🇷',hoyos:18,par:72,dif:'media'},
-    {nombre:'Club Árabe',ciudad:'Buenos Aires',pais:'🇦🇷',hoyos:18,par:70,dif:'difícil'},
-    {nombre:'Parque Patagónico FG',ciudad:'Bariloche',pais:'🇦🇷',hoyos:9,par:36,dif:'fácil'},
-    {nombre:'São Paulo FG Club',ciudad:'São Paulo',pais:'🇧🇷',hoyos:18,par:72,dif:'difícil'},
-    {nombre:'Montevideo FootGolf',ciudad:'Montevideo',pais:'🇺🇾',hoyos:18,par:71,dif:'media'},
+  window._allCanchas=ca&&ca.length?ca.map(c=>({nombre:c.nombre,ciudad:c.ciudades?.nombre||'',pais:c.ciudades?.paises?.bandera||'🌍',hoyos:c.total_hoyos,par:c.par_total,dif:c.dificultad,info:c.info||''})):[
+    // 🇲🇽 México — sedes Mundial FIFG 2026
+    {nombre:'Tres Vidas Golf Club',ciudad:'Acapulco, Guerrero',pais:'🇲🇽',hoyos:18,par:72,dif:'difícil',info:'Sede Mundial FIFG 2026 · "La Joya del Pacífico" · Carretera Barra Vieja Km.7'},
+    {nombre:'Turtle Dunes Country Club',ciudad:'Acapulco, Guerrero',pais:'🇲🇽',hoyos:18,par:72,dif:'difícil',info:'Sede Mundial FIFG 2026 · Fairmont Princess Resort · Costera de las Palmas'},
+    // 🇦🇷 Argentina
+    {nombre:'Los Álamos FootGolf',ciudad:'General Roca, Río Negro',pais:'🇦🇷',hoyos:18,par:72,dif:'media',info:''},
+    {nombre:'Club Árabe FootGolf',ciudad:'Buenos Aires',pais:'🇦🇷',hoyos:18,par:70,dif:'difícil',info:''},
+    {nombre:'Parque Patagónico FG',ciudad:'Bariloche, Río Negro',pais:'🇦🇷',hoyos:9,par:36,dif:'fácil',info:''},
+    // 🇧🇷 Brasil
+    {nombre:'São Paulo FG Club',ciudad:'São Paulo',pais:'🇧🇷',hoyos:18,par:72,dif:'difícil',info:''},
+    // 🇺🇾 Uruguay
+    {nombre:'Montevideo FootGolf',ciudad:'Montevideo',pais:'🇺🇾',hoyos:18,par:71,dif:'media',info:''},
   ]
   renderCanchas('')
   renderEquipos()
@@ -826,7 +832,7 @@ async function renderStaticData(){
 function renderCanchas(f){
   const items=(window._allCanchas||[]).filter(c=>!f||c.nombre.toLowerCase().includes(f.toLowerCase())||c.ciudad.toLowerCase().includes(f.toLowerCase()))
   const difC={facil:'bg',media:'ba','difícil':'br',experto:'br'}
-  document.getElementById('canchas-list').innerHTML=items.map(c=>`<div class="tc"><div class="tc-img">⛳</div><div class="tc-b"><div class="tc-n">${c.nombre}</div><div class="tc-m">${c.pais} ${c.ciudad}</div><div style="display:flex;gap:6px;margin-top:8px"><span class="badge bgr">${c.hoyos} hoyos</span><span class="badge bgr">Par ${c.par}</span><span class="badge ${difC[c.dif]||'bgr'}">${c.dif}</span></div></div></div>`).join('')
+  document.getElementById('canchas-list').innerHTML=items.map(c=>`<div class="tc"><div class="tc-img">⛳</div><div class="tc-b"><div class="tc-n">${c.nombre}</div><div class="tc-m">${c.pais} ${c.ciudad}</div>${c.info?`<div class="tc-m" style="color:var(--c3);font-weight:600;margin-top:4px">📌 ${c.info}</div>`:''}<div style="display:flex;gap:6px;margin-top:8px"><span class="badge bgr">${c.hoyos} hoyos</span><span class="badge bgr">Par ${c.par}</span><span class="badge ${difC[c.dif]||'bgr'}">${c.dif}</span></div></div></div>`).join('')
 }
 function filterCanchas(v){renderCanchas(v)}
 
