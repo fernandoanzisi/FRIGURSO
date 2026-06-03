@@ -532,33 +532,26 @@ let _selCourse=COURSES[0], _tourMode=false, _lastRoundData=null
 
 window.addEventListener('load', async ()=>{
   load('Iniciando...')
-  // Safety: si algo falla, parar el spinner a los 8s
-  const safetyTimer=setTimeout(()=>{stopLoad();go('sc-auth')},8000)
+  // Render estático siempre (no depende de sesión)
+  renderScorecard(); renderGPSList(); renderSelector(); renderStaticData(); loadClima()
   try{
-    SB.auth.onAuthStateChange(async (event, session)=>{
-      clearTimeout(safetyTimer)
-      if(session){
-        USER=session.user
-        await loadJugador()
-        showApp()
-      } else {
-        USER=null; JUGADOR=null
-        hideApp()
-      }
-    })
     const {data:{session}} = await SB.auth.getSession()
-    clearTimeout(safetyTimer)
-    if(!session){stopLoad();go('sc-auth')}
-    renderScorecard()
-    renderGPSList()
-    renderSelector()
-    renderStaticData()
-    loadClima()
+    if(session){
+      USER=session.user
+      await loadJugador()
+      showApp()
+    } else {
+      stopLoad()
+      go('sc-auth')
+    }
   } catch(e){
-    clearTimeout(safetyTimer)
     stopLoad()
     go('sc-auth')
   }
+  // onAuthStateChange solo para manejar logout automático
+  SB.auth.onAuthStateChange((event, session)=>{
+    if(!session && USER){USER=null;JUGADOR=null;hideApp()}
+  })
 })
 
 let authMode='login'
@@ -581,8 +574,11 @@ async function doAuth(){
   load(authMode==='login'?'Ingresando...':'Creando cuenta...')
   try{
     if(authMode==='login'){
-      const {error}=await SB.auth.signInWithPassword({email,password:pass})
+      const {data,error}=await SB.auth.signInWithPassword({email,password:pass})
       if(error){stopLoad();showErr('Email o contraseña incorrectos');document.getElementById('auth-btn').disabled=false;return}
+      USER=data.user
+      await loadJugador()
+      showApp()
     } else {
       const nombre=document.getElementById('r-nombre').value.trim()
       const apellido=document.getElementById('r-apellido').value.trim()
@@ -590,17 +586,16 @@ async function doAuth(){
       const {data,error}=await SB.auth.signUp({email,password:pass})
       if(error){stopLoad();showErr(error.message);document.getElementById('auth-btn').disabled=false;return}
       if(data.session){
-        // Confirmación de email desactivada — sesión inmediata
+        USER=data.user
         await SB.from('jugadores').insert({id:data.user.id,nombre,apellido})
-        // onAuthStateChange dispara showApp()
+        await loadJugador()
+        showApp()
       } else {
-        // Confirmación de email activada — guardar para después
         localStorage.setItem('fg_pending_jugador', JSON.stringify({nombre, apellido}))
         stopLoad()
         okEl.textContent='✓ Cuenta creada. Revisá tu email para confirmar y luego ingresá.'
         okEl.style.display='block'
         document.getElementById('auth-btn').disabled=false
-        return
       }
     }
   } catch(e){
