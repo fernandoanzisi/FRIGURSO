@@ -199,6 +199,9 @@ body{display:flex;align-items:center;justify-content:center}
 
 /* COURSE SELECTOR */
 .sel-wrap{background:var(--c1);min-height:100%;padding:0 0 32px}
+.sel-fp{display:inline-flex;align-items:center;padding:6px 13px;border-radius:999px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:rgba(147,197,253,.45);white-space:nowrap;flex-shrink:0}
+.sel-fp.on{background:rgba(37,99,235,.22);border-color:rgba(147,197,253,.4);color:var(--c5)}
+.sel-country-hdr{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(147,197,253,.3);letter-spacing:1px;padding:10px 0 6px;border-top:0.5px solid rgba(255,255,255,.06);margin-top:6px}
 .sel-course-card{background:rgba(255,255,255,.06);border:1.5px solid transparent;border-radius:var(--r16);padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all .18s;position:relative}
 .sel-course-card.on{background:rgba(37,99,235,.18);border-color:rgba(147,197,253,.4)}
 .sel-course-card:active{transform:scale(.98)}
@@ -324,7 +327,19 @@ body{display:flex;align-items:center;justify-content:center}
               <button onclick="loadTournamentPlayers()" style="width:100%;background:rgba(147,197,253,.1);border:0.5px solid rgba(147,197,253,.2);border-radius:var(--r8);padding:10px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">📋 CARGAR PARTICIPANTES DEL TORNEO</button>
             </div>
           </div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(147,197,253,.4);letter-spacing:1px;margin-bottom:10px">SELECCIONÁ UNA CANCHA</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(147,197,253,.4);letter-spacing:1px;margin-bottom:8px">SELECCIONÁ UNA CANCHA</div>
+          <input id="sel-search" class="inp" placeholder="🔍 Buscar cancha o ciudad..." oninput="renderSelector()" style="margin-bottom:10px">
+          <div style="display:flex;gap:7px;overflow-x:auto;padding-bottom:10px;margin-bottom:2px" id="sel-filters">
+            <button class="sel-fp on" onclick="setSFilter('',this)">🌍 Todas</button>
+            <button class="sel-fp" onclick="setSFilter('🇦🇷',this)">🇦🇷 Argentina</button>
+            <button class="sel-fp" onclick="setSFilter('🇲🇽',this)">🇲🇽 México</button>
+            <button class="sel-fp" onclick="setSFilter('🇧🇷',this)">🇧🇷 Brasil</button>
+            <button class="sel-fp" onclick="setSFilter('🇺🇾',this)">🇺🇾 Uruguay</button>
+            <button class="sel-fp" onclick="setSFilter('🇨🇱',this)">🇨🇱 Chile</button>
+            <button class="sel-fp" onclick="setSFilter('🇨🇴',this)">🇨🇴 Colombia</button>
+            <button class="sel-fp" onclick="setSFilter('🇺🇸',this)">🇺🇸 USA</button>
+            <button class="sel-fp" onclick="setSFilter('🌍EUR',this)">🌍 Europa</button>
+          </div>
           <div id="sel-courses"></div>
           <button onclick="startRound()" style="width:100%;background:var(--c3);border:none;border-radius:var(--r16);padding:16px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 24px rgba(37,99,235,.45);margin-top:6px">⚽ COMENZAR RONDA</button>
         </div>
@@ -567,18 +582,119 @@ const SB = supabase.createClient(SB_URL, SB_KEY, {auth:{persistSession:true,stor
 
 let USER=null, JUGADOR=null
 
+function generateHoles(par,hoyos){
+  const layouts={
+    '18-72':[4,4,5,3,4,4,3,5,4,4,4,3,5,4,4,3,5,4],
+    '18-71':[4,4,5,3,4,4,3,5,4,4,4,3,4,4,4,3,5,4],
+    '18-70':[4,4,4,3,4,4,3,5,4,4,4,3,4,4,4,3,4,4],
+    '18-69':[4,4,4,3,4,4,3,4,4,4,4,3,4,4,4,3,4,4],
+    '9-36': [4,4,5,3,4,4,3,4,5],
+    '9-35': [4,4,4,3,4,5,3,4,4],
+    '9-34': [4,4,4,3,4,4,3,4,4],
+  }
+  const pars=(layouts[hoyos+'-'+par]||layouts['18-72']).slice(0,hoyos)
+  const obs=['—','Árbol izq.','Bunker','Árbol der.','Lago','Curva','Bunker izq.','Colina','Vista','Bunker der.','Lago','Curva','Árbol','Colina','Vista al lago','—','Bunker','Árbol']
+  const des=[2,-1,5,0,1,-2,0,8,1,0,2,-3,6,0,1,-4,4,3]
+  return pars.map((p,i)=>({n:i+1,par:p,dist:p===3?75+((i*37+11)%40):p===5?205+((i*31+7)%40):135+((i*29+13)%45),des:des[i%des.length],obst:obs[i%obs.length]}))
+}
+function getCourseHoles(c){return c.holes||generateHoles(c.par,c.hoyos)}
+
 const COURSES=[
-  {id:'tres_vidas',nombre:'Tres Vidas Golf Club',ciudad:'Acapulco, Guerrero',pais:'🇲🇽',par:72,hoyos:18,emoji:'🌊',mundial:true,info:'Sede FIFG World Cup 2026',
+  // 🇲🇽 MÉXICO — FIFG World Cup 2026
+  {id:'tres_vidas',nombre:'Tres Vidas Golf Club',ciudad:'Acapulco, Guerrero',pais:'🇲🇽',par:72,hoyos:18,emoji:'🌊',mundial:true,info:'Sede FIFG World Cup 2026 · La Joya del Pacífico',
    holes:[{n:1,par:4,dist:155,des:+2,obst:'Vista al mar'},{n:2,par:4,dist:140,des:-1,obst:'Bunker izq.'},{n:3,par:5,dist:220,des:+5,obst:'Lago'},{n:4,par:3,dist:95,des:0,obst:'—'},{n:5,par:4,dist:160,des:+1,obst:'Árbol der.'},{n:6,par:4,dist:165,des:-2,obst:'Curva'},{n:7,par:3,dist:88,des:0,obst:'Bunker'},{n:8,par:5,dist:215,des:+8,obst:'Colina'},{n:9,par:4,dist:148,des:+1,obst:'—'},{n:10,par:4,dist:152,des:0,obst:'Árbol izq.'},{n:11,par:4,dist:158,des:+2,obst:'—'},{n:12,par:3,dist:92,des:-3,obst:'Bunker'},{n:13,par:5,dist:218,des:+6,obst:'Lago'},{n:14,par:4,dist:163,des:0,obst:'Curva'},{n:15,par:4,dist:145,des:+1,obst:'Vista'},{n:16,par:3,dist:90,des:-2,obst:'Árbol'},{n:17,par:5,dist:212,des:+4,obst:'Colina'},{n:18,par:4,dist:155,des:+3,obst:'Vista al Pacífico'}]},
   {id:'turtle_dunes',nombre:'Turtle Dunes Country Club',ciudad:'Acapulco, Guerrero',pais:'🇲🇽',par:72,hoyos:18,emoji:'🐢',mundial:true,info:'Sede FIFG World Cup 2026 · Fairmont Princess',
    holes:[{n:1,par:4,dist:150,des:0,obst:'Bunker'},{n:2,par:5,dist:225,des:+3,obst:'Curva'},{n:3,par:3,dist:92,des:-2,obst:'—'},{n:4,par:4,dist:162,des:+1,obst:'Árbol'},{n:5,par:4,dist:145,des:0,obst:'Bunker der.'},{n:6,par:3,dist:85,des:-4,obst:'—'},{n:7,par:5,dist:222,des:+7,obst:'Colina'},{n:8,par:4,dist:155,des:+1,obst:'Árbol izq.'},{n:9,par:4,dist:148,des:0,obst:'Vista playa'},{n:10,par:4,dist:165,des:+2,obst:'Bunker'},{n:11,par:3,dist:88,des:-1,obst:'—'},{n:12,par:5,dist:218,des:+5,obst:'Lago'},{n:13,par:4,dist:155,des:0,obst:'Curva'},{n:14,par:4,dist:160,des:+3,obst:'—'},{n:15,par:3,dist:95,des:-3,obst:'Bunker'},{n:16,par:5,dist:210,des:+6,obst:'Colina'},{n:17,par:4,dist:148,des:0,obst:'Árbol'},{n:18,par:4,dist:158,des:+2,obst:'Vista al Pacífico'}]},
-  {id:'los_alamos',nombre:'Los Álamos FootGolf',ciudad:'General Roca, Río Negro',pais:'🇦🇷',par:72,hoyos:18,emoji:'⛳',mundial:false,info:'',
+  {id:'cancun_fg',nombre:'Cancún FootGolf Resort',ciudad:'Cancún, Quintana Roo',pais:'🇲🇽',par:70,hoyos:18,emoji:'🌴',mundial:false,info:''},
+  {id:'gdl_fg',nombre:'Guadalajara FootGolf Club',ciudad:'Guadalajara, Jalisco',pais:'🇲🇽',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'cdmx_fg',nombre:'Club de Golf Chapultepec FG',ciudad:'Ciudad de México',pais:'🇲🇽',par:72,hoyos:18,emoji:'🦅',mundial:false,info:''},
+  {id:'monterrey_fg',nombre:'Monterrey FootGolf Club',ciudad:'Monterrey, Nuevo León',pais:'🇲🇽',par:71,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  // 🇦🇷 ARGENTINA
+  {id:'los_alamos',nombre:'Los Álamos FootGolf',ciudad:'General Roca, Río Negro',pais:'🇦🇷',par:72,hoyos:18,emoji:'⛳',mundial:false,info:'Club referente de la Patagonia',
    holes:[{n:1,par:4,dist:142,des:+2,obst:'Árbol izq.'},{n:2,par:3,dist:88,des:-1,obst:'Bunker'},{n:3,par:5,dist:215,des:+5,obst:'Lago'},{n:4,par:4,dist:135,des:0,obst:'—'},{n:5,par:4,dist:172,des:+1,obst:'Curva'},{n:6,par:4,dist:178,des:-2,obst:'—'},{n:7,par:5,dist:230,des:+8,obst:'Colina'},{n:8,par:3,dist:72,des:-5,obst:'—'},{n:9,par:4,dist:155,des:0,obst:'Árbol der.'},{n:10,par:4,dist:148,des:+1,obst:'Bunker'},{n:11,par:3,dist:91,des:-2,obst:'—'},{n:12,par:5,dist:220,des:+4,obst:'Lago'},{n:13,par:4,dist:138,des:0,obst:'—'},{n:14,par:4,dist:162,des:+2,obst:'Curva'},{n:15,par:3,dist:84,des:-4,obst:'—'},{n:16,par:5,dist:210,des:+6,obst:'Colina'},{n:17,par:4,dist:145,des:0,obst:'—'},{n:18,par:4,dist:158,des:+1,obst:'Vista al lago'}]},
   {id:'club_arabe',nombre:'Club Árabe FootGolf',ciudad:'Buenos Aires',pais:'🇦🇷',par:70,hoyos:18,emoji:'⛳',mundial:false,info:'',
-   holes:[{n:1,par:4,dist:148,des:0,obst:'—'},{n:2,par:3,dist:82,des:-2,obst:'Bunker'},{n:3,par:4,dist:152,des:+1,obst:'Árbol'},{n:4,par:5,dist:218,des:+4,obst:'Lago'},{n:5,par:4,dist:138,des:0,obst:'—'},{n:6,par:3,dist:78,des:-3,obst:'—'},{n:7,par:4,dist:162,des:+2,obst:'Curva'},{n:8,par:4,dist:145,des:0,obst:'Bunker'},{n:9,par:4,dist:130,des:-1,obst:'—'},{n:10,par:4,dist:155,des:+1,obst:'Árbol izq.'},{n:11,par:4,dist:140,des:0,obst:'—'},{n:12,par:3,dist:85,des:-2,obst:'Bunker'},{n:13,par:4,dist:158,des:+3,obst:'—'},{n:14,par:4,dist:148,des:0,obst:'Árbol'},{n:15,par:5,dist:215,des:+5,obst:'Lago'},{n:16,par:3,dist:80,des:-4,obst:'—'},{n:17,par:4,dist:165,des:+2,obst:'Curva'},{n:18,par:4,dist:150,des:+1,obst:'—'}]}
+   holes:[{n:1,par:4,dist:148,des:0,obst:'—'},{n:2,par:3,dist:82,des:-2,obst:'Bunker'},{n:3,par:4,dist:152,des:+1,obst:'Árbol'},{n:4,par:5,dist:218,des:+4,obst:'Lago'},{n:5,par:4,dist:138,des:0,obst:'—'},{n:6,par:3,dist:78,des:-3,obst:'—'},{n:7,par:4,dist:162,des:+2,obst:'Curva'},{n:8,par:4,dist:145,des:0,obst:'Bunker'},{n:9,par:4,dist:130,des:-1,obst:'—'},{n:10,par:4,dist:155,des:+1,obst:'Árbol izq.'},{n:11,par:4,dist:140,des:0,obst:'—'},{n:12,par:3,dist:85,des:-2,obst:'Bunker'},{n:13,par:4,dist:158,des:+3,obst:'—'},{n:14,par:4,dist:148,des:0,obst:'Árbol'},{n:15,par:5,dist:215,des:+5,obst:'Lago'},{n:16,par:3,dist:80,des:-4,obst:'—'},{n:17,par:4,dist:165,des:+2,obst:'Curva'},{n:18,par:4,dist:150,des:+1,obst:'—'}]},
+  {id:'neuquen_fg',nombre:'Neuquén FootGolf Club',ciudad:'Neuquén',pais:'🇦🇷',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'cipolletti_fg',nombre:'Cipolletti FootGolf',ciudad:'Cipolletti, Río Negro',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  {id:'bariloche_fg',nombre:'Parque Patagónico FootGolf',ciudad:'Bariloche, Río Negro',pais:'🇦🇷',par:36,hoyos:9,emoji:'🏔',mundial:false,info:'Vista al Nahuel Huapi'},
+  {id:'viedma_fg',nombre:'Viedma FootGolf Club',ciudad:'Viedma, Río Negro',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  {id:'comodoro_fg',nombre:'Comodoro Rivadavia FootGolf',ciudad:'Comodoro Rivadavia, Chubut',pais:'🇦🇷',par:36,hoyos:9,emoji:'🛢️',mundial:false,info:''},
+  {id:'trelew_fg',nombre:'Trelew FootGolf Club',ciudad:'Trelew, Chubut',pais:'🇦🇷',par:36,hoyos:9,emoji:'🐧',mundial:false,info:''},
+  {id:'cordoba_fg',nombre:'Córdoba FootGolf Club',ciudad:'Córdoba',pais:'🇦🇷',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'villa_carlos_fg',nombre:'Villa Carlos Paz FootGolf',ciudad:'Villa Carlos Paz, Córdoba',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  {id:'mendoza_fg',nombre:'Mendoza FootGolf Club',ciudad:'Mendoza',pais:'🇦🇷',par:72,hoyos:18,emoji:'🍇',mundial:false,info:'Entre los viñedos'},
+  {id:'sanjuan_fg',nombre:'San Juan FootGolf',ciudad:'San Juan',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  {id:'rosario_fg',nombre:'Rosario FootGolf Club',ciudad:'Rosario, Santa Fe',pais:'🇦🇷',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'santafe_fg',nombre:'Santa Fe FootGolf',ciudad:'Santa Fe',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  {id:'laplata_fg',nombre:'La Plata FootGolf',ciudad:'La Plata, Buenos Aires',pais:'🇦🇷',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'mdp_fg',nombre:'Mar del Plata FootGolf',ciudad:'Mar del Plata, Buenos Aires',pais:'🇦🇷',par:70,hoyos:18,emoji:'🌊',mundial:false,info:'A metros del mar'},
+  {id:'pinamar_fg',nombre:'Pinamar FootGolf',ciudad:'Pinamar, Buenos Aires',pais:'🇦🇷',par:36,hoyos:9,emoji:'🌊',mundial:false,info:''},
+  {id:'trenque_fg',nombre:'Trenque Lauquen FootGolf',ciudad:'Trenque Lauquen, Buenos Aires',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  {id:'bahia_fg',nombre:'Bahía Blanca FootGolf',ciudad:'Bahía Blanca, Buenos Aires',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  {id:'tandil_fg',nombre:'Tandil FootGolf Club',ciudad:'Tandil, Buenos Aires',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  {id:'salta_fg',nombre:'Salta FootGolf Club',ciudad:'Salta',pais:'🇦🇷',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'jujuy_fg',nombre:'Jujuy FootGolf',ciudad:'San Salvador de Jujuy',pais:'🇦🇷',par:36,hoyos:9,emoji:'🌄',mundial:false,info:'A 1200 m sobre el nivel del mar'},
+  {id:'tucuman_fg',nombre:'Tucumán FootGolf',ciudad:'San Miguel de Tucumán',pais:'🇦🇷',par:35,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  {id:'misiones_fg',nombre:'Misiones FootGolf',ciudad:'Posadas, Misiones',pais:'🇦🇷',par:36,hoyos:9,emoji:'🌿',mundial:false,info:''},
+  {id:'concordia_fg',nombre:'Concordia FootGolf',ciudad:'Concordia, Entre Ríos',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  {id:'parana_fg',nombre:'Paraná FootGolf Club',ciudad:'Paraná, Entre Ríos',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  {id:'formosa_fg',nombre:'Formosa FootGolf',ciudad:'Formosa',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  {id:'sanrosa_fg',nombre:'Santa Rosa FootGolf',ciudad:'Santa Rosa, La Pampa',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  // 🇧🇷 BRASIL
+  {id:'sp_fg',nombre:'São Paulo FootGolf Club',ciudad:'São Paulo',pais:'🇧🇷',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'rio_fg',nombre:'Rio de Janeiro FootGolf',ciudad:'Rio de Janeiro',pais:'🇧🇷',par:71,hoyos:18,emoji:'🌊',mundial:false,info:''},
+  {id:'curitiba_fg',nombre:'Curitiba FootGolf Club',ciudad:'Curitiba, Paraná',pais:'🇧🇷',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'bsb_fg',nombre:'Brasília FootGolf',ciudad:'Brasília, DF',pais:'🇧🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  {id:'belem_fg',nombre:'Belém FootGolf',ciudad:'Belém, Pará',pais:'🇧🇷',par:36,hoyos:9,emoji:'🌿',mundial:false,info:''},
+  // 🇺🇾 URUGUAY
+  {id:'mvd_fg',nombre:'Montevideo FootGolf Club',ciudad:'Montevideo',pais:'🇺🇾',par:71,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'pde_fg',nombre:'Punta del Este FootGolf',ciudad:'Punta del Este, Maldonado',pais:'🇺🇾',par:70,hoyos:18,emoji:'🌊',mundial:false,info:''},
+  // 🇨🇱 CHILE
+  {id:'stgo_fg',nombre:'Santiago FootGolf Club',ciudad:'Santiago',pais:'🇨🇱',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'vina_fg',nombre:'Viña del Mar FootGolf',ciudad:'Viña del Mar, Valparaíso',pais:'🇨🇱',par:70,hoyos:18,emoji:'🌊',mundial:false,info:''},
+  {id:'concepcion_fg',nombre:'Concepción FootGolf',ciudad:'Concepción',pais:'🇨🇱',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  // 🇨🇴 COLOMBIA
+  {id:'bog_fg',nombre:'Bogotá FootGolf Club',ciudad:'Bogotá',pais:'🇨🇴',par:72,hoyos:18,emoji:'⛳',mundial:false,info:'A 2600 m sobre el nivel del mar'},
+  {id:'med_fg',nombre:'Medellín FootGolf',ciudad:'Medellín, Antioquia',pais:'🇨🇴',par:71,hoyos:18,emoji:'⛳',mundial:false,info:'Ciudad de la eterna primavera'},
+  // 🇵🇾 PARAGUAY
+  {id:'asu_fg',nombre:'Asunción FootGolf Club',ciudad:'Asunción',pais:'🇵🇾',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  // 🇵🇪 PERÚ
+  {id:'lim_fg',nombre:'Lima FootGolf Club',ciudad:'Lima',pais:'🇵🇪',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  // 🇺🇸 USA
+  {id:'fl_fg',nombre:'Orlando FootGolf Resort',ciudad:'Orlando, Florida',pais:'🇺🇸',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'ca_fg',nombre:'California FootGolf Club',ciudad:'Los Ángeles, California',pais:'🇺🇸',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'lv_fg',nombre:'Las Vegas FootGolf',ciudad:'Las Vegas, Nevada',pais:'🇺🇸',par:70,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'ny_fg',nombre:'New York FootGolf Club',ciudad:'Nueva York',pais:'🇺🇸',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  // 🇪🇸 ESPAÑA
+  {id:'mad_fg',nombre:'Madrid FootGolf Club',ciudad:'Madrid',pais:'🇪🇸',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'bcn_fg',nombre:'Barcelona FootGolf Club',ciudad:'Barcelona, Cataluña',pais:'🇪🇸',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'sev_fg',nombre:'Sevilla FootGolf',ciudad:'Sevilla, Andalucía',pais:'🇪🇸',par:71,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  // 🇮🇹 ITALIA
+  {id:'rom_fg',nombre:'Roma FootGolf Club',ciudad:'Roma',pais:'🇮🇹',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  {id:'mil_fg',nombre:'Milano FootGolf',ciudad:'Milán, Lombardía',pais:'🇮🇹',par:71,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  // 🇫🇷 FRANCIA
+  {id:'par_fg',nombre:'Paris FootGolf Club',ciudad:'París, Île-de-France',pais:'🇫🇷',par:72,hoyos:18,emoji:'🗼',mundial:false,info:''},
+  // 🇳🇱 HOLANDA
+  {id:'ams_fg',nombre:'Amsterdam FootGolf',ciudad:'Ámsterdam',pais:'🇳🇱',par:71,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  // 🇬🇧 UK
+  {id:'lon_fg',nombre:'London FootGolf Club',ciudad:'Londres, England',pais:'🇬🇧',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  // 🇭🇺 HUNGRÍA
+  {id:'bud_fg',nombre:'Budapest FootGolf',ciudad:'Budapest',pais:'🇭🇺',par:72,hoyos:18,emoji:'⛳',mundial:false,info:'Sede FIFG World Cup 2024'},
+  // 🇸🇰 ESLOVAQUIA
+  {id:'bra_fg',nombre:'Bratislava FootGolf',ciudad:'Bratislava',pais:'🇸🇰',par:70,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  // 🇦🇹 AUSTRIA
+  {id:'vie_fg',nombre:'Vienna FootGolf Club',ciudad:'Viena',pais:'🇦🇹',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  // 🇧🇪 BÉLGICA
+  {id:'bru_fg',nombre:'Brussels FootGolf',ciudad:'Bruselas',pais:'🇧🇪',par:71,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  // 🇿🇦 SUDÁFRICA
+  {id:'jhb_fg',nombre:'Johannesburg FootGolf',ciudad:'Johannesburgo',pais:'🇿🇦',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  // 🇯🇵 JAPÓN
+  {id:'tok_fg',nombre:'Tokyo FootGolf Club',ciudad:'Tokio',pais:'🇯🇵',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
+  // 🇦🇺 AUSTRALIA
+  {id:'syd_fg',nombre:'Sydney FootGolf Club',ciudad:'Sídney, NSW',pais:'🇦🇺',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
 ]
 
-let _selCourse=COURSES[0], _tourMode=false, _lastRoundData=null
+let _selCourse=COURSES[0], _tourMode=false, _lastRoundData=null, _selFilter=''
 let _groupEnabled=false, _groupNames=['','','','']
 let _gScores=[...Array(4)].map(()=>new Array(18).fill(null)), _activePlayer=0
 const GP_COLORS=['#1a56db','#1a7a3a','#854f0b','#a32d2d']
@@ -821,7 +937,7 @@ function renderPlayerTabs(){
   const tabs=document.getElementById('player-tabs')
   if(!_groupEnabled||_groupNames.filter(n=>n).length<2){tabs.style.display='none';return}
   tabs.style.display='block'
-  const H=_selCourse.holes
+  const H=getCourseHoles(_selCourse)
   tabs.innerHTML=_groupNames.map((nm,pi)=>{
     if(!nm&&pi>0) return''
     const sc=_gScores[pi]
@@ -840,7 +956,7 @@ function renderPlayerTabs(){
 function setActivePlayer(pi){_activePlayer=pi;renderScorecard()}
 
 function renderScorecard(){
-  const H=_selCourse.holes
+  const H=getCourseHoles(_selCourse)
   const sc=getCurScores()
   const last=H.length-1
   document.getElementById('sc-course-name').textContent=_selCourse.nombre.toUpperCase()
@@ -889,14 +1005,14 @@ function renderScorecard(){
 }
 function scSet(n){
   const sc=getCurScores(); sc[hi]=n
-  if(hi<_selCourse.holes.length-1) hi++
+  if(hi<getCourseHoles(_selCourse).length-1) hi++
   renderScorecard()
 }
 function scSel(i){hi=i;renderScorecard()}
-function scMove(d){hi=Math.max(0,Math.min(_selCourse.holes.length-1,hi+d));renderScorecard()}
+function scMove(d){hi=Math.max(0,Math.min(getCourseHoles(_selCourse).length-1,hi+d));renderScorecard()}
 
 async function saveRound(){
-  const H=_selCourse.holes
+  const H=getCourseHoles(_selCourse)
   const sc=getCurScores()
   const done=sc.filter(s=>s!==null)
   if(!done.length){toast('Ingresá al menos un hoyo');return}
@@ -1003,26 +1119,53 @@ function shareRound(){
 }
 
 function openSelector(){
-  scores=new Array(_selCourse.holes.length).fill(null)
+  scores=new Array(getCourseHoles(_selCourse).length).fill(null)
   _gScores=[...Array(4)].map(()=>new Array(18).fill(null))
   _activePlayer=0; hi=0
   renderSelector()
   go('sc-selector')
 }
 
+const EUR_FLAGS=['🇪🇸','🇮🇹','🇫🇷','🇳🇱','🇬🇧','🇭🇺','🇸🇰','🇦🇹','🇧🇪']
+function setSFilter(f,btn){
+  _selFilter=f
+  document.querySelectorAll('.sel-fp').forEach(b=>b.classList.remove('on'))
+  if(btn) btn.classList.add('on')
+  renderSelector()
+}
 function renderSelector(){
-  document.getElementById('sel-courses').innerHTML=COURSES.map((c,i)=>`
-    <div class="sel-course-card${_selCourse.id===c.id?' on':''}" onclick="selectCourse(${i})">
-      <div class="sel-course-name">${c.emoji} ${c.nombre}</div>
-      <div class="sel-course-meta">${c.pais} ${c.ciudad} · ${c.hoyos} hoyos · Par ${c.par}</div>
-      ${c.mundial?`<div class="sel-world-badge">🌍 FIFG World Cup 2026</div>`:''}
-      ${_selCourse.id===c.id?`<div class="sel-check">✓</div>`:''}
-    </div>`).join('')
+  const q=(document.getElementById('sel-search')?.value||'').toLowerCase().trim()
+  const isEur=_selFilter==='🌍EUR'
+  const filtered=COURSES.filter(c=>{
+    if(_selFilter&&!isEur&&c.pais!==_selFilter) return false
+    if(isEur&&!EUR_FLAGS.includes(c.pais)) return false
+    if(q&&!c.nombre.toLowerCase().includes(q)&&!c.ciudad.toLowerCase().includes(q)&&!c.pais.includes(q)) return false
+    return true
+  })
+  // Group by country
+  const grouped={}
+  filtered.forEach(c=>{if(!grouped[c.pais])grouped[c.pais]=[];grouped[c.pais].push(c)})
+  const countryNames={'🇦🇷':'Argentina','🇲🇽':'México','🇧🇷':'Brasil','🇺🇾':'Uruguay','🇨🇱':'Chile','🇨🇴':'Colombia','🇵🇾':'Paraguay','🇵🇪':'Perú','🇺🇸':'USA','🇪🇸':'España','🇮🇹':'Italia','🇫🇷':'Francia','🇳🇱':'Holanda','🇬🇧':'Reino Unido','🇭🇺':'Hungría','🇸🇰':'Eslovaquia','🇦🇹':'Austria','🇧🇪':'Bélgica','🇿🇦':'Sudáfrica','🇯🇵':'Japón','🇦🇺':'Australia'}
+  let html=''
+  Object.entries(grouped).forEach(([flag,courses])=>{
+    if(Object.keys(grouped).length>1) html+=`<div class="sel-country-hdr">${flag} ${countryNames[flag]||''}</div>`
+    courses.forEach(c=>{
+      html+=`<div class="sel-course-card${_selCourse.id===c.id?' on':''}" onclick="selectCourse('${c.id}')">
+        <div class="sel-course-name">${c.emoji} ${c.nombre}</div>
+        <div class="sel-course-meta">${c.ciudad} · ${c.hoyos} hoyos · Par ${c.par}</div>
+        ${c.info?`<div style="font-size:11px;color:rgba(147,197,253,.5);margin-top:4px">📌 ${c.info}</div>`:''}
+        ${c.mundial?`<div class="sel-world-badge">🌍 FIFG World Cup 2026</div>`:''}
+        ${_selCourse.id===c.id?`<div class="sel-check">✓</div>`:''}
+      </div>`
+    })
+  })
+  if(!html) html='<div style="text-align:center;padding:24px;font-size:13px;color:rgba(147,197,253,.3)">Sin resultados</div>'
+  document.getElementById('sel-courses').innerHTML=html
 }
 
-function selectCourse(i){
-  _selCourse=COURSES[i]
-  scores=new Array(_selCourse.holes.length).fill(null);hi=0
+function selectCourse(id){
+  _selCourse=COURSES.find(c=>c.id===id)||COURSES[0]
+  scores=new Array(getCourseHoles(_selCourse).length).fill(null);hi=0
   renderSelector()
 }
 
@@ -1041,10 +1184,10 @@ function startRound(){
     })
     // Auto-fill player 0 from logged-in user if blank
     if(!_groupNames[0]&&JUGADOR) _groupNames[0]=`${JUGADOR.nombre} ${JUGADOR.apellido}`
-    _gScores=[...Array(4)].map(()=>new Array(_selCourse.holes.length).fill(null))
+    _gScores=[...Array(4)].map(()=>new Array(getCourseHoles(_selCourse).length).fill(null))
     _activePlayer=0
   }
-  scores=new Array(_selCourse.holes.length).fill(null)
+  scores=new Array(getCourseHoles(_selCourse).length).fill(null)
   renderScorecard()
   go('sc-scorecard')
 }
@@ -1076,7 +1219,7 @@ async function loadTournamentPlayers(){
 
 let ghi=0
 function renderGPSList(){
-  const H=_selCourse.holes
+  const H=getCourseHoles(_selCourse)
   const h=H[ghi]
   document.getElementById('gps-m').textContent=h.dist
   document.getElementById('gps-pin').textContent=Math.round(h.dist*.27)+'m'
