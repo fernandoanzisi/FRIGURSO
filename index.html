@@ -339,7 +339,8 @@ body{display:flex;align-items:center;justify-content:center}
             <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:800;color:var(--tx)" id="sc-hn">Hoyo 1</div><div style="font-size:13px;color:var(--tx2);margin-top:3px" id="sc-hi">Par 4 · 142m</div></div>
             <div id="sc-res"></div>
           </div>
-          <div style="font-size:12px;color:var(--tx2);font-weight:600;margin-top:16px;margin-bottom:4px">¿CUÁNTOS GOLPES?</div>
+          <div id="sc-info"></div>
+          <div style="font-size:12px;color:var(--tx2);font-weight:600;margin-top:8px;margin-bottom:4px">¿CUÁNTOS GOLPES?</div>
           <div class="g-grid" id="ggrid"></div>
           <div class="sc-nav">
             <button class="sc-nb" id="sc-prev" onclick="scMove(-1)">◀ Anterior</button>
@@ -714,6 +715,7 @@ function demoTorneos(){
 }
 
 let scores=new Array(18).fill(null),hi=0
+let _climaTemp='—',_climaViento='—'
 const scCol=s=>s<=-2?'var(--eagle)':s===-1?'var(--birdie)':s===0?'var(--tx)':s===1?'var(--bogey)':'var(--dbl)'
 const scCls=s=>s<=-2?'ge':s===-1?'gbi':s===0?'gp':s===1?'gbo':'gd'
 const scLbl=s=>s<=-2?'EAGLE':s===-1?'BIRDIE':s===0?'PAR':s===1?'BOGEY':'DOBLE+'
@@ -731,10 +733,23 @@ function renderScorecard(){
   if(chips[hi]) chips[hi].scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'})
   const h=H[hi]
   document.getElementById('sc-hn').textContent=`Hoyo ${h.n}`
-  document.getElementById('sc-hi').textContent=`Par ${h.par} · ${h.dist}m${h.obst!=='—'?' · '+h.obst:''}`
+  document.getElementById('sc-hi').textContent=`Par ${h.par} · ${h.dist}m`
   const g=scores[hi],svp=g!==null?g-h.par:null
   document.getElementById('sc-res').innerHTML=g!==null?`<div style="background:${scCol(svp)}18;border-radius:999px;padding:5px 13px"><span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:${scCol(svp)}">${scLbl(svp)}</span></div>`:''
-  document.getElementById('ggrid').innerHTML=Array.from({length:h.par+3},(_,i)=>{
+  // Info strip: clima + hoyo
+  const kickSug=h.dist>200?'Kick potente':h.dist>140?'Kick largo':h.dist>90?'Kick medio':h.dist>50?'Chip':'Putt'
+  const desCol=h.des>0?'#e07a2a':h.des<0?'#2a8ae0':'var(--tx2)'
+  const desIcon=h.des>0?'↑':h.des<0?'↓':'→'
+  const chipStyle='background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r8);padding:5px 10px;font-size:12px;font-weight:700;white-space:nowrap'
+  document.getElementById('sc-info').innerHTML=`
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px">
+      <span style="${chipStyle};color:var(--c3)">🌡 ${_climaTemp}</span>
+      <span style="${chipStyle};color:var(--c3)">💨 ${_climaViento}</span>
+      <span style="${chipStyle};color:${desCol}">${desIcon} ${h.des>0?'+':''}${h.des}m</span>
+      ${h.obst!=='—'?`<span style="${chipStyle};color:var(--tx2)">⚠ ${h.obst}</span>`:''}
+      <span style="${chipStyle};color:var(--birdie)">💪 ${kickSug}</span>
+    </div>`
+  document.getElementById('ggrid').innerHTML=Array.from({length:15},(_,i)=>{
     const n=i+1,cls=g===n?scCls(n-h.par):''
     return`<button class="gb ${cls}" onclick="scSet(${n})">${n}</button>`
   }).join('')
@@ -933,6 +948,8 @@ async function loadClima(){
       const emoji=wcEmoji(cur.weather_code)
       const city=gr.address?.city||gr.address?.town||gr.address?.village||''
       const state=gr.address?.state||''
+      // Guardar para scorecard
+      _climaTemp=temp+'°'; _climaViento=v+' km/h'
       document.getElementById('cl-temp').textContent=temp+'°'
       document.getElementById('cl-desc').textContent=emoji+' '+wcDesc(cur.weather_code)
       document.getElementById('cl-city').textContent='📍 '+(city?city+(state?', '+state:''):'Tu ubicación')
