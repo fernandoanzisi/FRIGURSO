@@ -614,6 +614,74 @@ body{display:flex;align-items:center;justify-content:center}
       <div class="sec sec-b" id="canchas-list"></div>
     </div>
 
+    <!-- MUNDIAL -->
+    <div class="sc" id="sc-mundial" style="display:flex;flex-direction:column;height:100%">
+      <div class="hdr" style="flex-shrink:0">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div><div class="hdr-sub">FIFG ACAPULCO 2026</div><div class="hdr-title">Mundial 🌍</div></div>
+          <div style="display:flex;gap:8px" id="mundial-tabs">
+            <button onclick="switchMundial('individual')" id="mtab-individual" style="background:var(--c3);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#000;cursor:pointer">INDIVIDUAL</button>
+            <button onclick="switchMundial('equipos')" id="mtab-equipos" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">EQUIPOS</button>
+            <button onclick="switchMundial('noticias')" id="mtab-noticias" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">NOTICIAS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Individual leaderboard iframe -->
+      <div id="mv-individual" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div style="padding:10px 16px 4px;flex-shrink:0">
+          <select id="mundial-cat" onchange="loadMundialIframe()" style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r8);padding:8px 12px;color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;width:100%;outline:none">
+            <option value="men">Hombres</option>
+            <option value="women">Mujeres</option>
+            <option value="senior">Senior Hombres</option>
+            <option value="senior_plus">Senior+</option>
+          </select>
+        </div>
+        <div style="flex:1;position:relative;overflow:hidden">
+          <iframe id="mundial-iframe" style="width:100%;height:100%;border:none;background:#0d1f2d" sandbox="allow-scripts allow-same-origin allow-forms" allow="accelerometer"></iframe>
+          <div id="mundial-loading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);gap:12px">
+            <div style="font-size:48px">⛳</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;color:var(--tx2)">Cargando leaderboard...</div>
+          </div>
+          <div id="mundial-error" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);gap:16px;padding:24px;text-align:center">
+            <div style="font-size:48px">🌍</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--tx)">FIFG WORLD CUP 2026</div>
+            <div style="font-size:14px;color:var(--tx2);margin-bottom:4px">Resultados en tiempo real desde el sitio oficial</div>
+            <button onclick="window.open('https://www.footgolf.sport/acapulcoworldcup2026/leaderboard-individual/','_blank')" style="background:var(--c3);border:none;border-radius:var(--r12);padding:13px 24px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#000;cursor:pointer;width:100%">⛳ VER LEADERBOARD INDIVIDUAL</button>
+            <button onclick="window.open('https://www.footgolf.sport/acapulcoworldcup2026/leaderboard-group','_blank')" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r12);padding:13px 24px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx);cursor:pointer;width:100%">🏆 VER LEADERBOARD EQUIPOS</button>
+            <button onclick="window.open('https://www.footgolf.sport/acapulcoworldcup2026/playoffs','_blank')" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r12);padding:13px 24px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx);cursor:pointer;width:100%">🥊 VER PLAYOFFS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Equipos / grupos -->
+      <div id="mv-equipos" style="display:none;flex:1;overflow-y:auto">
+        <div style="padding:14px 16px">
+          <div style="background:linear-gradient(135deg,rgba(74,222,128,.15),rgba(14,165,233,.1));border:0.5px solid rgba(74,222,128,.3);border-radius:var(--r16);padding:16px;margin-bottom:14px;text-align:center">
+            <div style="font-size:32px;margin-bottom:6px">⚽🦶⛳</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:#fff">FIFG WORLD CUP 2026</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.6);margin-top:4px">Tres Vidas & Turtle Dunes · Acapulco, México</div>
+            <div style="font-size:13px;color:var(--c3);font-weight:700;margin-top:6px">2 – 7 Junio 2026 · FASE DE EQUIPOS</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <button onclick="window.open('https://www.footgolf.sport/acapulcoworldcup2026/leaderboard-group','_blank')" style="background:var(--c3);border:none;border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#000;cursor:pointer">🏆 GRUPOS</button>
+            <button onclick="window.open('https://www.footgolf.sport/acapulcoworldcup2026/playoffs','_blank')" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--tx);cursor:pointer">🥊 PLAYOFFS</button>
+          </div>
+          <div id="mundial-equipos-noticias"></div>
+        </div>
+      </div>
+
+      <!-- Noticias / feed -->
+      <div id="mv-noticias" style="display:none;flex:1;overflow-y:auto">
+        <div style="padding:14px 16px" id="mundial-feed">
+          <div style="text-align:center;padding:40px 0;color:var(--tx3)">
+            <div style="font-size:36px;margin-bottom:10px">📰</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px">Cargando noticias...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- EQUIPOS -->
     <div class="sc" id="sc-equipos">
       <div class="hdr"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Equipos 👥</div></div>
@@ -856,7 +924,7 @@ body{display:flex;align-items:center;justify-content:center}
   <div class="nb" id="navbar" style="display:none">
     <button class="nbi on" data-sc="sc-home" onclick="tab(this,'sc-home')"><span class="nbi-i">🏠</span><span class="nbi-l">INICIO</span></button>
     <button class="nbi" data-sc="sc-torneos" onclick="tab(this,'sc-torneos')"><span class="nbi-i">🏆</span><span class="nbi-l">TORNEOS</span></button>
-    <button class="nbi" data-sc="sc-gps" onclick="tab(this,'sc-gps')"><span class="nbi-i">📍</span><span class="nbi-l">GPS</span></button>
+    <button class="nbi" data-sc="sc-mundial" onclick="tab(this,'sc-mundial')"><span class="nbi-i">🌍</span><span class="nbi-l">MUNDIAL</span></button>
     <button class="nbi" data-sc="sc-ranking" onclick="tab(this,'sc-ranking')"><span class="nbi-i">🥇</span><span class="nbi-l">RANKING</span></button>
     <button class="nbi" data-sc="sc-perfil" onclick="tab(this,'sc-perfil')"><span class="nbi-i">👤</span><span class="nbi-l">PERFIL</span></button>
   </div>
@@ -1171,6 +1239,7 @@ function tab(btn,id){
   if(id==='sc-ranking') loadRanking()
   if(id==='sc-gps') getGPS()
   if(id==='sc-clima') loadClima()
+  if(id==='sc-mundial') loadMundial()
   if(id==='sc-canchas'){ if(window._allCanchas&&window._allCanchas.length) renderCanchas(''); else renderStaticData() }
 }
 // Hardware back button: restore previous screen instead of closing app
@@ -2607,6 +2676,75 @@ async function uploadCanchaPhoto(file){
     renderCanchas(document.getElementById('cancha-search')?.value||'')
     toast('✓ Foto subida')
   }catch(e){ toast('Error al subir foto') }
+}
+
+// ═══ MUNDIAL 2026 ═══
+const MUNDIAL_URLS={
+  individual:'https://www.footgolf.sport/acapulcoworldcup2026/leaderboard-individual/',
+  equipos:'https://www.footgolf.sport/acapulcoworldcup2026/leaderboard-group',
+  playoffs:'https://www.footgolf.sport/acapulcoworldcup2026/playoffs'
+}
+let _mundialTab='individual'
+
+function switchMundial(tab){
+  _mundialTab=tab
+  document.getElementById('mv-individual').style.display=tab==='individual'?'flex':'none'
+  document.getElementById('mv-equipos').style.display=tab==='equipos'?'block':'none'
+  document.getElementById('mv-noticias').style.display=tab==='noticias'?'block':'none'
+  document.querySelectorAll('#mundial-tabs button').forEach(b=>{
+    b.style.background='rgba(255,255,255,.1)'; b.style.color='var(--tx2)'
+  })
+  const active=document.getElementById('mtab-'+tab)
+  if(active){active.style.background='var(--c3)';active.style.color='#000'}
+  if(tab==='individual') loadMundialIframe()
+  if(tab==='noticias') loadMundialNoticias()
+}
+
+function loadMundialIframe(){
+  const iframe=document.getElementById('mundial-iframe')
+  const loading=document.getElementById('mundial-loading')
+  const error=document.getElementById('mundial-error')
+  loading.style.display='flex'; error.style.display='none'
+  const url=MUNDIAL_URLS.individual
+  iframe.src=url
+  let timer=setTimeout(()=>{
+    // Si no cargó en 6s, mostramos fallback con botones
+    loading.style.display='none'; error.style.display='flex'
+  },6000)
+  iframe.onload=()=>{ clearTimeout(timer); loading.style.display='none' }
+  iframe.onerror=()=>{ clearTimeout(timer); loading.style.display='none'; error.style.display='flex' }
+}
+
+async function loadMundialNoticias(){
+  const feed=document.getElementById('mundial-feed')
+  // Cargar noticias del mundial desde Supabase
+  const {data}=await SB.from('mundial_noticias').select('*').order('created_at',{ascending:false}).limit(20).catch(()=>({data:null}))
+  if(!data||!data.length){
+    feed.innerHTML=`<div style="text-align:center;padding:30px 0">
+      <div style="font-size:36px;margin-bottom:10px">🌍</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--tx);margin-bottom:8px">SIGUE EL MUNDIAL EN VIVO</div>
+      <div style="font-size:14px;color:var(--tx2);margin-bottom:20px">Resultados, noticias y highlights del FIFG World Cup Acapulco 2026</div>
+      <button onclick="window.open('https://www.instagram.com/fifgfootgolfworldchampionship/','_blank')" style="width:100%;background:linear-gradient(135deg,#e1306c,#f77737);border:none;border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;margin-bottom:10px">📸 Instagram Oficial FIFG</button>
+      <button onclick="window.open('https://www.footgolf.sport/acapulcoworldcup2026/','_blank')" style="width:100%;background:rgba(255,255,255,.1);border:none;border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--tx);cursor:pointer;margin-bottom:10px">🌐 Sitio Oficial</button>
+      <button onclick="window.open('https://www.acapulco2026.com/full-competition','_blank')" style="width:100%;background:rgba(255,255,255,.1);border:none;border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--tx);cursor:pointer">🏆 Todos los resultados</button>
+    </div>`
+    return
+  }
+  feed.innerHTML=data.map(n=>`
+    <div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r16);padding:14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:20px">${n.emoji||'🌍'}</span>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx);flex:1">${n.titulo}</div>
+        <div style="font-size:11px;color:var(--tx3)">${new Date(n.created_at).toLocaleDateString('es-AR',{day:'numeric',month:'short'})}</div>
+      </div>
+      ${n.resultado?`<div style="background:rgba(74,222,128,.1);border:0.5px solid rgba(74,222,128,.3);border-radius:var(--r8);padding:10px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:#fff;text-align:center;margin-bottom:8px">${n.resultado}</div>`:''}
+      ${n.cuerpo?`<div style="font-size:13px;color:var(--tx2);line-height:1.5">${n.cuerpo}</div>`:''}
+    </div>
+  `).join('')
+}
+
+function loadMundial(){
+  switchMundial('individual')
 }
 
 function renderEquipos(){
