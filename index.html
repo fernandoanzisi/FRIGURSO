@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>FRIGURSO — FootGolf</title>
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0f2856">
+<meta name="theme-color" content="#0a0a0a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,23 +15,23 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{
-  --c1:#0f2856;--c2:#1a3a70;--c3:#1a56db;--c4:#2563eb;--c5:#93c5fd;
-  --bg:#f0f4ff;--bg2:#e8eeff;--bg3:#ffffff;
-  --tx:#0f1f40;--tx2:#4a6080;--tx3:#a0aec0;
-  --bd:rgba(37,99,235,0.14);--bd2:rgba(37,99,235,0.28);
-  --eagle:#1a56db;--birdie:#1a7a3a;--bogey:#854f0b;--dbl:#a32d2d;
-  --blue:#1a56db;--amber:#854f0b;--red:#a32d2d;
+  --c1:#0a0a0a;--c2:#141414;--c3:#4ade80;--c4:#22c55e;--c5:#86efac;
+  --bg:#0d0d0d;--bg2:#1a1a1a;--bg3:#1a1a1a;
+  --tx:#ffffff;--tx2:#888888;--tx3:#444444;
+  --bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.16);
+  --eagle:#a78bfa;--birdie:#4ade80;--bogey:#fb923c;--dbl:#f87171;
+  --blue:#60a5fa;--amber:#fbbf24;--red:#f87171;
   --r8:8px;--r12:12px;--r16:16px;--r22:22px;--rF:999px;
-  --sh:0 2px 12px rgba(15,40,86,0.08);--sh2:0 6px 28px rgba(15,40,86,0.16);
+  --sh:0 2px 16px rgba(0,0,0,.4);--sh2:0 8px 32px rgba(0,0,0,.6);
   font-family:'Barlow',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;background:#0a1628}
+html,body{height:100%;overflow:hidden;background:#000}
 body{display:flex;align-items:center;justify-content:center}
 
 .device{width:100%;max-width:430px;height:100vh;max-height:100vh;background:var(--bg3);display:flex;flex-direction:column;position:relative;overflow:hidden}
 @media(min-width:800px){
-  .device{max-height:900px;border-radius:40px;box-shadow:0 40px 100px rgba(0,0,0,0.6),0 0 0 1px rgba(37,99,235,0.2)}
+  .device{max-height:900px;border-radius:40px;box-shadow:0 40px 100px rgba(0,0,0,0.6),0 0 0 1px rgba(74,222,128,0.2)}
 }
 
 .sb{background:var(--c1);height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0}
@@ -43,35 +43,35 @@ body{display:flex;align-items:center;justify-content:center}
 .sc.cur{display:block}
 .sc.cur.flex{display:flex;flex-direction:column}
 
-.nb{background:var(--c1);border-top:0.5px solid rgba(147,197,253,0.12);display:flex;flex-shrink:0}
+.nb{background:var(--c1);border-top:0.5px solid rgba(134,239,172,0.12);display:flex;flex-shrink:0}
 .nbi{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 10px;cursor:pointer;border:none;background:none}
 .nbi-i{font-size:20px;line-height:1;opacity:.35;transition:opacity .2s}
-.nbi-l{font-size:9px;font-weight:700;font-family:'Barlow Condensed',sans-serif;color:rgba(147,197,253,0.3);letter-spacing:.4px;transition:color .2s}
+.nbi-l{font-size:9px;font-weight:700;font-family:'Barlow Condensed',sans-serif;color:rgba(134,239,172,0.3);letter-spacing:.4px;transition:color .2s}
 .nbi.on .nbi-i{opacity:1}
 .nbi.on .nbi-l{color:var(--c5)}
 
 /* AUTH */
 .auth-wrap{background:var(--c1);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;overflow-y:auto}
-.auth-logo{width:80px;height:80px;background:var(--c3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;margin-bottom:16px;border:2px solid rgba(147,197,253,.25)}
+.auth-logo{width:80px;height:80px;background:var(--c3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;margin-bottom:16px;border:2px solid rgba(134,239,172,.25)}
 .auth-title{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:800;color:#fff;letter-spacing:2px;margin-bottom:4px}
-.auth-sub{font-size:13px;color:rgba(147,197,253,.5);margin-bottom:28px;text-align:center;line-height:1.5}
+.auth-sub{font-size:13px;color:rgba(134,239,172,.5);margin-bottom:28px;text-align:center;line-height:1.5}
 .auth-tabs{display:flex;background:rgba(255,255,255,.06);border-radius:var(--r12);padding:3px;margin-bottom:22px;width:100%}
-.auth-tab{flex:1;padding:9px;border-radius:var(--r8);border:none;background:none;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:rgba(147,197,253,.4);cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.auth-tab{flex:1;padding:9px;border-radius:var(--r8);border:none;background:none;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:rgba(134,239,172,.4);cursor:pointer;transition:all .2s;letter-spacing:.5px}
 .auth-tab.on{background:var(--c3);color:#fff}
 .inp-lbl{font-size:11px;color:rgba(255,255,255,.45);margin-bottom:5px;font-weight:700;letter-spacing:.5px;width:100%}
 .inp{width:100%;background:rgba(255,255,255,.08);border:0.5px solid rgba(255,255,255,.15);border-radius:var(--r12);padding:13px 15px;font-size:15px;color:#fff;font-family:'Barlow',sans-serif;outline:none;margin-bottom:14px}
 .inp:focus{border-color:rgba(255,255,255,.4)}
 .inp::placeholder{color:rgba(255,255,255,.2)}
 .inp-row{display:flex;gap:10px;width:100%}
-.btn-main{width:100%;background:var(--c3);border:none;border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 20px rgba(37,99,235,.4);margin-top:4px}
+.btn-main{width:100%;background:var(--c3);border:none;border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 20px rgba(74,222,128,.4);margin-top:4px}
 .btn-main:active{transform:scale(.97)}
 .btn-main:disabled{opacity:.5}
-.auth-err{background:rgba(163,45,45,.15);border:0.5px solid rgba(163,45,45,.3);border-radius:var(--r8);padding:10px 14px;font-size:13px;color:#f09595;margin-bottom:12px;width:100%;display:none}
-.auth-ok{background:rgba(37,99,235,.2);border:0.5px solid rgba(37,99,235,.4);border-radius:var(--r8);padding:10px 14px;font-size:13px;color:var(--c5);margin-bottom:12px;width:100%;display:none}
+.auth-err{background:rgba(248,113,113,.15);border:0.5px solid rgba(248,113,113,.3);border-radius:var(--r8);padding:10px 14px;font-size:13px;color:#f09595;margin-bottom:12px;width:100%;display:none}
+.auth-ok{background:rgba(74,222,128,.2);border:0.5px solid rgba(74,222,128,.4);border-radius:var(--r8);padding:10px 14px;font-size:13px;color:var(--c5);margin-bottom:12px;width:100%;display:none}
 
 /* COMMON */
 .hdr{background:var(--c1);padding:16px 20px 18px;flex-shrink:0}
-.hdr-sub{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(147,197,253,.45);letter-spacing:1.2px;margin-bottom:3px}
+.hdr-sub{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(134,239,172,.45);letter-spacing:1.2px;margin-bottom:3px}
 .hdr-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:#fff}
 .hdr-row{display:flex;justify-content:space-between;align-items:center}
 .hcp-box{background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:var(--r12);padding:8px 14px;text-align:center}
@@ -83,10 +83,10 @@ body{display:flex;align-items:center;justify-content:center}
 .sec-b{padding-bottom:24px}
 .divh{height:8px;background:var(--bg);flex-shrink:0}
 .badge{display:inline-flex;padding:2px 9px;border-radius:var(--rF);font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:.3px}
-.bg{background:rgba(37,99,235,.1);color:#1a56db}
-.ba{background:#faeeda;color:#854f0b}
-.bb{background:rgba(14,165,233,.1);color:#0369a1}
-.br{background:#fcebeb;color:#a32d2d}
+.bg{background:rgba(74,222,128,.15);color:#4ade80}
+.ba{background:rgba(251,191,36,.12);color:#fbbf24}
+.bb{background:rgba(96,165,250,.1);color:#60a5fa}
+.br{background:rgba(248,113,113,.1);color:#f87171}
 .bgr{background:var(--bg2);color:var(--tx2)}
 .li{display:flex;align-items:center;padding:11px 0;border-bottom:0.5px solid var(--bd);gap:12px}
 .li:last-child{border-bottom:none}
@@ -95,7 +95,7 @@ body{display:flex;align-items:center;justify-content:center}
 .met-v{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800}
 .met-l{font-size:11px;color:var(--tx2);margin-top:2px}
 .met-s{font-size:11px;color:var(--c4);margin-top:2px}
-.fab{background:var(--c3);border-radius:var(--rF);padding:13px 30px;display:flex;align-items:center;gap:8px;align-self:center;margin:14px auto;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(37,99,235,.35)}
+.fab{background:var(--c3);border-radius:var(--rF);padding:13px 30px;display:flex;align-items:center;gap:8px;align-self:center;margin:14px auto;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(74,222,128,.35)}
 .fab:active{transform:scale(.97)}
 .fab-t{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.5px}
 .quick{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 16px 14px}
@@ -110,7 +110,7 @@ body{display:flex;align-items:center;justify-content:center}
 .strip{background:rgba(9,24,55,.5);overflow-x:auto;display:flex;padding:10px 14px;gap:6px;flex-shrink:0}
 .strip::-webkit-scrollbar{display:none}
 .hchip{min-width:38px;background:rgba(255,255,255,.05);border-radius:6px;padding:5px 3px;text-align:center;cursor:pointer;border:0.5px solid transparent;flex-shrink:0}
-.hchip.on{background:rgba(37,99,235,.18);border-color:rgba(147,197,253,.4)}
+.hchip.on{background:rgba(74,222,128,.18);border-color:rgba(134,239,172,.4)}
 .hn{font-size:10px;color:rgba(255,255,255,.45);font-family:'Barlow Condensed',sans-serif;font-weight:700}
 .hp{font-size:10px;color:rgba(255,255,255,.2)}
 .hs{width:22px;height:22px;border-radius:50%;margin:3px auto 0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;font-family:'Barlow Condensed',sans-serif}
@@ -121,9 +121,9 @@ body{display:flex;align-items:center;justify-content:center}
 .gb:active{transform:scale(.93)}
 .ge{background:rgba(26,86,219,.1);border-color:var(--eagle);color:var(--eagle)}
 .gbi{background:rgba(26,122,58,.1);border-color:var(--birdie);color:var(--birdie)}
-.gp{background:rgba(15,31,64,.05);border-color:#c0cce0;color:var(--tx)}
-.gbo{background:rgba(133,79,11,.1);border-color:var(--bogey);color:var(--bogey)}
-.gd{background:rgba(163,45,45,.1);border-color:var(--dbl);color:var(--dbl)}
+.gp{background:rgba(74,222,128,.06);border-color:rgba(74,222,128,.25);color:var(--tx)}
+.gbo{background:rgba(251,191,36,.1);border-color:var(--bogey);color:var(--bogey)}
+.gd{background:rgba(248,113,113,.1);border-color:var(--dbl);color:var(--dbl)}
 .sc-nav{display:flex;justify-content:space-between;margin-top:16px}
 .sc-nb{background:none;border:none;cursor:pointer;padding:8px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--c3)}
 .sc-nb:disabled{color:var(--tx3)}
@@ -162,11 +162,11 @@ body{display:flex;align-items:center;justify-content:center}
 
 /* PERFIL */
 .p-hdr{background:var(--c1);padding:24px 18px;text-align:center;flex-shrink:0}
-.p-av{width:82px;height:82px;border-radius:50%;background:var(--c3);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:#fff;border:3px solid rgba(147,197,253,.3)}
-.p-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(37,99,235,.1);margin-top:16px;border-radius:var(--r16);overflow:hidden}
+.p-av{width:82px;height:82px;border-radius:50%;background:var(--c3);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:#fff;border:3px solid rgba(134,239,172,.3)}
+.p-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(74,222,128,.1);margin-top:16px;border-radius:var(--r16);overflow:hidden}
 .ps{background:rgba(255,255,255,.08);padding:12px;text-align:center}
 .psv{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--c5)}
-.psl{font-size:9px;color:rgba(147,197,253,.4);letter-spacing:.3px}
+.psl{font-size:9px;color:rgba(134,239,172,.4);letter-spacing:.3px}
 
 /* TORNEOS / CANCHAS */
 .tc{background:var(--bg3);border-radius:var(--r22);border:0.5px solid var(--bd);overflow:hidden;margin-bottom:12px;box-shadow:var(--sh)}
@@ -182,15 +182,15 @@ body{display:flex;align-items:center;justify-content:center}
 /* HISTORIAL */
 .hr{display:flex;align-items:center;padding:12px 0;border-bottom:0.5px solid var(--bd);gap:12px}
 .hr:last-child{border-bottom:none}
-.hr-i{width:38px;height:38px;border-radius:var(--r8);background:rgba(37,99,235,.1);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.hr-i{width:38px;height:38px;border-radius:var(--r8);background:rgba(74,222,128,.1);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 
 /* LOADER / TOAST */
-.loader{position:absolute;inset:0;background:rgba(15,40,86,.88);display:none;align-items:center;justify-content:center;z-index:400;flex-direction:column;gap:12px}
+.loader{position:absolute;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:400;flex-direction:column;gap:12px}
 .loader.on{display:flex}
-.spin{width:36px;height:36px;border:3px solid rgba(147,197,253,.2);border-top-color:var(--c5);border-radius:50%;animation:spin .8s linear infinite}
+.spin{width:36px;height:36px;border:3px solid rgba(134,239,172,.2);border-top-color:var(--c5);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loader-t{color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px}
-.toast{position:absolute;bottom:76px;left:50%;transform:translateX(-50%) translateY(6px);background:var(--c1);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;padding:10px 22px;border-radius:var(--rF);box-shadow:var(--sh2);white-space:nowrap;z-index:300;opacity:0;transition:all .22s;border:0.5px solid rgba(147,197,253,.2);pointer-events:none}
+.toast{position:absolute;bottom:76px;left:50%;transform:translateX(-50%) translateY(6px);background:var(--c1);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;padding:10px 22px;border-radius:var(--rF);box-shadow:var(--sh2);white-space:nowrap;z-index:300;opacity:0;transition:all .22s;border:0.5px solid rgba(134,239,172,.2);pointer-events:none}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .empty{text-align:center;padding:32px 16px}
 .empty-i{font-size:36px;margin-bottom:8px}
@@ -199,18 +199,18 @@ body{display:flex;align-items:center;justify-content:center}
 
 /* COURSE SELECTOR */
 .sel-wrap{background:var(--c1);min-height:100%;padding:0 0 32px}
-.sel-fp{display:inline-flex;align-items:center;padding:6px 13px;border-radius:999px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:rgba(147,197,253,.45);white-space:nowrap;flex-shrink:0}
-.sel-fp.on{background:rgba(37,99,235,.22);border-color:rgba(147,197,253,.4);color:var(--c5)}
-.sel-country-hdr{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(147,197,253,.3);letter-spacing:1px;padding:10px 0 6px;border-top:0.5px solid rgba(255,255,255,.06);margin-top:6px}
+.sel-fp{display:inline-flex;align-items:center;padding:6px 13px;border-radius:999px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:rgba(134,239,172,.45);white-space:nowrap;flex-shrink:0}
+.sel-fp.on{background:rgba(74,222,128,.22);border-color:rgba(134,239,172,.4);color:var(--c5)}
+.sel-country-hdr{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(134,239,172,.3);letter-spacing:1px;padding:10px 0 6px;border-top:0.5px solid rgba(255,255,255,.06);margin-top:6px}
 .sel-course-card{background:rgba(255,255,255,.06);border:1.5px solid transparent;border-radius:var(--r16);padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all .18s;position:relative}
-.sel-course-card.on{background:rgba(37,99,235,.18);border-color:rgba(147,197,253,.4)}
+.sel-course-card.on{background:rgba(74,222,128,.18);border-color:rgba(134,239,172,.4)}
 .sel-course-card:active{transform:scale(.98)}
 .sel-course-name{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;color:#fff}
-.sel-course-meta{font-size:12px;color:rgba(147,197,253,.45);margin-top:3px}
+.sel-course-meta{font-size:12px;color:rgba(134,239,172,.45);margin-top:3px}
 .sel-world-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,193,7,.12);color:#ffc107;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;margin-top:7px;letter-spacing:.3px}
 .sel-check{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:50%;background:var(--c3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff}
 .tog-wrap{display:flex;background:rgba(255,255,255,.07);border-radius:var(--r12);padding:3px;margin-bottom:16px}
-.tog-opt{flex:1;padding:9px;border-radius:var(--r8);border:none;background:none;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:rgba(147,197,253,.4);cursor:pointer;transition:all .18s;letter-spacing:.5px}
+.tog-opt{flex:1;padding:9px;border-radius:var(--r8);border:none;background:none;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:rgba(134,239,172,.4);cursor:pointer;transition:all .18s;letter-spacing:.5px}
 .tog-opt.on{background:var(--c3);color:#fff}
 .mundial-banner{background:linear-gradient(90deg,rgba(255,193,7,.15),rgba(255,193,7,.08));border:0.5px solid rgba(255,193,7,.3);border-radius:var(--r12);padding:12px 14px;margin-bottom:14px;display:none}
 .mundial-banner.on{display:block}
@@ -223,7 +223,7 @@ body{display:flex;align-items:center;justify-content:center}
 .sum-chips{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:20px 0}
 .sum-chip{background:rgba(255,255,255,.08);border-radius:var(--r8);padding:8px 14px;text-align:center}
 .sum-chip-v{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:#fff}
-.sum-chip-l{font-size:10px;color:rgba(147,197,253,.4);margin-top:2px}
+.sum-chip-l{font-size:10px;color:rgba(134,239,172,.4);margin-top:2px}
 
 /* STAT BARS */
 .sbar-row{display:flex;align-items:center;gap:10px;margin-bottom:11px}
@@ -235,11 +235,6 @@ body{display:flex;align-items:center;justify-content:center}
 </head>
 <body>
 <div class="device">
-  <div class="sb">
-    <span class="sb-t" id="sbt">09:41</span>
-    <span style="font-size:13px">📶 🔋</span>
-  </div>
-
   <div class="screens" id="screens">
 
     <!-- AUTH -->
@@ -272,14 +267,14 @@ body{display:flex;align-items:center;justify-content:center}
 
         <!-- Formulario olvidé contraseña -->
         <div id="forgot-fields" style="display:none;width:100%">
-          <div style="font-size:13px;color:rgba(147,197,253,.5);margin-bottom:16px;text-align:center;line-height:1.5">Te enviamos un link a tu email para restablecer la contraseña</div>
+          <div style="font-size:13px;color:rgba(134,239,172,.5);margin-bottom:16px;text-align:center;line-height:1.5">Te enviamos un link a tu email para restablecer la contraseña</div>
           <div class="inp-lbl">TU EMAIL</div>
           <input class="inp" id="forgot-email" type="email" placeholder="tu@email.com">
         </div>
 
         <!-- Formulario nueva contraseña (recovery) -->
         <div id="reset-fields" style="display:none;width:100%">
-          <div style="font-size:13px;color:rgba(147,197,253,.5);margin-bottom:16px;text-align:center;line-height:1.5">Ingresá tu nueva contraseña</div>
+          <div style="font-size:13px;color:rgba(134,239,172,.5);margin-bottom:16px;text-align:center;line-height:1.5">Ingresá tu nueva contraseña</div>
           <div class="inp-lbl">NUEVA CONTRASEÑA</div>
           <input class="inp" id="new-pass" type="password" placeholder="Mínimo 8 caracteres">
           <div class="inp-lbl">REPETIR CONTRASEÑA</div>
@@ -289,8 +284,8 @@ body{display:flex;align-items:center;justify-content:center}
         <div class="auth-err" id="auth-err"></div>
         <div class="auth-ok" id="auth-ok"></div>
         <button class="btn-main" id="auth-btn" onclick="doAuth()">INGRESAR</button>
-        <button id="forgot-link" onclick="switchTab('forgot')" style="background:none;border:none;color:rgba(147,197,253,.4);font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline">¿Olvidaste tu contraseña?</button>
-        <div style="margin-top:12px;text-align:center;font-size:12px;color:rgba(147,197,253,.3)">🌍 89 canchas · 312 jugadores · Sudamérica</div>
+        <button id="forgot-link" onclick="switchTab('forgot')" style="background:none;border:none;color:rgba(134,239,172,.4);font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline">¿Olvidaste tu contraseña?</button>
+        <div style="margin-top:12px;text-align:center;font-size:12px;color:rgba(134,239,172,.3)">🌍 89 canchas · 312 jugadores · Sudamérica</div>
       </div>
     </div>
 
@@ -324,14 +319,14 @@ body{display:flex;align-items:center;justify-content:center}
         <!-- Modo + Jugadores en una fila -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:rgba(147,197,253,.35);letter-spacing:1px;margin-bottom:6px">MODO</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:rgba(134,239,172,.35);letter-spacing:1px;margin-bottom:6px">MODO</div>
             <div class="tog-wrap" style="margin-bottom:0">
               <button class="tog-opt on" id="tog-prac" onclick="toggleTourMode('practica')">⛳ PRÁCT.</button>
               <button class="tog-opt" id="tog-torn" onclick="toggleTourMode('torneo')">🏆 TORN.</button>
             </div>
           </div>
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:rgba(147,197,253,.35);letter-spacing:1px;margin-bottom:6px">JUGADORES</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:rgba(134,239,172,.35);letter-spacing:1px;margin-bottom:6px">JUGADORES</div>
             <div class="tog-wrap" style="margin-bottom:0">
               <button class="tog-opt on" id="tog-solo" onclick="toggleGroupMode(false)">👤 SOLO</button>
               <button class="tog-opt" id="tog-grupo" onclick="toggleGroupMode(true)">👥 GRUPO</button>
@@ -344,19 +339,19 @@ body{display:flex;align-items:center;justify-content:center}
         </div>
         <!-- Inputs de grupo (se muestran solo en modo grupo) -->
         <div id="group-inputs" style="display:none;margin-bottom:10px;background:rgba(255,255,255,.05);border-radius:var(--r12);padding:12px">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(147,197,253,.4);letter-spacing:1px;margin-bottom:10px">NOMBRES DEL GRUPO</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(134,239,172,.4);letter-spacing:1px;margin-bottom:10px">NOMBRES DEL GRUPO</div>
           <input class="inp" id="gp0" placeholder="Jugador 1 (vos)" style="margin-bottom:8px">
           <input class="inp" id="gp1" placeholder="Jugador 2" style="margin-bottom:8px">
           <input class="inp" id="gp2" placeholder="Jugador 3" style="margin-bottom:8px">
           <input class="inp" id="gp3" placeholder="Jugador 4 (opcional)" style="margin-bottom:8px">
-          <button id="btn-cargar-participantes" onclick="loadTournamentPlayers(this)" style="width:100%;background:rgba(147,197,253,.08);border:0.5px solid rgba(147,197,253,.2);border-radius:var(--r8);padding:9px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s">📋 CARGAR PARTICIPANTES DEL TORNEO</button>
+          <button id="btn-cargar-participantes" onclick="loadTournamentPlayers(this)" style="width:100%;background:rgba(134,239,172,.08);border:0.5px solid rgba(134,239,172,.2);border-radius:var(--r8);padding:9px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s">📋 CARGAR PARTICIPANTES DEL TORNEO</button>
         </div>
         <!-- Lista de canchas -->
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:rgba(147,197,253,.35);letter-spacing:1px;margin-bottom:8px" id="sel-count"></div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:rgba(134,239,172,.35);letter-spacing:1px;margin-bottom:8px" id="sel-count"></div>
         <div id="sel-courses"></div>
         <!-- Agregar cancha propia -->
-        <button onclick="toggleAddCourse()" style="width:100%;background:rgba(255,255,255,.05);border:1.5px dashed rgba(147,197,253,.2);border-radius:var(--r16);padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:rgba(147,197,253,.5);cursor:pointer;margin-top:6px">➕ Agregar cancha que no está en la lista</button>
-        <div id="add-course-form" style="display:none;background:rgba(255,255,255,.06);border:1.5px solid rgba(147,197,253,.2);border-radius:var(--r16);padding:16px;margin-top:8px">
+        <button onclick="toggleAddCourse()" style="width:100%;background:rgba(255,255,255,.05);border:1.5px dashed rgba(134,239,172,.2);border-radius:var(--r16);padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:rgba(134,239,172,.5);cursor:pointer;margin-top:6px">➕ Agregar cancha que no está en la lista</button>
+        <div id="add-course-form" style="display:none;background:rgba(255,255,255,.06);border:1.5px solid rgba(134,239,172,.2);border-radius:var(--r16);padding:16px;margin-top:8px">
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;margin-bottom:14px;letter-spacing:.5px">➕ NUEVA CANCHA</div>
           <div class="inp-lbl">NOMBRE DE LA CANCHA</div>
           <input class="inp" id="ac-nombre" placeholder="Ej: Club de Golf Las Rosas">
@@ -384,14 +379,14 @@ body{display:flex;align-items:center;justify-content:center}
           <div class="inp-lbl">PAR TOTAL <span id="ac-par-hint" style="font-weight:400;text-transform:none">(podés ajustar)</span></div>
           <input class="inp" id="ac-par" type="number" value="36" min="27" max="82">
           <button onclick="submitAddCourse()" style="width:100%;background:var(--c3);border:none;border-radius:var(--r12);padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#fff;cursor:pointer;margin-bottom:8px">✓ GUARDAR CANCHA</button>
-          <button onclick="toggleAddCourse()" style="width:100%;background:rgba(255,255,255,.06);border:none;border-radius:var(--r12);padding:10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:rgba(147,197,253,.4);cursor:pointer">Cancelar</button>
+          <button onclick="toggleAddCourse()" style="width:100%;background:rgba(255,255,255,.06);border:none;border-radius:var(--r12);padding:10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:rgba(134,239,172,.4);cursor:pointer">Cancelar</button>
         </div>
       </div>
 
       <!-- Botón iniciar siempre visible abajo -->
-      <div style="padding:10px 18px 14px;background:var(--c1);flex-shrink:0;border-top:0.5px solid rgba(147,197,253,.08)">
-        <div id="sel-cur" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:rgba(147,197,253,.4);margin-bottom:8px;text-align:center"></div>
-        <button onclick="startRound()" style="width:100%;background:var(--c3);border:none;border-radius:var(--r16);padding:16px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 24px rgba(37,99,235,.45)">⚽ COMENZAR RONDA</button>
+      <div style="padding:10px 18px 14px;background:var(--c1);flex-shrink:0;border-top:0.5px solid rgba(134,239,172,.08)">
+        <div id="sel-cur" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:rgba(134,239,172,.4);margin-bottom:8px;text-align:center"></div>
+        <button onclick="startRound()" style="width:100%;background:var(--c3);border:none;border-radius:var(--r16);padding:16px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 24px rgba(74,222,128,.45)">⚽ COMENZAR RONDA</button>
       </div>
     </div>
 
@@ -411,10 +406,10 @@ body{display:flex;align-items:center;justify-content:center}
       </div>
       <button class="fab" onclick="openSelector()"><span style="font-size:20px">⚽</span><span class="fab-t">NUEVA RONDA</span></button>
       <div class="quick">
-        <button class="qb" onclick="go('sc-gps')"><div class="qb-i" style="background:rgba(37,99,235,.1)">📍</div><span class="qb-l">GPS</span></button>
+        <button class="qb" onclick="go('sc-gps')"><div class="qb-i" style="background:rgba(74,222,128,.1)">📍</div><span class="qb-l">GPS</span></button>
         <button class="qb" onclick="go('sc-clima')"><div class="qb-i" style="background:rgba(14,165,233,.1)">🌤</div><span class="qb-l">CLIMA</span></button>
-        <button class="qb" onclick="go('sc-torneos')"><div class="qb-i" style="background:rgba(133,79,11,.1)">🏆</div><span class="qb-l">TORNEOS</span></button>
-        <button class="qb" onclick="go('sc-equipos')"><div class="qb-i" style="background:rgba(163,45,45,.1)">👥</div><span class="qb-l">EQUIPOS</span></button>
+        <button class="qb" onclick="go('sc-torneos')"><div class="qb-i" style="background:rgba(251,191,36,.1)">🏆</div><span class="qb-l">TORNEOS</span></button>
+        <button class="qb" onclick="go('sc-equipos')"><div class="qb-i" style="background:rgba(248,113,113,.1)">👥</div><span class="qb-l">EQUIPOS</span></button>
       </div>
       <!-- RONDA SUSPENDIDA -->
       <div id="draft-card" style="display:none;margin:0 16px 16px;border-radius:18px;overflow:hidden;box-shadow:0 0 0 1.5px rgba(251,191,36,.35),0 8px 32px rgba(251,191,36,.12)">
@@ -456,7 +451,7 @@ body{display:flex;align-items:center;justify-content:center}
           <div style="display:flex;align-items:center;gap:10px">
             <div id="autosave-pill" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:#fbbf24;letter-spacing:.8px;transition:opacity .4s"></div>
             <div style="text-align:right">
-              <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(147,197,253,.45);letter-spacing:.5px" id="sc-course-name">—</div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(134,239,172,.45);letter-spacing:.5px" id="sc-course-name">—</div>
               <div id="sc-top" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:#fff">E</div>
             </div>
           </div>
@@ -480,7 +475,7 @@ body{display:flex;align-items:center;justify-content:center}
           </div>
         </div>
       </div>
-      <div id="save-error" style="display:none;background:rgba(163,45,45,.18);border-top:1px solid rgba(163,45,45,.35);padding:10px 16px;font-size:12px;color:#f09595;font-family:'Barlow Condensed',sans-serif;font-weight:700;flex-shrink:0"></div>
+      <div id="save-error" style="display:none;background:rgba(248,113,113,.18);border-top:1px solid rgba(248,113,113,.35);padding:10px 16px;font-size:12px;color:#f09595;font-family:'Barlow Condensed',sans-serif;font-weight:700;flex-shrink:0"></div>
       <div class="sc-foot">
         <div class="sfi"><div class="sfv" id="sf-g">0</div><div class="sfl">GOLPES</div></div>
         <div class="sfi"><div class="sfv" id="sf-p">0</div><div class="sfl">PAR</div></div>
@@ -497,11 +492,11 @@ body{display:flex;align-items:center;justify-content:center}
       <div class="gps-hdr">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
           <div class="live" style="width:9px;height:9px;border-radius:50%;background:var(--c5)"></div>
-          <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:rgba(147,197,253,.5);letter-spacing:.8px">GPS EN VIVO</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:rgba(134,239,172,.5);letter-spacing:.8px">GPS EN VIVO</span>
           <button onclick="getGPS()" style="margin-left:auto;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:var(--r8);padding:5px 12px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;cursor:pointer">📡 ACTIVAR</button>
         </div>
         <div style="display:flex;align-items:flex-end;justify-content:space-between">
-          <div><div class="gps-big"><span id="gps-m">142</span><span style="font-size:28px;color:rgba(255,255,255,.3)">m</span></div><div style="font-size:12px;color:rgba(147,197,253,.45);margin-top:4px" id="gps-lbl">distancia al hoyo</div></div>
+          <div><div class="gps-big"><span id="gps-m">142</span><span style="font-size:28px;color:rgba(255,255,255,.3)">m</span></div><div style="font-size:12px;color:rgba(134,239,172,.45);margin-top:4px" id="gps-lbl">distancia al hoyo</div></div>
           <div style="text-align:right"><div style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;color:rgba(255,255,255,.6)" id="gps-pin">38m</div><div style="font-size:11px;color:rgba(255,255,255,.25)">al pin</div></div>
         </div>
         <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">
@@ -595,7 +590,7 @@ body{display:flex;align-items:center;justify-content:center}
     <div class="sc" id="sc-ranking">
       <div class="rk-hdr">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:#fff;letter-spacing:1px">🏆 RANKING</div>
-        <div style="font-size:12px;color:rgba(147,197,253,.4);margin-top:4px">Temporada 2025 · Sudamérica</div>
+        <div style="font-size:12px;color:rgba(134,239,172,.4);margin-top:4px">Temporada 2025 · Sudamérica</div>
       </div>
       <div class="sec sec-b"><div class="card" id="ranking-list"></div></div>
     </div>
@@ -633,7 +628,7 @@ body{display:flex;align-items:center;justify-content:center}
       <div class="p-hdr">
         <div class="p-av" id="p-av">?</div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:#fff" id="p-name">—</div>
-        <div style="font-size:13px;color:rgba(147,197,253,.5);margin-top:5px" id="p-meta">—</div>
+        <div style="font-size:13px;color:rgba(134,239,172,.5);margin-top:5px" id="p-meta">—</div>
         <div class="p-stats">
           <div class="ps"><div class="psv" id="ps-hcp">—</div><div class="psl">HCP</div></div>
           <div class="ps"><div class="psv" id="ps-vict">0</div><div class="psl">VICTORIAS</div></div>
@@ -661,16 +656,16 @@ body{display:flex;align-items:center;justify-content:center}
 
   <!-- ROUND SUMMARY -->
   <div class="sum-overlay" id="sum-overlay">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(147,197,253,.35);letter-spacing:1.5px;font-weight:700;margin-bottom:10px">RONDA COMPLETADA</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(134,239,172,.35);letter-spacing:1.5px;font-weight:700;margin-bottom:10px">RONDA COMPLETADA</div>
     <div class="sum-score" id="sum-score">E</div>
-    <div class="sum-lbl" id="sum-lbl" style="color:rgba(147,197,253,.5)">AL PAR</div>
-    <div style="margin-top:14px;font-size:13px;color:rgba(147,197,253,.5)" id="sum-course-lbl">—</div>
+    <div class="sum-lbl" id="sum-lbl" style="color:rgba(134,239,172,.5)">AL PAR</div>
+    <div style="margin-top:14px;font-size:13px;color:rgba(134,239,172,.5)" id="sum-course-lbl">—</div>
     <div class="sum-chips" id="sum-chips"></div>
     <div id="sum-tour-note" style="display:none;background:rgba(255,193,7,.1);border:0.5px solid rgba(255,193,7,.25);border-radius:var(--r8);padding:9px 16px;font-size:13px;color:#ffc107;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:18px">🌍 Registrada en FIFG World Cup 2026</div>
     <div id="sum-save-status" style="display:none;width:100%;border-radius:var(--r8);padding:10px 14px;font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:4px;text-align:left"></div>
     <div style="display:flex;gap:10px;width:100%;margin-top:8px">
       <button onclick="shareRound()" style="flex:1;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.15);border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer">📤 COMPARTIR</button>
-      <button onclick="closeSummary()" style="flex:1.6;background:var(--c3);border:none;border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(37,99,235,.4)">✓ CONTINUAR</button>
+      <button onclick="closeSummary()" style="flex:1.6;background:var(--c3);border:none;border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(74,222,128,.4)">✓ CONTINUAR</button>
     </div>
   </div>
 
@@ -692,12 +687,6 @@ body{display:flex;align-items:center;justify-content:center}
 const SB_URL = 'https://cwcgltiilatygutfqqna.supabase.co'
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3Y2dsdGlpbGF0eWd1dGZxcW5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTY5MTQsImV4cCI6MjA5NTk5MjkxNH0.nY5DPNYpEdG9YTkC3KtNp0yjUL-JRLyElu4YVBoN5pE'
 const SB = supabase.createClient(SB_URL, SB_KEY, {auth:{persistSession:true,storage:localStorage}})
-
-;(function tick(){
-  const n=new Date()
-  document.getElementById('sbt').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')
-  setTimeout(tick,10000)
-})()
 
 let USER=null, JUGADOR=null
 
@@ -816,7 +805,7 @@ const COURSES=[
 let _selCourse=COURSES[0], _tourMode=false, _lastRoundData=null, _selFilter=''
 let _groupEnabled=false, _groupNames=['','','','']
 let _gScores=[...Array(4)].map(()=>new Array(18).fill(null)), _activePlayer=0
-const GP_COLORS=['#1a56db','#1a7a3a','#854f0b','#a32d2d']
+const GP_COLORS=['#4ade80','#60a5fa','#fbbf24','#f87171']
 
 window.addEventListener('load', async ()=>{
   load('Iniciando...')
@@ -1081,7 +1070,7 @@ function renderPlayerTabs(){
     const str=done.length===0?'—':svp===0?'E':svp>0?'+'+svp:svp
     const col=GP_COLORS[pi]
     const on=pi===_activePlayer
-    return`<button onclick="setActivePlayer(${pi})" style="display:inline-flex;align-items:center;gap:5px;background:${on?col+'28':'rgba(255,255,255,.05)'};border:1.5px solid ${on?col:'rgba(255,255,255,.08)'};border-radius:20px;padding:5px 11px;margin-right:6px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:${on?col:'rgba(147,197,253,.35)'}">
+    return`<button onclick="setActivePlayer(${pi})" style="display:inline-flex;align-items:center;gap:5px;background:${on?col+'28':'rgba(255,255,255,.05)'};border:1.5px solid ${on?col:'rgba(255,255,255,.08)'};border-radius:20px;padding:5px 11px;margin-right:6px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:${on?col:'rgba(134,239,172,.35)'}">
       <span style="width:7px;height:7px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>${nm.split(' ')[0]}<span style="opacity:.7">${str}</span>
     </button>`
   }).join('')
@@ -1151,7 +1140,7 @@ function renderScorecard(){
   document.getElementById('ggrid').innerHTML=Array.from({length:15},(_,i)=>{
     const n=i+1,cls=g===n?scCls(n-h.par):''
     return`<button class="gb ${cls}" onclick="scSet(${n})" style="${g===n&&_groupEnabled?'border-color:'+GP_COLORS[_activePlayer]+';color:'+GP_COLORS[_activePlayer]:''}">${n}</button>`
-  }).join('')+(g!==null?`<button onclick="clearHole()" style="width:100%;margin-top:8px;background:rgba(163,45,45,.08);border:1.5px solid rgba(163,45,45,.3);border-radius:var(--r12);padding:9px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--dbl);cursor:pointer">✕ Borrar anotación del Hoyo ${h.n}</button>`:'')
+  }).join('')+(g!==null?`<button onclick="clearHole()" style="width:100%;margin-top:8px;background:rgba(248,113,113,.08);border:1.5px solid rgba(248,113,113,.3);border-radius:var(--r12);padding:9px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--dbl);cursor:pointer">✕ Borrar anotación del Hoyo ${h.n}</button>`:'')
   document.getElementById('sc-prev').disabled=hi===0
   document.getElementById('sc-next').disabled=hi===last
   const done=sc.filter(s=>s!==null)
@@ -1169,8 +1158,27 @@ function renderScorecard(){
 }
 function scSet(n){
   const sc=getCurScores()
-  if(sc[hi]===n){ sc[hi]=null }
-  else { sc[hi]=n; if(hi<getCourseHoles(_selCourse).length-1) hi++ }
+  if(sc[hi]===n){
+    sc[hi]=null
+  } else {
+    const wasNull=sc[hi]===null
+    sc[hi]=n
+    if(_groupEnabled && wasNull){
+      // Modo grupo: avanzar al siguiente jugador sin score en este hoyo
+      const names=getGroupNames()
+      const activePlayers=names.map((nm,i)=>nm?i:-1).filter(i=>i>=0)
+      const nextP=activePlayers.find(pi=>pi>_activePlayer&&_gScores[pi][hi]===null)
+      if(nextP!==undefined){
+        _activePlayer=nextP
+      } else {
+        // Todos anotaron este hoyo → volver al primero y avanzar hoyo
+        _activePlayer=activePlayers[0]||0
+        if(hi<getCourseHoles(_selCourse).length-1) hi++
+      }
+    } else if(!_groupEnabled){
+      if(hi<getCourseHoles(_selCourse).length-1) hi++
+    }
+  }
   renderScorecard()
   autoSaveDraft()
 }
@@ -1339,7 +1347,7 @@ async function saveRound(){
   // 3. Guardar en DB en segundo plano
   const statusEl=document.getElementById('sum-save-status')
   const setStatus=(icon,bg,col,txt)=>{if(statusEl){statusEl.style.display='block';statusEl.style.background=bg;statusEl.style.color=col;statusEl.textContent=icon+' '+txt}}
-  setStatus('⏳','rgba(147,197,253,.12)','rgba(147,197,253,.7)','Guardando...')
+  setStatus('⏳','rgba(134,239,172,.12)','rgba(134,239,172,.7)','Guardando...')
   try{
     // Buscar cancha_id (no crítico si falla)
     let canchaId=null
@@ -1362,7 +1370,7 @@ async function saveRound(){
     }
     if(canchaId) ins.cancha_id=canchaId
 
-    setStatus('⏳','rgba(147,197,253,.12)','rgba(147,197,253,.7)','Insertando ronda (cancha:'+(canchaId?'ok':'sin id')+')')
+    setStatus('⏳','rgba(134,239,172,.12)','rgba(134,239,172,.7)','Insertando ronda (cancha:'+(canchaId?'ok':'sin id')+')')
     const {data:ronda,error}=await SB.from('rondas').insert(ins).select().single()
     if(error){
       // Mostrar código + mensaje completo para diagnóstico
@@ -1377,7 +1385,7 @@ async function saveRound(){
     loadDashboard()
   }catch(e){
     const msg=e?.message||e?.error_description||e?.code||JSON.stringify(e)||'Error desconocido'
-    setStatus('⚠','rgba(163,45,45,.18)','#f09595','No se guardó: '+msg)
+    setStatus('⚠','rgba(248,113,113,.18)','#f09595','No se guardó: '+msg)
     console.error('saveRound error:',e)
   }
 }
@@ -1461,15 +1469,15 @@ function renderSelector(){
     if(Object.keys(grouped).length>1) html+=`<div class="sel-country-hdr">${flag} ${countryNames[flag]||''}</div>`
     courses.forEach(c=>{
       html+=`<div class="sel-course-card${_selCourse.id===c.id?' on':''}" onclick="selectCourse('${c.id}')">
-        <div class="sel-course-name">${c.emoji} ${c.nombre}${c.custom?'<span style="font-size:11px;color:rgba(147,197,253,.4);font-weight:600;margin-left:6px">MÍA</span>':''}</div>
+        <div class="sel-course-name">${c.emoji} ${c.nombre}${c.custom?'<span style="font-size:11px;color:rgba(134,239,172,.4);font-weight:600;margin-left:6px">MÍA</span>':''}</div>
         <div class="sel-course-meta">${c.ciudad} · ${c.hoyos} hoyos · Par ${c.par}</div>
-        ${c.info&&!c.custom?`<div style="font-size:11px;color:rgba(147,197,253,.5);margin-top:4px">📌 ${c.info}</div>`:''}
+        ${c.info&&!c.custom?`<div style="font-size:11px;color:rgba(134,239,172,.5);margin-top:4px">📌 ${c.info}</div>`:''}
         ${c.mundial?`<div class="sel-world-badge">🌍 FIFG World Cup 2026</div>`:''}
         ${_selCourse.id===c.id?`<div class="sel-check">✓</div>`:''}
       </div>`
     })
   })
-  if(!html) html='<div style="text-align:center;padding:24px;font-size:13px;color:rgba(147,197,253,.3)">Sin resultados. Podés agregar la cancha abajo ↓</div>'
+  if(!html) html='<div style="text-align:center;padding:24px;font-size:13px;color:rgba(134,239,172,.3)">Sin resultados. Podés agregar la cancha abajo ↓</div>'
   document.getElementById('sel-courses').innerHTML=html
   const countEl=document.getElementById('sel-count')
   if(countEl) countEl.textContent=filtered.length+' cancha'+(filtered.length!==1?'s':'')+(q||_selFilter?' encontradas':'s disponibles')
@@ -1663,7 +1671,7 @@ async function loadClima(){
       document.getElementById('cl-vis').innerHTML=Math.round((cur.visibility||10000)/1000)+'<span style="font-size:10px">km</span>'
       document.getElementById('cl-sens').textContent=Math.round(cur.apparent_temperature)+'°'
       const apto=temp>5&&temp<38&&v<50
-      document.getElementById('cl-apto').innerHTML=`<span style="background:${apto?'rgba(37,99,235,.2)':'rgba(163,45,45,.2)'};color:${apto?'var(--c5)':'#f09595'};font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;padding:6px 16px;border-radius:999px">${apto?'✓ Apto para jugar':'⚠ Condiciones difíciles'}</span>`
+      document.getElementById('cl-apto').innerHTML=`<span style="background:${apto?'rgba(74,222,128,.2)':'rgba(248,113,113,.2)'};color:${apto?'var(--c5)':'#f09595'};font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;padding:6px 16px;border-radius:999px">${apto?'✓ Apto para jugar':'⚠ Condiciones difíciles'}</span>`
       document.getElementById('gps-wind').textContent='Viento: '+v+' km/h'
       document.getElementById('gps-temp').textContent=temp+'°C'
       const dias=['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB']
@@ -1730,10 +1738,10 @@ function filterCanchas(v){renderCanchas(v)}
 
 function renderEquipos(){
   const items=[
-    {i:'PR',n:'Patagonia Rangers',p:'🇦🇷',j:4,v:8,r:1,bg:'rgba(37,99,235,.12)',c:'#1a56db'},
+    {i:'PR',n:'Patagonia Rangers',p:'🇦🇷',j:4,v:8,r:1,bg:'rgba(74,222,128,.12)',c:'#4ade80'},
     {i:'RJ',n:'Rio Jaguares',p:'🇧🇷',j:4,v:6,r:2,bg:'rgba(14,165,233,.12)',c:'#0369a1'},
-    {i:'AM',n:'Andean Masters',p:'🇨🇱',j:3,v:4,r:3,bg:'rgba(163,45,45,.12)',c:'#a32d2d'},
-    {i:'PA',n:'Pampas Aces',p:'🇦🇷',j:4,v:3,r:4,bg:'rgba(133,79,11,.12)',c:'#854f0b'},
+    {i:'AM',n:'Andean Masters',p:'🇨🇱',j:3,v:4,r:3,bg:'rgba(248,113,113,.12)',c:'#f87171'},
+    {i:'PA',n:'Pampas Aces',p:'🇦🇷',j:4,v:3,r:4,bg:'rgba(251,191,36,.12)',c:'#fbbf24'},
   ]
   const pc=r=>r===1?'p1':r===2?'p2':r===3?'p3':'pn'
   document.getElementById('equipos-list').innerHTML=`
@@ -1933,7 +1941,7 @@ async function loadInforme(rondaId){
     </tr>`
   }).join('')
   ic.innerHTML=`
-    <div style="background:linear-gradient(135deg,rgba(37,99,235,.15),rgba(79,70,229,.1));border-radius:var(--r12);margin:0 16px 14px;padding:18px;border:0.5px solid rgba(147,197,253,.12)">
+    <div style="background:linear-gradient(135deg,rgba(74,222,128,.15),rgba(79,70,229,.1));border-radius:var(--r12);margin:0 16px 14px;padding:18px;border:0.5px solid rgba(134,239,172,.12)">
       <div style="font-size:11px;color:var(--tx3);text-transform:capitalize;margin-bottom:4px">${f}</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--tx);margin-bottom:10px">${ronda.canchas?.nombre||'Cancha'}</div>
       <div style="display:flex;align-items:flex-start;gap:14px">
@@ -1965,11 +1973,11 @@ async function loadInforme(rondaId){
 
 async function loadRanking(){
   const {data}=await SB.from('ranking_global').select('*').order('posicion_global').limit(20).catch(()=>({data:null}))
-  const items=data&&data.length?data.map((j,i)=>({pos:j.posicion_global||i+1,ini:(j.jugador||'??').slice(0,2).toUpperCase(),n:j.jugador||'—',p:'🌍',cat:j.categoria||'—',hcp:j.handicap>=0?'+'+j.handicap:j.handicap,pts:j.puntos_totales||0,bg:'rgba(37,99,235,.12)',c:'#1a56db'})):[
-    {pos:1,ini:'GA',n:'Giovanni Anzisi',p:'🇦🇷',cat:'Elite',hcp:'+3.2',pts:1240,bg:'rgba(37,99,235,.15)',c:'#1a56db'},
+  const items=data&&data.length?data.map((j,i)=>({pos:j.posicion_global||i+1,ini:(j.jugador||'??').slice(0,2).toUpperCase(),n:j.jugador||'—',p:'🌍',cat:j.categoria||'—',hcp:j.handicap>=0?'+'+j.handicap:j.handicap,pts:j.puntos_totales||0,bg:'rgba(74,222,128,.12)',c:'#4ade80'})):[
+    {pos:1,ini:'GA',n:'Giovanni Anzisi',p:'🇦🇷',cat:'Elite',hcp:'+3.2',pts:1240,bg:'rgba(74,222,128,.15)',c:'#4ade80'},
     {pos:2,ini:'JS',n:'João Silva',p:'🇧🇷',cat:'Elite',hcp:'+2.8',pts:1180,bg:'rgba(14,165,233,.12)',c:'#0369a1'},
-    {pos:3,ini:'LT',n:'Luis Torres',p:'🇲🇽',cat:'Masters',hcp:'+2.1',pts:1050,bg:'rgba(163,45,45,.12)',c:'#a32d2d'},
-    {pos:4,ini:'AG',n:'Ana García',p:'🇺🇾',cat:'Masters',hcp:'+1.9',pts:980,bg:'rgba(133,79,11,.12)',c:'#854f0b'},
+    {pos:3,ini:'LT',n:'Luis Torres',p:'🇲🇽',cat:'Masters',hcp:'+2.1',pts:1050,bg:'rgba(248,113,113,.12)',c:'#f87171'},
+    {pos:4,ini:'AG',n:'Ana García',p:'🇺🇾',cat:'Masters',hcp:'+1.9',pts:980,bg:'rgba(251,191,36,.12)',c:'#fbbf24'},
     {pos:5,ini:'PR',n:'Pedro Rojas',p:'🇨🇱',cat:'Abierta',hcp:'+0.5',pts:860,bg:'var(--bg2)',c:'var(--tx2)'},
   ]
   const pc=p=>p===1?'p1':p===2?'p2':p===3?'p3':'pn'
