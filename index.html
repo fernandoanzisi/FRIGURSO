@@ -982,6 +982,10 @@ async function doLogout(){
 function go(id){
   document.querySelectorAll('.sc').forEach(s=>s.classList.remove('cur'))
   document.getElementById(id).classList.add('cur')
+  if(id==='sc-canchas'){
+    if(window._allCanchas&&window._allCanchas.length) renderCanchas(document.getElementById('cancha-search')?.value||'')
+    else renderStaticData()
+  }
 }
 function tab(btn,id){
   document.querySelectorAll('.nbi').forEach(b=>b.classList.remove('on'))
@@ -1399,7 +1403,7 @@ async function saveRound(){
       throw new Error(detail||JSON.stringify(error))
     }
     try{
-      const rows=H.map((h,i)=>allSc[i]===null?null:{ronda_id:ronda.id,hoyo_numero:h.n,par:h.par,golpes:allSc[i],distancia_metros:h.dist}).filter(Boolean)
+      const rows=H.map((h,i)=>allSc[i]===null?null:{ronda_id:ronda.id,hoyo:h.n,par:h.par,golpes:allSc[i]}).filter(Boolean)
       if(rows.length) await SB.from('scorecard').insert(rows)
     }catch(se){console.warn('scorecard insert:',se)}
     setStatus('✓','rgba(26,122,58,.15)','#4ade80','Ronda guardada correctamente')
@@ -2027,7 +2031,7 @@ async function loadInforme(rondaId){
       ${miniChip(dist.bogey,'BOGEY','var(--bogey)',dist.bogey>0)}
       ${miniChip(dist.dbl,'DOBLE+','var(--dbl)',dist.dbl>0)}
     </div>
-    ${holes.length?`<div class="sec sec-b" style="padding-top:0"><div class="card" style="padding:0;overflow:hidden">
+    ${holes.length?`<div class="sec" style="padding-top:0"><div class="card" style="padding:0;overflow:hidden">
       <div class="ct" style="padding:12px 14px;border-bottom:0.5px solid var(--bd)">📊 Hoyo a hoyo</div>
       <table style="width:100%;border-collapse:collapse">
         <thead><tr style="background:rgba(255,255,255,.05)">
@@ -2039,7 +2043,83 @@ async function loadInforme(rondaId){
         <tbody>${tableRows}</tbody>
       </table>
     </div></div>`:'<div class="empty" style="padding:30px 0"><div class="empty-i">📊</div><div class="empty-t">Sin datos de hoyos</div><div class="empty-s">Los hoyos se guardan al completar la ronda</div></div>'}
+    <div class="sec sec-b" style="padding-top:${holes.length?'12px':'0'}">${generarAnalisis(ronda,holes,dist,svp,sameCourseBest)}</div>
   `
+}
+
+function generarAnalisis(ronda, holes, dist, svp, sameCourseBest){
+  const cancha=ronda.canchas?.nombre||'la cancha'
+  const tipo=ronda.tipo==='torneo'?'torneo':'práctica'
+  // Score level
+  let nivel,intro,acol
+  if(svp<=-6){nivel='excepcional';intro=`Una ronda verdaderamente histórica. Terminar ${Math.abs(svp)} golpes bajo par en ${cancha} refleja un nivel de juego de élite absoluta.`;acol='#a78bfa'}
+  else if(svp<=-4){nivel='sobresaliente';intro=`Ronda sobresaliente en ${cancha}. ${Math.abs(svp)} golpes bajo par es un resultado que muy pocos jugadores logran en una cancha de este nivel.`;acol='var(--birdie)'}
+  else if(svp<=-2){nivel='excelente';intro=`Ronda excelente. ${Math.abs(svp)} golpes bajo par en ${cancha} refleja consistencia y buen manejo de cada hoyo.`;acol='var(--birdie)'}
+  else if(svp===-1){nivel='muy bueno';intro=`Un golpe bajo par en ${cancha}. Sólido y consistente, con buenos momentos durante la ronda.`;acol='var(--birdie)'}
+  else if(svp===0){nivel='perfecto';intro=`Al par en ${cancha}. Una ronda técnicamente impecable que requiere concentración en cada hoyo.`;acol='var(--tx)'}
+  else if(svp<=3){nivel='regular';intro=`Ronda por encima del par en ${cancha}. Con ajustes puntuales podés mejorar significativamente.`;acol='var(--bogey)'}
+  else{nivel='difícil';intro=`${cancha} presentó un desafío importante esta vez. Cada cancha exige adaptación y este resultado sirve como base para mejorar.`;acol='var(--dbl)'}
+
+  // Best and worst holes (if data)
+  let fuertes='',mejoras='',holesAnalysis=''
+  if(holes.length){
+    const sorted=[...holes].sort((a,b)=>(a.golpes-a.par)-(b.golpes-b.par))
+    const mejores=sorted.slice(0,3).filter(h=>h.golpes-h.par<=0)
+    const peores=sorted.slice(-2).filter(h=>h.golpes-h.par>0)
+    if(mejores.length){
+      fuertes=`<div style="margin-bottom:10px"><div style="font-size:11px;color:var(--c3);font-weight:700;letter-spacing:.5px;margin-bottom:6px">💪 PUNTOS FUERTES</div>${mejores.map(h=>{const d=h.golpes-h.par;const lb=d<=-2?'Eagle 🦅':d===-1?'Birdie 🐦':'Par ⛳';return`<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--tx);padding:3px 0;border-bottom:0.5px solid rgba(255,255,255,.05)"><span>Hoyo ${h.hoyo} (Par ${h.par})</span><span style="color:var(--birdie);font-weight:700">${lb} · ${h.golpes} golpes</span></div>`}).join('')}</div>`
+    }
+    if(peores.length){
+      mejoras=`<div style="margin-bottom:10px"><div style="font-size:11px;color:var(--bogey);font-weight:700;letter-spacing:.5px;margin-bottom:6px">🎯 ÁREA DE MEJORA</div>${peores.map(h=>{const d=h.golpes-h.par;const lb=d===1?'Bogey':d===2?'Doble bogey':'Más de doble';return`<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--tx);padding:3px 0;border-bottom:0.5px solid rgba(255,255,255,.05)"><span>Hoyo ${h.hoyo} (Par ${h.par})</span><span style="color:var(--bogey);font-weight:700">${lb} · ${h.golpes} golpes</span></div>`}).join('')}</div>`
+    }
+    // Consistency metric
+    const varianza=holes.map(h=>Math.pow(h.golpes-h.par,2)).reduce((a,b)=>a+b,0)/holes.length
+    const consistencia=varianza<1?'Alta':'varianza<2'?'Media':'En desarrollo'
+    holesAnalysis=`<div style="display:flex;gap:8px;margin-bottom:12px">
+      <div style="flex:1;background:rgba(255,255,255,.04);border-radius:var(--r8);padding:10px;text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--tx)">${holes.length}</div><div style="font-size:10px;color:var(--tx3)">HOYOS</div></div>
+      <div style="flex:1;background:rgba(255,255,255,.04);border-radius:var(--r8);padding:10px;text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--birdie)">${dist.birdie+dist.eagle}</div><div style="font-size:10px;color:var(--tx3)">BAJO PAR</div></div>
+      <div style="flex:1;background:rgba(255,255,255,.04);border-radius:var(--r8);padding:10px;text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--tx)">${dist.par}</div><div style="font-size:10px;color:var(--tx3)">PARES</div></div>
+      <div style="flex:1;background:rgba(255,255,255,.04);border-radius:var(--r8);padding:10px;text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--bogey)">${dist.bogey+dist.dbl}</div><div style="font-size:10px;color:var(--tx3)">SOBRE PAR</div></div>
+    </div>`
+  }
+
+  // Comparativa vs mejor
+  let comparativa=''
+  if(sameCourseBest!==null&&svp!==null){
+    const diff=svp-sameCourseBest
+    if(diff===0) comparativa=`<div style="margin-bottom:10px;padding:10px 12px;background:rgba(74,222,128,.08);border:0.5px solid rgba(74,222,128,.2);border-radius:var(--r8);font-size:13px;color:var(--birdie)">🏆 Igualaste tu mejor marca personal en esta cancha</div>`
+    else if(diff<0) comparativa=`<div style="margin-bottom:10px;padding:10px 12px;background:rgba(74,222,128,.08);border:0.5px solid rgba(74,222,128,.2);border-radius:var(--r8);font-size:13px;color:var(--birdie)">🏆 ¡Nuevo record personal en ${cancha}! Mejoraste tu marca anterior por ${Math.abs(diff)} golpe${Math.abs(diff)>1?'s':''}</div>`
+    else comparativa=`<div style="margin-bottom:10px;padding:10px 12px;background:rgba(255,255,255,.04);border:0.5px solid var(--bd);border-radius:var(--r8);font-size:13px;color:var(--tx2)">Tu mejor score en esta cancha es <strong style="color:var(--tx)">${sameCourseBest>=0?'+'+sameCourseBest:sameCourseBest}</strong>. Estás a ${diff} golpe${diff>1?'s':''} de tu record.</div>`
+  }
+
+  // Tip contextual
+  const tips={
+    excelente:['Mantené ese ritmo de pre-shot routine que claramente funcionó hoy.','La confianza es tu mejor aliada — seguí con esa mentalidad ofensiva.'],
+    'muy bueno':['Un birdie adicional por ronda te llevaría a otro nivel.','Trabajá la consistencia en hoyos de Par 4, que suelen ser los decisivos.'],
+    regular:['Enfocate en eliminar los dobles bogeys — uno menos por ronda hace gran diferencia.','Los hoyos de Par 3 son oportunidades clave de rescatar golpes.'],
+    difícil:['Cada ronda difícil enseña algo. Analizá qué decisiones podrías cambiar.','La gestión del campo es tan importante como la técnica.'],
+  }
+  const tipKey=svp<=-2?'excelente':svp<0?'muy bueno':svp<=3?'regular':'difícil'
+  const tipArr=tips[tipKey]
+  const tip=tipArr[Math.floor(new Date().getDate()%tipArr.length)]
+
+  return`<div class="card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <div style="width:28px;height:28px;border-radius:50%;background:${acol}20;display:flex;align-items:center;justify-content:center;font-size:14px">🤖</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--tx)">ANÁLISIS DE RONDA</div>
+      <div style="flex:1"></div>
+      <span style="background:${acol}18;color:${acol};border:0.5px solid ${acol}30;border-radius:var(--rF);padding:3px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase">${nivel}</span>
+    </div>
+    <p style="font-size:14px;color:var(--tx2);line-height:1.6;margin-bottom:14px">${intro}</p>
+    ${holesAnalysis}
+    ${comparativa}
+    ${fuertes}
+    ${mejoras}
+    <div style="background:rgba(74,222,128,.06);border:0.5px solid rgba(74,222,128,.18);border-radius:var(--r8);padding:12px 14px">
+      <div style="font-size:11px;color:var(--c3);font-weight:700;letter-spacing:.5px;margin-bottom:4px">💡 CONSEJO PARA LA PRÓXIMA RONDA</div>
+      <div style="font-size:13px;color:var(--tx2);line-height:1.5">${tip}</div>
+    </div>
+  </div>`
 }
 
 async function loadRanking(){
