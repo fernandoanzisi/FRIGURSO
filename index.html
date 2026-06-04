@@ -162,7 +162,9 @@ body{display:flex;align-items:center;justify-content:center}
 
 /* PERFIL */
 .p-hdr{background:var(--c1);padding:24px 18px;text-align:center;flex-shrink:0}
-.p-av{width:82px;height:82px;border-radius:50%;background:var(--c3);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:#fff;border:3px solid rgba(134,239,172,.3)}
+.p-av{width:88px;height:88px;border-radius:50%;background:var(--c3);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:#fff;border:3px solid rgba(134,239,172,.35);position:relative;overflow:hidden;cursor:pointer;flex-shrink:0}
+.p-av-cam{position:absolute;bottom:0;left:0;right:0;height:26px;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;font-size:13px;backdrop-filter:blur(2px)}
+.p-av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
 .p-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(74,222,128,.1);margin-top:16px;border-radius:var(--r16);overflow:hidden}
 .ps{background:rgba(255,255,255,.08);padding:12px;text-align:center}
 .psv{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--c5)}
@@ -518,8 +520,11 @@ body{display:flex;align-items:center;justify-content:center}
     <!-- TORNEOS -->
     <div class="sc" id="sc-torneos">
       <div class="hdr"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Torneos 🏆</div></div>
-      <div style="display:flex;gap:7px;padding:14px 16px;flex-wrap:wrap">
-        <span class="badge bg">Todos</span><span class="badge bgr">Próximos</span><span class="badge bgr">Equipos</span>
+      <div style="display:flex;gap:8px;padding:14px 16px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch">
+        <button id="tf-todos" onclick="filterTorneos('todos')" style="flex-shrink:0;background:var(--c3);border:none;border-radius:var(--rF);padding:7px 16px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#000;cursor:pointer;white-space:nowrap;transition:all .2s">Todos</button>
+        <button id="tf-programado" onclick="filterTorneos('programado')" style="flex-shrink:0;background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--rF);padding:7px 16px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer;white-space:nowrap;transition:all .2s">Próximos</button>
+        <button id="tf-en_curso" onclick="filterTorneos('en_curso')" style="flex-shrink:0;background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--rF);padding:7px 16px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer;white-space:nowrap;transition:all .2s">En curso</button>
+        <button id="tf-inscripciones" onclick="filterTorneos('inscripciones')" style="flex-shrink:0;background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--rF);padding:7px 16px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer;white-space:nowrap;transition:all .2s">Inscripción</button>
       </div>
       <div class="sec sec-b" id="torneos-list"></div>
     </div>
@@ -626,7 +631,12 @@ body{display:flex;align-items:center;justify-content:center}
     <!-- PERFIL -->
     <div class="sc" id="sc-perfil">
       <div class="p-hdr">
-        <div class="p-av" id="p-av">?</div>
+        <div class="p-av" id="p-av" onclick="triggerAvatarUpload()">
+          <span id="p-av-ini">?</span>
+          <img id="p-av-img" style="display:none">
+          <div class="p-av-cam">📷</div>
+        </div>
+        <input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="uploadAvatar(this.files[0]);this.value=''">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:#fff" id="p-name">—</div>
         <div style="font-size:13px;color:rgba(134,239,172,.5);margin-top:5px" id="p-meta">—</div>
         <div class="p-stats">
@@ -1004,11 +1014,22 @@ async function loadDashboard(){
   const tc=document.getElementById('d-torneos')
   if(torneos&&torneos.length){
     tc.innerHTML=torneos.map(t=>{
-      const bc={'inscripciones':'bg','en_curso':'bb','programado':'bgr'}[t.estado]||'bgr'
-      const bl={'inscripciones':'Inscribirse','en_curso':'En curso','programado':'Próximo'}[t.estado]||t.estado
+      const scol={inscripciones:'var(--c3)',en_curso:'var(--blue)',programado:'var(--tx3)'}[t.estado]||'var(--tx3)'
+      const slab={inscripciones:'Inscripción',en_curso:'En curso',programado:'Próximo'}[t.estado]||t.estado
       const f=new Date(t.fecha_inicio+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'})
-      return`<div class="li"><div style="width:8px;height:8px;border-radius:50%;background:var(--c4);flex-shrink:0"></div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${t.nombre}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${t.ciudades?.nombre||''}</div></div><span class="badge ${bc}">${bl}</span></div>`
-    }).join('')
+      const dias=diasHasta(t.fecha_inicio)
+      return`<div class="li" onclick="tab(document.querySelector('[data-sc=sc-torneos]'),'sc-torneos')" style="cursor:pointer">
+        <div style="width:10px;height:10px;border-radius:50%;background:${scol};flex-shrink:0;box-shadow:0 0 6px ${scol}60"></div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600;color:var(--tx)">${t.nombre}</div>
+          <div style="font-size:12px;color:var(--tx2);margin-top:2px">📍 ${t.ciudades?.nombre||''} · ${f}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:${scol}">${slab}</div>
+          ${dias?`<div style="font-size:10px;color:var(--tx3)">${dias}</div>`:''}
+        </div>
+      </div>`
+    }).join('')+`<div style="padding:10px 0 2px;text-align:center"><span onclick="tab(document.querySelector('[data-sc=sc-torneos]'),'sc-torneos')" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--c3);cursor:pointer">Ver todos los torneos →</span></div>`
   } else {
     tc.innerHTML=demoTorneos()
   }
@@ -1697,20 +1718,70 @@ function setClimaDefault(){
   document.getElementById('cl-fc').innerHTML=''
 }
 
-async function renderStaticData(){
-  const {data:t}=await SB.from('torneos').select('*,ciudades(nombre)').order('fecha_inicio').limit(10).catch(()=>({data:null}))
+let _torneosAll=[]
+
+function diasHasta(fecha){
+  if(!fecha)return null
+  const hoy=new Date();hoy.setHours(0,0,0,0)
+  const f=new Date(fecha+'T00:00:00')
+  const d=Math.ceil((f-hoy)/(864e5))
+  if(d<0)return null
+  if(d===0)return'HOY'
+  if(d===1)return'MAÑANA'
+  return'EN '+d+' DÍAS'
+}
+
+function renderTorneoCard(it){
+  const statusConf={
+    inscripciones:{col:'#4ade80',label:'🟢 Inscripción abierta',bg:'rgba(74,222,128,.08)',border:'rgba(74,222,128,.25)'},
+    en_curso:{col:'#60a5fa',label:'🔵 En curso',bg:'rgba(96,165,250,.08)',border:'rgba(96,165,250,.25)'},
+    programado:{col:'#888888',label:'⏳ Próximo',bg:'rgba(255,255,255,.04)',border:'rgba(255,255,255,.08)'},
+    finalizado:{col:'#444444',label:'✓ Finalizado',bg:'rgba(255,255,255,.03)',border:'rgba(255,255,255,.06)'},
+  }
+  const s=statusConf[it.estado]||statusConf.programado
+  const f=it.fecha_inicio?new Date(it.fecha_inicio+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}):'—'
+  const dias=diasHasta(it.fecha_inicio)
+  return`<div style="background:${s.bg};border:1px solid ${s.border};border-radius:var(--r16);margin-bottom:10px;overflow:hidden">
+    <div style="display:flex;align-items:stretch;gap:0">
+      <div style="width:4px;background:${s.col};flex-shrink:0;border-radius:4px 0 0 4px"></div>
+      <div style="padding:14px 15px;flex:1">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--tx);line-height:1.2;margin-bottom:7px">${it.emoji||'🏆'} ${it.nombre}</div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:3px">📍 ${it.ciudades?.nombre||'—'}</div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:10px">📅 ${f}${it.formato?' · '+it.formato:it.tipo?' · '+it.tipo:''}</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:${s.col}">${s.label}</span>
+          ${dias?`<span style="background:${s.col}20;color:${s.col};border:0.5px solid ${s.col}40;border-radius:var(--rF);padding:3px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700">${dias}</span>`:''}
+          ${it.tipo?`<span style="background:rgba(255,255,255,.06);color:var(--tx3);border-radius:var(--rF);padding:3px 10px;font-size:11px;font-weight:600">${it.tipo}</span>`:''}
+        </div>
+        ${it.url_inscripcion&&it.estado==='inscripciones'?`<a href="${it.url_inscripcion}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:var(--c3);border:none;border-radius:var(--r8);padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#000;cursor:pointer;text-decoration:none">INSCRIBIRME →</a>`:''}
+      </div>
+    </div>
+  </div>`
+}
+
+function filterTorneos(filtro){
+  ['todos','programado','en_curso','inscripciones'].forEach(k=>{
+    const btn=document.getElementById('tf-'+k)
+    if(!btn)return
+    const active=k===filtro
+    btn.style.background=active?'var(--c3)':'var(--bg2)'
+    btn.style.color=active?'#000':'var(--tx2)'
+    btn.style.border=active?'none':'0.5px solid var(--bd)'
+  })
+  const items=filtro==='todos'?_torneosAll:_torneosAll.filter(t=>t.estado===filtro)
   const tl=document.getElementById('torneos-list')
-  const items=t&&t.length?t:[
+  tl.innerHTML=items.length?`<div style="padding:0 16px">${items.map(renderTorneoCard).join('')}</div>`:`<div class="empty" style="padding:40px 0"><div class="empty-i">🏆</div><div class="empty-t">Sin torneos en esta categoría</div></div>`
+}
+
+async function renderStaticData(){
+  const {data:t}=await SB.from('torneos').select('*,ciudades(nombre)').order('fecha_inicio').limit(20).catch(()=>({data:null}))
+  _torneosAll=t&&t.length?t:[
     {nombre:'FIFG World Cup Acapulco 2026',fecha_inicio:'2026-05-27',tipo:'individual',formato:'Stroke Play · 72 hoyos',estado:'en_curso',ciudades:{nombre:'Acapulco 🇲🇽'},emoji:'🌍'},
-    {nombre:'Copa Patagonia 2026',fecha_inicio:'2026-06-15',tipo:'individual',formato:'Stroke Play',estado:'programado',ciudades:{nombre:'General Roca 🇦🇷'},emoji:'🏆'},
-    {nombre:'Open Nacional Argentina',fecha_inicio:'2026-06-28',tipo:'individual',formato:'Stroke · 36 hoyos',estado:'programado',ciudades:{nombre:'Buenos Aires 🇦🇷'},emoji:'⚽'},
+    {nombre:'Copa Patagonia 2026',fecha_inicio:'2026-06-15',tipo:'individual',formato:'Stroke Play · 18 hoyos',estado:'inscripciones',ciudades:{nombre:'General Roca 🇦🇷'},emoji:'🏆'},
+    {nombre:'Open Nacional Argentina',fecha_inicio:'2026-06-28',tipo:'individual',formato:'Stroke Play · 36 hoyos',estado:'programado',ciudades:{nombre:'Buenos Aires 🇦🇷'},emoji:'⚽'},
+    {nombre:'South America Cup 2026',fecha_inicio:'2026-07-12',tipo:'equipos',formato:'Best Ball · 18 hoyos',estado:'programado',ciudades:{nombre:'São Paulo 🇧🇷'},emoji:'🌎'},
   ]
-  tl.innerHTML=items.map(it=>{
-    const bc={'inscripciones':'bg','en_curso':'bb','programado':'bgr'}[it.estado]||'bgr'
-    const bl={'inscripciones':'Inscribirse','en_curso':'En curso','programado':'Próximo'}[it.estado]||it.estado
-    const f=it.fecha_inicio?new Date(it.fecha_inicio+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'}):'—'
-    return`<div class="tc"><div class="tc-img">${it.emoji||'🏆'}</div><div class="tc-b"><div class="tc-n">${it.nombre}</div><div class="tc-m">📍 ${it.ciudades?.nombre||''}</div><div class="tc-m">📅 ${f} · ${it.formato||it.tipo}</div><div style="margin-top:9px;display:flex;gap:6px"><span class="badge ${bc}">${bl}</span><span class="badge bgr">${it.tipo}</span></div></div></div>`
-  }).join('')
+  filterTorneos('todos')
   const {data:ca}=await SB.from('canchas').select('*,ciudades(nombre,paises(bandera))').eq('activa',true).order('nombre').catch(()=>({data:null}))
   window._allCanchas=ca&&ca.length?ca.map(c=>({nombre:c.nombre,ciudad:c.ciudades?.nombre||'',pais:c.ciudades?.paises?.bandera||'🌍',hoyos:c.total_hoyos,par:c.par_total,dif:c.dificultad,info:c.info||''})):[
     // 🇲🇽 México — sedes Mundial FIFG 2026
@@ -1990,10 +2061,63 @@ async function loadRanking(){
     </div>`).join('')
 }
 
+function triggerAvatarUpload(){ document.getElementById('avatar-input').click() }
+
+async function resizeImage(file,maxSize=400){
+  return new Promise(resolve=>{
+    const reader=new FileReader()
+    reader.onload=e=>{
+      const img=new Image()
+      img.onload=()=>{
+        const sz=Math.min(img.width,img.height,maxSize)
+        const canvas=document.createElement('canvas')
+        canvas.width=sz;canvas.height=sz
+        const ctx=canvas.getContext('2d')
+        ctx.drawImage(img,(img.width-sz)/2,(img.height-sz)/2,sz,sz,0,0,sz,sz)
+        canvas.toBlob(b=>resolve(b),'image/jpeg',0.88)
+      }
+      img.src=e.target.result
+    }
+    reader.readAsDataURL(file)
+  })
+}
+
+async function uploadAvatar(file){
+  if(!file||!USER)return
+  if(file.size>15*1024*1024){toast('Imagen muy grande — máx 15 MB');return}
+  toast('⏳ Subiendo foto...')
+  try{
+    const blob=await resizeImage(file)
+    const path=`${USER.id}.jpg`
+    const {error:upErr}=await SB.storage.from('avatars').upload(path,blob,{upsert:true,contentType:'image/jpeg'})
+    if(upErr)throw upErr
+    const {data:urlData}=SB.storage.from('avatars').getPublicUrl(path)
+    const url=urlData.publicUrl+'?t='+Date.now()
+    await SB.from('jugadores').update({avatar_url:url}).eq('id',USER.id)
+    if(JUGADOR)JUGADOR.avatar_url=url
+    showAvatar(url)
+    toast('✓ Foto actualizada')
+  }catch(e){
+    console.error('Avatar error:',e)
+    toast('Error al subir — creá el bucket "avatars" en Supabase Storage')
+  }
+}
+
+function showAvatar(url){
+  const img=document.getElementById('p-av-img')
+  const ini=document.getElementById('p-av-ini')
+  if(!img||!url)return
+  img.src=url
+  img.style.display='block'
+  if(ini)ini.style.display='none'
+}
+
 async function loadPerfil(){
   if(!JUGADOR) return
   const ini=`${JUGADOR.nombre?.[0]||'?'}${JUGADOR.apellido?.[0]||''}`
-  document.getElementById('p-av').textContent=ini
+  const iniEl=document.getElementById('p-av-ini')
+  if(iniEl)iniEl.textContent=ini
+  if(JUGADOR.avatar_url)showAvatar(JUGADOR.avatar_url)
   document.getElementById('p-name').textContent=`${JUGADOR.nombre} ${JUGADOR.apellido}`
   document.getElementById('p-meta').textContent=`${JUGADOR.categoria||'Aficionado'} · ${JUGADOR.ciudad||'Argentina'}`
   const hcp=JUGADOR.handicap
