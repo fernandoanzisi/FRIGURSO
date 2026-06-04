@@ -392,7 +392,10 @@ body{display:flex;align-items:center;justify-content:center}
       <!-- Botón iniciar siempre visible abajo -->
       <div style="padding:10px 18px 14px;background:var(--c1);flex-shrink:0;border-top:0.5px solid rgba(134,239,172,.08)">
         <div id="sel-cur" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:rgba(134,239,172,.4);margin-bottom:8px;text-align:center"></div>
-        <button onclick="startRound()" style="width:100%;background:var(--c3);border:none;border-radius:var(--r16);padding:16px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 24px rgba(74,222,128,.45)">⚽ COMENZAR RONDA</button>
+        <div style="display:flex;gap:8px">
+          <button onclick="openEditHoles()" style="flex:0 0 auto;background:rgba(255,255,255,.08);border:0.5px solid rgba(255,255,255,.15);border-radius:var(--r16);padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--tx2);cursor:pointer;white-space:nowrap">✏️ Hoyos</button>
+          <button onclick="startRound()" style="flex:1;background:var(--c3);border:none;border-radius:var(--r16);padding:16px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 24px rgba(74,222,128,.45)">⚽ COMENZAR RONDA</button>
+        </div>
       </div>
     </div>
 
@@ -681,6 +684,20 @@ body{display:flex;align-items:center;justify-content:center}
       <button onclick="shareRound()" style="flex:1;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.15);border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer">📤 COMPARTIR</button>
       <button onclick="closeSummary()" style="flex:1.6;background:var(--c3);border:none;border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(74,222,128,.4)">✓ CONTINUAR</button>
     </div>
+  </div>
+
+  <!-- EDIT HOLES OVERLAY -->
+  <div id="edit-holes-overlay" style="position:absolute;inset:0;background:var(--bg);z-index:250;display:none;flex-direction:column">
+    <div style="background:var(--c1);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:0.5px solid rgba(74,222,128,.12)">
+      <button onclick="closeEditHoles()" style="background:rgba(255,255,255,.1);border-radius:var(--r8);padding:7px 14px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:none">← VOLVER</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#fff;letter-spacing:.5px">EDITAR HOYOS</div>
+      <button onclick="saveEditHoles()" style="background:var(--c3);border:none;border-radius:var(--r8);padding:7px 16px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#fff;cursor:pointer">GUARDAR</button>
+    </div>
+    <div style="padding:12px 16px 6px;flex-shrink:0">
+      <div id="edit-holes-cancha" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--c3);font-weight:700;letter-spacing:.3px"></div>
+      <div style="font-size:12px;color:var(--tx3);margin-top:2px">Tocá el par de cada hoyo para cambiarlo</div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:8px 16px 24px" id="edit-holes-list"></div>
   </div>
 
   <!-- NAVBAR -->
@@ -1577,10 +1594,70 @@ function submitAddCourse(){
   renderSelector()
   toast('✓ Cancha "'+nombre+'" agregada')
 }
+// ── Edit holes ──
+let _editHoles=[]
+function openEditHoles(){
+  const course=_selCourse
+  // Start from existing holes or generate default ones
+  _editHoles=getCourseHoles(course).map(h=>({...h}))
+  document.getElementById('edit-holes-cancha').textContent=course.nombre+' · '+_editHoles.length+' hoyos'
+  renderEditHolesList()
+  document.getElementById('edit-holes-overlay').style.display='flex'
+}
+function renderEditHolesList(){
+  const par35=[3,4,5]
+  document.getElementById('edit-holes-list').innerHTML=_editHoles.map((h,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:0.5px solid rgba(255,255,255,.06)">
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--tx2);flex-shrink:0">${h.n}</div>
+      <div style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--tx2)">Hoyo ${h.n}</div>
+      <div style="display:flex;gap:6px">
+        ${par35.map(p=>`<button onclick="setEditPar(${i},${p})" style="width:42px;height:36px;border-radius:var(--r8);border:1.5px solid ${h.par===p?'var(--c3)':'rgba(255,255,255,.1)'};background:${h.par===p?'rgba(74,222,128,.18)':'rgba(255,255,255,.05)'};font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:${h.par===p?'var(--c3)':'var(--tx3)'};cursor:pointer">${p}</button>`).join('')}
+      </div>
+      <div style="width:36px;text-align:right;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--c3)">P${h.par}</div>
+    </div>`).join('')
+}
+function setEditPar(idx,par){
+  _editHoles[idx].par=par
+  renderEditHolesList()
+}
+function saveEditHoles(){
+  const course=_selCourse
+  // Persist holes into course object
+  course.holes=_editHoles.map(h=>({...h}))
+  course.par=_editHoles.reduce((s,h)=>s+h.par,0)
+  // Save custom-course overrides to localStorage
+  try{
+    const key='fg_holes_override'
+    const all=JSON.parse(localStorage.getItem(key)||'{}')
+    all[course.id]=course.holes
+    localStorage.setItem(key,JSON.stringify(all))
+    // Also update fg_custom_courses if it's a custom one
+    if(course.custom){
+      const saved=JSON.parse(localStorage.getItem('fg_custom_courses')||'[]')
+      const idx=saved.findIndex(c=>c.id===course.id)
+      if(idx>=0){saved[idx]=course;localStorage.setItem('fg_custom_courses',JSON.stringify(saved))}
+    }
+  }catch(_){}
+  // Reset scorecard to match new holes
+  scores=new Array(course.holes.length).fill(null);hi=0
+  renderSelector()
+  closeEditHoles()
+  toast('✓ Hoyos guardados · Par total '+course.par)
+}
+function closeEditHoles(){
+  document.getElementById('edit-holes-overlay').style.display='none'
+}
+
 function loadCustomCourses(){
   try{
     const saved=JSON.parse(localStorage.getItem('fg_custom_courses')||'[]')
     saved.forEach(c=>{if(!COURSES.find(x=>x.id===c.id))COURSES.push(c)})
+    // Apply holes overrides for all courses
+    const overrides=JSON.parse(localStorage.getItem('fg_holes_override')||'{}')
+    Object.entries(overrides).forEach(([id,holes])=>{
+      const c=COURSES.find(x=>x.id===id)
+      if(c){c.holes=holes;c.par=holes.reduce((s,h)=>s+h.par,0)}
+    })
   }catch(_){}
 }
 
