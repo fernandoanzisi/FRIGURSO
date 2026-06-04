@@ -222,6 +222,8 @@ body{display:flex;align-items:center;justify-content:center}
 .mundial-banner.on{display:block}
 .cat-t-opt{padding:7px 11px;border-radius:var(--r8);border:0.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:rgba(134,239,172,.4);cursor:pointer;transition:all .18s;letter-spacing:.3px}
 .cat-t-opt.on{background:rgba(74,222,128,.18);border-color:var(--c3);color:var(--c3)}
+.er-tipo-opt{padding:7px 12px;border-radius:var(--r8);border:0.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer;transition:all .18s}
+.er-tipo-opt.on{background:rgba(74,222,128,.18);border-color:var(--c3);color:var(--c3)}
 
 /* ROUND SUMMARY OVERLAY */
 .sum-overlay{position:absolute;inset:0;background:var(--c1);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center}
@@ -764,6 +766,39 @@ body{display:flex;align-items:center;justify-content:center}
     <div style="flex:1;overflow-y:auto;padding:8px 16px 24px" id="edit-holes-list"></div>
   </div>
 
+  <!-- EDIT RONDA OVERLAY -->
+  <div id="edit-ronda-overlay" style="position:absolute;inset:0;background:var(--bg);z-index:260;display:none;flex-direction:column">
+    <div style="background:var(--c1);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:0.5px solid rgba(74,222,128,.12)">
+      <button onclick="closeEditRonda()" style="background:rgba(255,255,255,.1);border-radius:var(--r8);padding:7px 14px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:none">← VOLVER</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#fff;letter-spacing:.5px">EDITAR RONDA</div>
+      <button onclick="saveEditRonda()" style="background:var(--c3);border:none;border-radius:var(--r8);padding:7px 16px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#fff;cursor:pointer">GUARDAR</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px">
+      <input type="hidden" id="er-id">
+      <div class="inp-lbl">CANCHA</div>
+      <div id="er-cancha-name" style="font-size:14px;font-weight:600;color:var(--tx);padding:10px 14px;background:rgba(255,255,255,.04);border-radius:var(--r8);margin-bottom:14px"></div>
+      <div class="inp-lbl">FECHA</div>
+      <input class="inp" type="date" id="er-fecha" style="margin-bottom:14px">
+      <div class="inp-lbl">TIPO</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="er-tipo-opt" onclick="setErTipo('practica',this)">⛳ Práctica</button>
+        <button class="er-tipo-opt" onclick="setErTipo('torneo_ra250',this)">RA250</button>
+        <button class="er-tipo-opt" onclick="setErTipo('torneo_ra500',this)">RA500</button>
+        <button class="er-tipo-opt" onclick="setErTipo('torneo_ra1000',this)">RA1000</button>
+        <button class="er-tipo-opt" onclick="setErTipo('torneo_major',this)">🏆 Major</button>
+        <button class="er-tipo-opt" onclick="setErTipo('torneo_mundial',this)">🌍 Mundial</button>
+      </div>
+      <div class="inp-lbl">SCORE VS PAR</div>
+      <input class="inp" type="number" id="er-svp" placeholder="Ej: -21" style="margin-bottom:14px">
+      <div class="inp-lbl">POSICIÓN FINAL</div>
+      <input class="inp" type="number" id="er-pos" placeholder="Ej: 1" min="1" style="margin-bottom:14px">
+      <div class="inp-lbl">TOTAL GOLPES</div>
+      <input class="inp" type="number" id="er-golpes" placeholder="Ej: 51" min="1" style="margin-bottom:6px">
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:20px">Opcional — si no sabés el total dejalo vacío</div>
+      <div id="er-pts-preview" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;color:rgba(255,193,7,.7);padding:10px;background:rgba(255,193,7,.06);border-radius:var(--r8);border:0.5px solid rgba(255,193,7,.15)"></div>
+    </div>
+  </div>
+
   <!-- NAVBAR -->
   <div class="nb" id="navbar" style="display:none">
     <button class="nbi on" data-sc="sc-home" onclick="tab(this,'sc-home')"><span class="nbi-i">🏠</span><span class="nbi-l">INICIO</span></button>
@@ -1159,11 +1194,76 @@ async function loadDashboard(){
       const col=svp<0?'var(--birdie)':svp>0?'var(--bogey)':'var(--tx)'
       const str=svp===0?'E':svp>0?'+'+svp:svp
       const f=new Date(r.fecha+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'})
-      return`<div class="li"><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${r.canchas?.nombre||'Cancha'}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${r.tipo}</div></div><span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:${col}">${str??'—'}</span><button onclick="deleteRonda('${r.id}','home')" style="margin-left:10px;background:rgba(248,113,113,.1);border:0.5px solid rgba(248,113,113,.2);border-radius:var(--r8);padding:5px 9px;font-size:13px;color:var(--red);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;flex-shrink:0">🗑️</button></div>`
+      return`<div class="li"><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${r.canchas?.nombre||'Cancha'}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${r.tipo}</div></div><span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:${col}">${str??'—'}</span><div style="display:flex;gap:5px;margin-left:8px"><button onclick="openEditRonda('${r.id}')" style="background:rgba(74,222,128,.1);border:0.5px solid rgba(74,222,128,.2);border-radius:var(--r8);padding:5px 8px;font-size:12px;color:var(--c3);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;flex-shrink:0">✏️</button><button onclick="deleteRonda('${r.id}','home')" style="background:rgba(248,113,113,.1);border:0.5px solid rgba(248,113,113,.2);border-radius:var(--r8);padding:5px 8px;font-size:12px;color:var(--red);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;flex-shrink:0">🗑️</button></div></div>`
     }).join('')
   } else {
     rl.innerHTML=`<div class="empty"><div class="empty-i">⚽</div><div class="empty-t">Registrá tu primera ronda</div><div class="empty-s">Tocá NUEVA RONDA para empezar</div></div>`
   }
+}
+
+let _erTipo='practica'
+function setErTipo(tipo, btn){
+  _erTipo=tipo
+  document.querySelectorAll('.er-tipo-opt').forEach(b=>b.classList.remove('on'))
+  btn.classList.add('on')
+  actualizarErPtsPreview()
+}
+function actualizarErPtsPreview(){
+  const pos=parseInt(document.getElementById('er-pos')?.value)||null
+  const prev=document.getElementById('er-pts-preview')
+  if(!prev) return
+  if(_erTipo.startsWith('torneo_')&&pos){
+    const cat=_erTipo.replace('torneo_','')
+    const pts=calcPuntosCat(cat,pos)
+    const catLabel={ra250:'RA250',ra500:'RA500',ra1000:'RA1000',major:'Major 2000',mundial:'Mundial 5000'}[cat]||cat
+    prev.textContent=`🏅 Esta ronda vale ${pts} puntos World Tour (${catLabel} · Pos. ${pos})`
+    prev.style.display='block'
+  } else { prev.style.display='none' }
+}
+function openEditRonda(id){
+  // Buscar en _statData primero, luego en las últimas del dashboard
+  const r=_statData?.find(x=>x.id===id)
+  if(!r){ toast('Cargá el historial primero'); return }
+  document.getElementById('er-id').value=id
+  document.getElementById('er-cancha-name').textContent=r.canchas?.nombre||'—'
+  document.getElementById('er-fecha').value=r.fecha||''
+  document.getElementById('er-svp').value=r.score_vs_par??''
+  document.getElementById('er-pos').value=r.posicion_final??''
+  document.getElementById('er-golpes').value=r.total_golpes??''
+  // Tipo
+  _erTipo=r.tipo||'practica'
+  document.querySelectorAll('.er-tipo-opt').forEach(b=>{
+    b.classList.toggle('on', b.getAttribute('onclick')?.includes(`'${_erTipo}'`))
+  })
+  actualizarErPtsPreview()
+  document.getElementById('er-pos').addEventListener('input', actualizarErPtsPreview)
+  document.getElementById('edit-ronda-overlay').style.display='flex'
+}
+function closeEditRonda(){
+  document.getElementById('edit-ronda-overlay').style.display='none'
+}
+async function saveEditRonda(){
+  const id=document.getElementById('er-id').value
+  const svp=document.getElementById('er-svp').value
+  const pos=document.getElementById('er-pos').value
+  const golpes=document.getElementById('er-golpes').value
+  const fecha=document.getElementById('er-fecha').value
+  const upd={tipo:_erTipo,fecha:fecha||undefined}
+  if(svp!=='') upd.score_vs_par=parseInt(svp)
+  if(pos!=='') upd.posicion_final=parseInt(pos)
+  if(golpes!=='') upd.total_golpes=parseInt(golpes)
+  const {error}=await SB.from('rondas').update(upd).eq('id',id)
+  if(error){ toast('Error al guardar'); console.error(error); return }
+  // Actualizar cache local
+  if(_statData){
+    const idx=_statData.findIndex(r=>r.id===id)
+    if(idx>=0) _statData[idx]={..._statData[idx],...upd}
+  }
+  closeEditRonda()
+  renderStatHistorial()
+  renderStatMiJuego()
+  loadDashboard()
+  toast('✓ Ronda actualizada')
 }
 
 async function deleteRonda(id, from){
@@ -2221,7 +2321,10 @@ function renderStatHistorial(){
       <div class="hr-i" onclick="loadInforme('${r.id}')">${r.tipo==='torneo'?'🏆':'⛳'}</div>
       <div style="flex:1" onclick="loadInforme('${r.id}')"><div style="font-size:14px;font-weight:500;color:var(--tx)">${r.canchas?.nombre||'Cancha'}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f} · ${r.tipo}</div></div>
       <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:${col}" onclick="loadInforme('${r.id}')">${svp!==null?str:'—'}</span>
-      <button onclick="deleteRonda('${r.id}','historial')" style="margin-left:8px;background:rgba(248,113,113,.1);border:0.5px solid rgba(248,113,113,.2);border-radius:var(--r8);padding:5px 9px;font-size:13px;color:var(--red);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;flex-shrink:0">🗑️</button>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-left:6px">
+        <button onclick="openEditRonda('${r.id}')" style="background:rgba(74,222,128,.1);border:0.5px solid rgba(74,222,128,.2);border-radius:var(--r8);padding:4px 8px;font-size:12px;color:var(--c3);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700">✏️</button>
+        <button onclick="deleteRonda('${r.id}','historial')" style="background:rgba(248,113,113,.1);border:0.5px solid rgba(248,113,113,.2);border-radius:var(--r8);padding:4px 8px;font-size:12px;color:var(--red);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700">🗑️</button>
+      </div>
     </div>`
   }).join('')
 }
