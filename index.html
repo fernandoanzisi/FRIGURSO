@@ -2651,7 +2651,12 @@ function load(msg='Cargando...'){
 function stopLoad(){document.getElementById('loader').classList.remove('on')}
 
 if('serviceWorker' in navigator){
+  let _swReg = null
+
   navigator.serviceWorker.register('/sw.js').then(reg => {
+    _swReg = reg
+
+    // Cuando encuentra una nueva versión → activarla inmediatamente
     reg.addEventListener('updatefound', () => {
       const nw = reg.installing
       nw.addEventListener('statechange', () => {
@@ -2660,9 +2665,20 @@ if('serviceWorker' in navigator){
         }
       })
     })
+
+    // Chequear update cada 30 minutos (para usuarios que dejan la app abierta)
+    setInterval(() => { reg.update() }, 30 * 60 * 1000)
+
   }).catch(()=>{})
+
+  // Recargar cuando el nuevo SW toma control
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     window.location.reload()
+  })
+
+  // Chequear update cada vez que el usuario vuelve a la app desde segundo plano
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible' && _swReg) _swReg.update()
   })
 }
 
