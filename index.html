@@ -2305,35 +2305,6 @@ function checkTournamentDayAlert(){
   }
 }
 
-
-
-function checkTournamentDayAlert(){
-  const hoy=new Date().toISOString().split('T')[0]
-  const dismissKey='fg_alert_dismissed_'+hoy
-  if(localStorage.getItem(dismissKey)) return
-  for(const [tid,circ] of Object.entries(CIRCUITOS)){
-    const idx=circ.fechas.indexOf(hoy)
-    if(idx>=0){
-      const n=idx+1
-      const ov=document.createElement('div')
-      ov.id='torneo-day-alert'
-      ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:400;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px)'
-      ov.innerHTML=`<div style="background:var(--c1);border-radius:var(--r22);padding:28px 24px;max-width:340px;width:100%;text-align:center;border:1px solid rgba(74,222,128,.3);box-shadow:0 0 40px rgba(74,222,128,.2)">
-        <div style="font-size:48px;margin-bottom:12px">🏆</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--c3);letter-spacing:1px;font-weight:700;margin-bottom:6px">¡HOY ES DÍA DE TORNEO!</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:6px">FECHA ${n}</div>
-        <div style="font-size:14px;color:rgba(255,255,255,.7);margin-bottom:20px">${circ.nombre}</div>
-        <div style="display:flex;gap:10px">
-          <button onclick="document.getElementById('torneo-day-alert').remove();localStorage.setItem('fg_alert_dismissed_${hoy}','1')" style="flex:1;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.15);border-radius:var(--r12);padding:12px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer">CERRAR</button>
-          <button onclick="document.getElementById('torneo-day-alert').remove();localStorage.setItem('fg_alert_dismissed_${hoy}','1');go('sc-selector')" style="flex:2;background:var(--c3);border:none;border-radius:var(--r12);padding:12px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(74,222,128,.4)">⛳ JUGAR AHORA</button>
-        </div>
-      </div>`
-      document.body.appendChild(ov)
-      break
-    }
-  }
-}
-
 // Fechas de cada fecha del circuito local (Tour Roca)
 const CIRCUITOS={
   'a692490c-ab84-4b96-b1aa-5f9686e37991':{
@@ -2465,7 +2436,7 @@ function renderTorneoCard(it){
     fechaLabel=it.fecha_inicio?new Date(it.fecha_inicio+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}):'—'
   }
   const dias=!esCircuito?diasHasta(it.fecha_inicio):null
-  const clickAttr=esCircuito?`onclick="openLeaderboard('${it.id}','${(it.nombre||'').replace(/'/g,'\\'')}')" style="cursor:pointer"`:`style=""`
+  const clickAttr=esCircuito?`onclick="openLeaderboard('${it.id}','${(it.nombre||'').replace(/'/g,"\\'")}'" style="cursor:pointer"`:`style=""`
   return`<div ${clickAttr} style="background:${s.bg};border:1px solid ${s.border};border-radius:var(--r16);margin-bottom:10px;overflow:hidden">
     <div style="display:flex;align-items:stretch;gap:0">
       <div style="width:4px;background:${s.col};flex-shrink:0;border-radius:4px 0 0 4px"></div>
