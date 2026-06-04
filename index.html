@@ -1535,12 +1535,13 @@ function renderSelector(){
   Object.entries(grouped).forEach(([flag,courses])=>{
     if(Object.keys(grouped).length>1) html+=`<div class="sel-country-hdr">${flag} ${countryNames[flag]||''}</div>`
     courses.forEach(c=>{
-      html+=`<div class="sel-course-card${_selCourse.id===c.id?' on':''}" onclick="selectCourse('${c.id}')">
+      html+=`<div class="sel-course-card${_selCourse.id===c.id?' on':''}" style="position:relative" onclick="selectCourse('${c.id}')">
         <div class="sel-course-name">${c.emoji} ${c.nombre}${c.custom?'<span style="font-size:11px;color:rgba(134,239,172,.4);font-weight:600;margin-left:6px">MÍA</span>':''}</div>
         <div class="sel-course-meta">${c.ciudad} · ${c.hoyos} hoyos · Par ${c.par}</div>
         ${c.info&&!c.custom?`<div style="font-size:11px;color:rgba(134,239,172,.5);margin-top:4px">📌 ${c.info}</div>`:''}
         ${c.mundial?`<div class="sel-world-badge">🌍 FIFG World Cup 2026</div>`:''}
         ${_selCourse.id===c.id?`<div class="sel-check">✓</div>`:''}
+        ${c.custom?`<button onclick="event.stopPropagation();deleteCourse('${c.id}')" style="position:absolute;top:10px;right:10px;background:rgba(248,113,113,.12);border:0.5px solid rgba(248,113,113,.25);border-radius:var(--r8);padding:4px 10px;font-size:12px;color:var(--red);font-family:'Barlow Condensed',sans-serif;font-weight:700;cursor:pointer">🗑️</button>`:''}
       </div>`
     })
   })
@@ -1648,9 +1649,34 @@ function closeEditHoles(){
   document.getElementById('edit-holes-overlay').style.display='none'
 }
 
-function loadCustomCourses(){
+function deleteCourse(id){
+  const c=COURSES.find(x=>x.id===id)
+  if(!c||!c.custom) return
+  if(_selCourse.id===id) _selCourse=COURSES.find(x=>x.id!==id)||COURSES[0]
+  const idx=COURSES.findIndex(x=>x.id===id)
+  if(idx>=0) COURSES.splice(idx,1)
   try{
     const saved=JSON.parse(localStorage.getItem('fg_custom_courses')||'[]')
+    localStorage.setItem('fg_custom_courses',JSON.stringify(saved.filter(x=>x.id!==id)))
+    const overrides=JSON.parse(localStorage.getItem('fg_holes_override')||'{}')
+    delete overrides[id]
+    localStorage.setItem('fg_holes_override',JSON.stringify(overrides))
+  }catch(_){}
+  renderSelector()
+  toast('Cancha eliminada')
+}
+
+function loadCustomCourses(){
+  try{
+    let saved=JSON.parse(localStorage.getItem('fg_custom_courses')||'[]')
+    // Deduplicar por nombre+ciudad (por si se agregó la misma varias veces)
+    const seen=new Set()
+    saved=saved.filter(c=>{
+      const key=(c.nombre+c.ciudad).toLowerCase().replace(/\s/g,'')
+      if(seen.has(key)) return false
+      seen.add(key);return true
+    })
+    localStorage.setItem('fg_custom_courses',JSON.stringify(saved))
     saved.forEach(c=>{if(!COURSES.find(x=>x.id===c.id))COURSES.push(c)})
     // Apply holes overrides for all courses
     const overrides=JSON.parse(localStorage.getItem('fg_holes_override')||'{}')
