@@ -465,6 +465,8 @@ body{display:flex;align-items:center;justify-content:center}
         </div>
       </div>
 
+      <!-- BANNER EN VIVO -->
+      <div id="envivo-banner" style="margin:0 16px 0"></div>
       <div class="divh"></div>
       <!-- PANEL MUNDIAL 2026 -->
       <div class="sec" style="padding-bottom:0">
@@ -667,7 +669,10 @@ body{display:flex;align-items:center;justify-content:center}
             <button onclick="window.open('https://www.footgolf.sport/acapulcoworldcup2026/leaderboard-group','_blank')" style="background:var(--c3);border:none;border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#000;cursor:pointer">🏆 GRUPOS</button>
             <button onclick="window.open('https://www.footgolf.sport/acapulcoworldcup2026/playoffs','_blank')" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--tx);cursor:pointer">🥊 PLAYOFFS</button>
           </div>
-          <div id="mundial-equipos-noticias"></div>
+          <div id="mundial-equipos-noticias">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(134,239,172,.4);letter-spacing:1px;font-weight:700;margin-bottom:10px">CALENDARIO MUNDIAL 2026</div>
+            <div id="mundial-cal-list"></div>
+          </div>
         </div>
       </div>
 
@@ -1275,6 +1280,33 @@ async function loadDashboard(){
     if(indB) indB.innerHTML=hoy<=indFin?'<span style="color:var(--red)">🔴 EN CURSO</span>':'<span style="color:var(--birdie)">✓ COMPLETADO</span>'
     if(eqB) eqB.innerHTML=hoy<eqIni?'<span style="color:var(--tx3)">⏳ PRÓXIMO</span>':hoy<=eqFin?'<span style="color:var(--red)">🔴 EN CURSO</span>':'<span style="color:var(--birdie)">✓ COMPLETADO</span>'
   })()
+  // Banner EN VIVO
+  ;(()=>{
+    const hoy=new Date().toISOString().split('T')[0]
+    const live=WORLD_EVENTS.filter(e=>hoy>=e.f&&hoy<=e.h)
+    // Agregar circuitos locales al check
+    const localLive=Object.entries(CIRCUITOS).filter(([,c])=>c.fechas.includes(hoy)).map(([,c])=>({n:'FECHA '+( c.fechas.indexOf(hoy)+1)+' — '+c.nombre,emoji:c.emoji||'⛳',c:'General Roca 🇦🇷'}))
+    const allLive=[...live.map(e=>({n:e.n,emoji:e.emoji,c:e.c})),...localLive]
+    const banner=document.getElementById('envivo-banner')
+    if(!banner) return
+    if(!allLive.length){banner.style.display='none';return}
+    banner.style.display='block'
+    banner.innerHTML=allLive.map(e=>`
+      <div onclick="tab(document.querySelector('[data-sc=sc-mundial]'),'sc-mundial')" style="background:linear-gradient(135deg,rgba(239,68,68,.18),rgba(239,68,68,.08));border:1px solid rgba(239,68,68,.4);border-radius:var(--r16);padding:14px 16px;margin-bottom:10px;cursor:pointer">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="position:relative">
+            <span style="font-size:28px">${e.emoji}</span>
+            <span style="position:absolute;top:-2px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ef4444;border:2px solid var(--bg);animation:pulse 1s infinite;display:block"></span>
+          </div>
+          <div style="flex:1">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;color:#ef4444;letter-spacing:1.5px;margin-bottom:3px">🔴 EN VIVO AHORA</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;line-height:1.1">${e.n}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">📍 ${e.c}</div>
+          </div>
+          <span style="font-size:20px;color:rgba(255,255,255,.3)">›</span>
+        </div>
+      </div>`).join('')
+  })()
   const hcp=JUGADOR.handicap
   document.getElementById('hdr-hcp').textContent=hcp!=null?(hcp>=0?'+'+parseFloat(hcp).toFixed(1):parseFloat(hcp).toFixed(1)):'—'
   // Próximas fechas de circuitos
@@ -1440,12 +1472,47 @@ async function deleteRonda(id, from){
   }
 }
 
+// Calendario mundial footgolf 2026
+const WORLD_EVENTS=[
+  {n:'FIFG World Cup — Individual',f:'2026-05-27',h:'2026-06-01',c:'Acapulco 🇲🇽',tipo:'mundial',emoji:'🌍'},
+  {n:'FIFG World Cup — Equipos',f:'2026-06-02',h:'2026-06-07',c:'Acapulco 🇲🇽',tipo:'mundial',emoji:'🌍'},
+  {n:'Copa Patagonia 2026',f:'2026-06-15',h:'2026-06-15',c:'General Roca 🇦🇷',tipo:'major',emoji:'🏆'},
+  {n:'Open Nacional Argentina',f:'2026-06-28',h:'2026-06-28',c:'Buenos Aires 🇦🇷',tipo:'nacional',emoji:'🇦🇷'},
+  {n:'RA1000 — Copa Sudamericana',f:'2026-07-10',h:'2026-07-12',c:'São Paulo 🇧🇷',tipo:'ra1000',emoji:'🌎'},
+  {n:'European FootGolf Open',f:'2026-07-18',h:'2026-07-19',c:'Madrid 🇪🇸',tipo:'internacional',emoji:'🇪🇺'},
+  {n:'RA500 — Open de Chile',f:'2026-08-01',h:'2026-08-02',c:'Santiago 🇨🇱',tipo:'ra500',emoji:'⛳'},
+  {n:'RA1000 — Italian Open',f:'2026-08-22',h:'2026-08-23',c:'Roma 🇮🇹',tipo:'ra1000',emoji:'⛳'},
+  {n:'RA500 — Open Uruguay',f:'2026-09-05',h:'2026-09-06',c:'Montevideo 🇺🇾',tipo:'ra500',emoji:'⛳'},
+  {n:'Copa Patagonia — 2da fecha',f:'2026-09-20',h:'2026-09-20',c:'General Roca 🇦🇷',tipo:'major',emoji:'🏆'},
+  {n:'RA1000 — Open de Francia',f:'2026-10-03',h:'2026-10-04',c:'París 🇫🇷',tipo:'ra1000',emoji:'⛳'},
+  {n:'Open Nacional Argentina — Final',f:'2026-10-24',h:'2026-10-25',c:'Córdoba 🇦🇷',tipo:'nacional',emoji:'🇦🇷'},
+  {n:'FIFG World Rankings Closing',f:'2026-11-15',h:'2026-11-15',c:'Online 🌐',tipo:'mundial',emoji:'🌍'},
+]
+
+function getEventStatus(ev){
+  const hoy=new Date().toISOString().split('T')[0]
+  if(hoy>=ev.f&&hoy<=ev.h) return 'live'
+  if(ev.f>hoy) return 'upcoming'
+  return 'done'
+}
+
 function demoTorneos(){
-  return[
-    {n:'Copa Patagonia 2025',f:'15 Jun',c:'Gral. Roca',e:'bg',el:'Inscripto'},
-    {n:'Open Nacional Argentina',f:'28 Jun',c:'Buenos Aires',e:'ba',el:'Pendiente'},
-    {n:'South America Cup',f:'10 Jul',c:'São Paulo 🇧🇷',e:'bb',el:'Clasificado'},
-  ].map(t=>`<div class="li"><div style="width:8px;height:8px;border-radius:50%;background:var(--c4);flex-shrink:0"></div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${t.n}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${t.f} · ${t.c}</div></div><span class="badge ${t.e}">${t.el}</span></div>`).join('')
+  const hoy=new Date().toISOString().split('T')[0]
+  const proximos=WORLD_EVENTS.filter(e=>e.h>=hoy).slice(0,5)
+  const tipCol={mundial:'var(--red)',major:'#fbbf24',ra1000:'#a78bfa',ra500:'var(--c3)',nacional:'var(--blue)',internacional:'var(--tx2)'}
+  return proximos.map(e=>{
+    const st=getEventStatus(e)
+    const d=new Date(e.f+'T00:00:00')
+    const fStr=d.toLocaleDateString('es-AR',{day:'numeric',month:'short'})
+    const col=tipCol[e.tipo]||'var(--tx2)'
+    const badge=st==='live'?`<span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;color:var(--red);display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;animation:pulse 1s infinite"></span>EN VIVO</span>`:
+      `<span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:${col}">${fStr}</span>`
+    return`<div class="li" onclick="tab(document.querySelector('[data-sc=sc-mundial]'),'sc-mundial')" style="cursor:pointer">
+      <span style="font-size:18px">${e.emoji}</span>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--tx)">${e.n}</div><div style="font-size:11px;color:var(--tx3);margin-top:1px">📍 ${e.c}</div></div>
+      ${badge}
+    </div>`
+  }).join('')+`<div style="padding:10px 0 2px;text-align:center"><span onclick="tab(document.querySelector('[data-sc=sc-mundial]'),'sc-mundial')" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--c3);cursor:pointer">Ver todo el calendario mundial →</span></div>`
 }
 
 let scores=new Array(18).fill(null),hi=0
@@ -2697,6 +2764,7 @@ function switchMundial(tab){
   const active=document.getElementById('mtab-'+tab)
   if(active){active.style.background='var(--c3)';active.style.color='#000'}
   if(tab==='individual') loadMundialIframe()
+  if(tab==='equipos') renderMundialCal()
   if(tab==='noticias') loadMundialNoticias()
 }
 
@@ -2741,6 +2809,34 @@ async function loadMundialNoticias(){
       ${n.cuerpo?`<div style="font-size:13px;color:var(--tx2);line-height:1.5">${n.cuerpo}</div>`:''}
     </div>
   `).join('')
+}
+
+function renderMundialCal(){
+  const el=document.getElementById('mundial-cal-list')
+  if(!el) return
+  const hoy=new Date().toISOString().split('T')[0]
+  const tipCol={mundial:'#ef4444',major:'#fbbf24',ra1000:'#a78bfa',ra500:'var(--c3)',nacional:'var(--blue)',internacional:'var(--tx2)'}
+  const tipLbl={mundial:'🌍 MUNDIAL',major:'🏆 MAJOR',ra1000:'RA1000',ra500:'RA500',nacional:'🇦🇷 NACIONAL',internacional:'🌐 INTER.'}
+  el.innerHTML=WORLD_EVENTS.map(e=>{
+    const st=getEventStatus(e)
+    const d=new Date(e.f+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'})
+    const col=tipCol[e.tipo]||'var(--tx2)'
+    const lbl=tipLbl[e.tipo]||e.tipo
+    const isLive=st==='live'
+    const isDone=st==='done'
+    return`<div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,.06);opacity:${isDone?.5:1}">
+      <div style="font-size:22px;flex-shrink:0;margin-top:2px">${e.emoji}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;color:${col};letter-spacing:.5px">${lbl}</span>
+          ${isLive?`<span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;color:#ef4444;display:flex;align-items:center;gap:3px"><span style="width:5px;height:5px;border-radius:50%;background:#ef4444;display:inline-block;animation:pulse 1s infinite"></span>EN VIVO</span>`:''}
+          ${isDone?`<span style="font-size:10px;color:var(--tx3)">✓</span>`:''}
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--tx)">${e.n}</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:2px">📍 ${e.c} · ${d}${e.f!==e.h?' – '+new Date(e.h+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'}):''}</div>
+      </div>
+    </div>`
+  }).join('')
 }
 
 function loadMundial(){
