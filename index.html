@@ -588,6 +588,20 @@ body{display:flex;align-items:center;justify-content:center}
       <div class="sec sec-b" id="torneos-list"></div>
     </div>
 
+    <!-- LEADERBOARD OVERLAY -->
+    <div id="leaderboard-overlay" style="position:absolute;inset:0;background:var(--bg);z-index:270;display:none;flex-direction:column">
+      <div style="background:var(--c1);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:0.5px solid rgba(74,222,128,.12)">
+        <button onclick="closeLeaderboard()" style="background:rgba(255,255,255,.1);border-radius:var(--r8);padding:7px 14px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:none">← VOLVER</button>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:.5px;text-align:center;flex:1;padding:0 8px" id="lb-title">—</div>
+        <div style="width:70px"></div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:14px 16px 24px">
+        <div id="lb-fechas" style="margin-bottom:16px"></div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(134,239,172,.4);letter-spacing:1px;font-weight:700;margin-bottom:10px">TABLA DE POSICIONES</div>
+        <div id="lb-list"></div>
+      </div>
+    </div>
+
     <!-- CANCHAS -->
     <div class="sc" id="sc-canchas">
       <div class="hdr"><div style="display:flex;align-items:center;gap:12px"><button class="sc-back" onclick="tab(document.querySelector('[data-sc=sc-perfil]'),'sc-perfil')">← VOLVER</button><div><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Canchas ⛳</div></div></div></div>
@@ -1624,9 +1638,20 @@ async function saveRound(){
 
     const posInput=parseInt(document.getElementById('inp-posicion')?.value)||null
     const puntos=_tourMode&&posInput?calcPuntosCat(_catTorneo,posInput):null
+    const hoyStr=new Date().toISOString().split('T')[0]
+    // Detectar si hoy es fecha de algún circuito activo
+    let torneoId=null
+    for(const [tid,circ] of Object.entries(CIRCUITOS)){
+      if(circ.fechas.includes(hoyStr)){
+        const nf=circ.fechas.indexOf(hoyStr)+1
+        const ok=confirm(`¡Hoy es Fecha ${nf} del ${circ.nombre}!\n¿Querés registrar esta ronda en el circuito?`)
+        if(ok) torneoId=tid
+        break
+      }
+    }
     const ins={
       jugador_id:USER.id,
-      fecha:new Date().toISOString().split('T')[0],
+      fecha:hoyStr,
       tipo:_tourMode?'torneo_'+_catTorneo:'practica',
       total_golpes:tg,
       score_vs_par:svp,
@@ -1634,6 +1659,7 @@ async function saveRound(){
     }
     if(canchaId) ins.cancha_id=canchaId
     if(posInput) ins.posicion_final=posInput
+    if(torneoId) ins.torneo_id=torneoId
 
     setStatus('⏳','rgba(134,239,172,.12)','rgba(134,239,172,.7)','Insertando ronda (cancha:'+(canchaId?'ok':'sin id')+')')
     const {data:ronda,error}=await SB.from('rondas').insert(ins).select().single()
@@ -2070,6 +2096,101 @@ function setClimaDefault(){
 
 let _torneosAll=[]
 
+// Fechas de cada fecha del circuito local (Tour Roca)
+const CIRCUITOS={
+  'a692490c-ab84-4b96-b1aa-5f9686e37991':{
+    nombre:'Tour Roca FootGolf 2026',
+    emoji:'⛳',
+    fechas:['2026-03-15','2026-04-12','2026-05-10','2026-06-07','2026-07-05','2026-08-09','2026-09-06','2026-10-04','2026-11-08']
+  },
+  '114b1c93-57a2-4cb3-b40d-86a06a6ba917':{
+    nombre:'Tour Roca Par 3 2026',
+    emoji:'🎯',
+    fechas:['2026-03-29','2026-04-26','2026-05-24','2026-06-21','2026-07-26','2026-08-23','2026-09-27','2026-10-25','2026-11-29']
+  }
+}
+
+function getFechaCircuito(id){
+  const c=CIRCUITOS[id]; if(!c) return null
+  const hoy=new Date().toISOString().split('T')[0]
+  return c.fechas.find(f=>f===hoy)||null
+}
+
+function getProximaFecha(id){
+  const c=CIRCUITOS[id]; if(!c) return null
+  const hoy=new Date().toISOString().split('T')[0]
+  return c.fechas.find(f=>f>=hoy)||null
+}
+
+function getNumFecha(id, fecha){
+  const c=CIRCUITOS[id]; if(!c) return null
+  const idx=c.fechas.indexOf(fecha)
+  return idx>=0?idx+1:null
+}
+
+async function openLeaderboard(torneoId, nombre){
+  const ov=document.getElementById('leaderboard-overlay')
+  document.getElementById('lb-title').textContent=nombre
+  document.getElementById('lb-list').innerHTML='<div style="text-align:center;padding:30px;color:var(--tx3)">Cargando...</div>'
+  ov.style.display='flex'
+  // Renderizar fechas del circuito
+  const circ=CIRCUITOS[torneoId]
+  const fechasEl=document.getElementById('lb-fechas')
+  if(circ){
+    const hoy=new Date().toISOString().split('T')[0]
+    fechasEl.innerHTML=`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(134,239,172,.4);letter-spacing:1px;font-weight:700;margin-bottom:8px">FECHAS DEL TORNEO</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${circ.fechas.map((f,i)=>{
+        const past=f<hoy, today=f===hoy
+        const [,m,d]=f.split('-')
+        const bg=today?'rgba(74,222,128,.2)':past?'rgba(255,255,255,.04)':'rgba(255,255,255,.08)'
+        const col=today?'var(--c3)':past?'var(--tx3)':'var(--tx2)'
+        const border=today?'rgba(74,222,128,.4)':past?'rgba(255,255,255,.06)':'rgba(255,255,255,.12)'
+        return`<div style="background:${bg};border:0.5px solid ${border};border-radius:var(--r8);padding:5px 10px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:${col}${past?';opacity:.5':''}">${today?'🟢 HOY · ':''}F${i+1} · ${d}/${m}</div>`
+      }).join('')}</div>`
+  } else { fechasEl.innerHTML='' }
+  // Cargar ranking
+  try{
+    const {data:rondas}=await SB.from('rondas')
+      .select('jugador_id,score_vs_par,total_golpes,fecha,completada,jugadores(nombre)')
+      .eq('torneo_id',torneoId).eq('completada',true)
+    if(!rondas||!rondas.length){
+      document.getElementById('lb-list').innerHTML='<div style="text-align:center;padding:40px 0;color:var(--tx3)"><div style="font-size:40px;margin-bottom:8px">🏆</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700">Sin rondas registradas aún</div><div style="font-size:13px;margin-top:6px">Cuando los jugadores guarden sus rondas en este torneo aparecerán acá</div></div>'
+      return
+    }
+    // Agrupar por jugador - suma de score_vs_par
+    const byPlayer={}
+    rondas.forEach(r=>{
+      const id=r.jugador_id, nm=r.jugadores?.nombre||'—'
+      if(!byPlayer[id]) byPlayer[id]={nombre:nm,total:0,rondas:0,golpes:0}
+      byPlayer[id].total+=r.score_vs_par||0
+      byPlayer[id].rondas++
+      byPlayer[id].golpes+=r.total_golpes||0
+    })
+    const sorted=Object.values(byPlayer).sort((a,b)=>a.total-b.total)
+    const medals=['🥇','🥈','🥉']
+    document.getElementById('lb-list').innerHTML=sorted.map((p,i)=>{
+      const str=p.total===0?'E':p.total>0?'+'+p.total:p.total
+      return`<div style="background:${i===0?'rgba(251,191,36,.08)':'rgba(255,255,255,.04)'};border:0.5px solid ${i===0?'rgba(251,191,36,.2)':'rgba(255,255,255,.06)'};border-radius:var(--r12);padding:13px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:${i===0?'#ffc107':i===1?'#aaa':i===2?'#cd7f32':'var(--tx2)'};width:28px;flex-shrink:0">${medals[i]||('#'+(i+1))}</div>
+        <div style="flex:1">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:var(--tx)">${p.nombre}</div>
+          <div style="font-size:12px;color:var(--tx3);margin-top:2px">${p.rondas} fecha${p.rondas!==1?'s':''} jugada${p.rondas!==1?'s':''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:${p.total<=0?'var(--c3)':'#f87171'}">${str}</div>
+          <div style="font-size:11px;color:var(--tx3)">vs par acum.</div>
+        </div>
+      </div>`
+    }).join('')
+  }catch(e){
+    document.getElementById('lb-list').innerHTML='<div style="color:#f87171;padding:20px;text-align:center">Error al cargar el ranking</div>'
+  }
+}
+
+function closeLeaderboard(){
+  document.getElementById('leaderboard-overlay').style.display='none'
+}
+
 function diasHasta(fecha){
   if(!fecha)return null
   const hoy=new Date();hoy.setHours(0,0,0,0)
@@ -2088,21 +2209,38 @@ function renderTorneoCard(it){
     programado:{col:'#888888',label:'⏳ Próximo',bg:'rgba(255,255,255,.04)',border:'rgba(255,255,255,.08)'},
     finalizado:{col:'#444444',label:'✓ Finalizado',bg:'rgba(255,255,255,.03)',border:'rgba(255,255,255,.06)'},
   }
-  const s=statusConf[it.estado]||statusConf.programado
-  const f=it.fecha_inicio?new Date(it.fecha_inicio+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}):'—'
-  const dias=diasHasta(it.fecha_inicio)
-  return`<div style="background:${s.bg};border:1px solid ${s.border};border-radius:var(--r16);margin-bottom:10px;overflow:hidden">
+  const esCircuito=!!(it.id&&CIRCUITOS[it.id])
+  const circ=esCircuito?CIRCUITOS[it.id]:null
+  // Para circuitos siempre mostramos como "en curso" durante su temporada
+  const estado=esCircuito?'en_curso':(it.estado||'programado')
+  const s=statusConf[estado]||statusConf.programado
+  let fechaLabel='—'
+  if(esCircuito&&circ){
+    const hoy=new Date().toISOString().split('T')[0]
+    const prox=circ.fechas.find(f=>f>=hoy)
+    if(prox){
+      const n=circ.fechas.indexOf(prox)+1
+      const [,m,d]=prox.split('-')
+      fechaLabel=`Próxima: Fecha ${n} · ${d}/${m}/2026`
+    } else { fechaLabel='Temporada finalizada' }
+  } else {
+    fechaLabel=it.fecha_inicio?new Date(it.fecha_inicio+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}):'—'
+  }
+  const dias=!esCircuito?diasHasta(it.fecha_inicio):null
+  const clickAttr=esCircuito?`onclick="openLeaderboard('${it.id}','${(it.nombre||'').replace(/'/g,'\\'')}')" style="cursor:pointer"`:`style=""`
+  return`<div ${clickAttr} style="background:${s.bg};border:1px solid ${s.border};border-radius:var(--r16);margin-bottom:10px;overflow:hidden">
     <div style="display:flex;align-items:stretch;gap:0">
       <div style="width:4px;background:${s.col};flex-shrink:0;border-radius:4px 0 0 4px"></div>
       <div style="padding:14px 15px;flex:1">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--tx);line-height:1.2;margin-bottom:7px">${it.emoji||'🏆'} ${it.nombre}</div>
-        <div style="font-size:12px;color:var(--tx2);margin-bottom:3px">📍 ${it.ciudades?.nombre||'—'}</div>
-        <div style="font-size:12px;color:var(--tx2);margin-bottom:10px">📅 ${f}${it.formato?' · '+it.formato:it.tipo?' · '+it.tipo:''}</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--tx);line-height:1.2;margin-bottom:7px">${circ?.emoji||it.emoji||'🏆'} ${it.nombre}</div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:3px">📍 ${it.ciudades?.nombre||'General Roca, Río Negro 🇦🇷'}</div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:10px">📅 ${fechaLabel}</div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:${s.col}">${s.label}</span>
+          <span style="font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:${s.col}">${esCircuito?'🟢 Temporada en curso':s.label}</span>
           ${dias?`<span style="background:${s.col}20;color:${s.col};border:0.5px solid ${s.col}40;border-radius:var(--rF);padding:3px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700">${dias}</span>`:''}
-          ${it.tipo?`<span style="background:rgba(255,255,255,.06);color:var(--tx3);border-radius:var(--rF);padding:3px 10px;font-size:11px;font-weight:600">${it.tipo}</span>`:''}
+          ${esCircuito?`<span style="background:rgba(74,222,128,.08);color:var(--c3);border-radius:var(--rF);padding:3px 10px;font-size:11px;font-weight:700;border:0.5px solid rgba(74,222,128,.2)">${circ.fechas.length} fechas</span>`:''}
         </div>
+        ${esCircuito?`<div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,.1);border:0.5px solid rgba(74,222,128,.25);border-radius:var(--r8);padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--c3)">VER TABLA DE POSICIONES →</div>`:''}
         ${it.url_inscripcion&&it.estado==='inscripciones'?`<a href="${it.url_inscripcion}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:var(--c3);border:none;border-radius:var(--r8);padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#000;cursor:pointer;text-decoration:none">INSCRIBIRME →</a>`:''}
       </div>
     </div>
@@ -2124,13 +2262,16 @@ function filterTorneos(filtro){
 }
 
 async function renderStaticData(){
-  const {data:t}=await SB.from('torneos').select('*,ciudades(nombre)').order('fecha_inicio').limit(20).catch(()=>({data:null}))
-  _torneosAll=t&&t.length?t:[
+  const {data:t}=await SB.from('torneos').select('*,ciudades(nombre)').order('fecha_inicio').limit(30).catch(()=>({data:null}))
+  const fallback=[
     {nombre:'FIFG World Cup Acapulco 2026',fecha_inicio:'2026-05-27',tipo:'individual',formato:'Stroke Play · 72 hoyos',estado:'en_curso',ciudades:{nombre:'Acapulco 🇲🇽'},emoji:'🌍'},
     {nombre:'Copa Patagonia 2026',fecha_inicio:'2026-06-15',tipo:'individual',formato:'Stroke Play · 18 hoyos',estado:'inscripciones',ciudades:{nombre:'General Roca 🇦🇷'},emoji:'🏆'},
     {nombre:'Open Nacional Argentina',fecha_inicio:'2026-06-28',tipo:'individual',formato:'Stroke Play · 36 hoyos',estado:'programado',ciudades:{nombre:'Buenos Aires 🇦🇷'},emoji:'⚽'},
-    {nombre:'South America Cup 2026',fecha_inicio:'2026-07-12',tipo:'equipos',formato:'Best Ball · 18 hoyos',estado:'programado',ciudades:{nombre:'São Paulo 🇧🇷'},emoji:'🌎'},
   ]
+  // Poner circuitos al frente, luego el resto
+  const circuitos=(t||[]).filter(x=>CIRCUITOS[x.id])
+  const otros=(t&&t.length)?t.filter(x=>!CIRCUITOS[x.id]):fallback
+  _torneosAll=[...circuitos,...otros]
   filterTorneos('todos')
   const {data:ca}=await SB.from('canchas').select('*,ciudades(nombre,paises(bandera))').eq('activa',true).order('nombre').catch(()=>({data:null}))
   window._allCanchas=ca&&ca.length?ca.map(c=>({nombre:c.nombre,ciudad:c.ciudades?.nombre||'',pais:c.ciudades?.paises?.bandera||'🌍',hoyos:c.total_hoyos,par:c.par_total,dif:c.dificultad,info:c.info||''})):[
