@@ -1,4 +1,4 @@
-const CACHE = 'frigurso-v8'
+const CACHE = 'frigurso-v9'
 const PRECACHE = ['/', '/index.html', '/icon-192.png', '/icon-512.png', '/manifest.json']
 
 self.addEventListener('install', e => {
@@ -17,16 +17,19 @@ self.addEventListener('activate', e => {
   )
 })
 
+// Permite que la página le ordene activarse inmediatamente
+self.addEventListener('message', e => {
+  if (e.data?.type === 'SKIP_WAITING') self.skipWaiting()
+})
+
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) return
 
-  // APIs externas: siempre red, cache como fallback offline
   if (e.request.url.includes('supabase') || e.request.url.includes('open-meteo') || e.request.url.includes('nominatim')) {
     e.respondWith(fetch(e.request).catch(() => caches.match(e.request)))
     return
   }
 
-  // index.html: siempre red primero para recibir actualizaciones; cache solo si offline
   const url = new URL(e.request.url)
   if (url.pathname === '/' || url.pathname === '/index.html') {
     e.respondWith(
@@ -39,7 +42,6 @@ self.addEventListener('fetch', e => {
     return
   }
 
-  // Resto (íconos, manifest): cache first
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
       const clone = res.clone()
