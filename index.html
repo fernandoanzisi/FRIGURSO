@@ -187,6 +187,10 @@ body{display:flex;align-items:center;justify-content:center}
 .hr-i{width:38px;height:38px;border-radius:var(--r8);background:rgba(74,222,128,.1);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 
 /* LOADER / TOAST */
+.ptr-bar{position:absolute;top:0;left:0;right:0;z-index:350;display:flex;align-items:center;justify-content:center;gap:8px;height:0;overflow:hidden;background:var(--bg2);transition:height .2s;border-bottom:0.5px solid rgba(74,222,128,.15)}
+.ptr-bar.show{height:50px}
+.ptr-spin{width:20px;height:20px;border:2px solid rgba(74,222,128,.25);border-top-color:var(--c3);border-radius:50%;animation:spin .7s linear infinite}
+.ptr-txt{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--c3);letter-spacing:.5px}
 .loader{position:absolute;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:400;flex-direction:column;gap:12px}
 .loader.on{display:flex}
 .spin{width:36px;height:36px;border:3px solid rgba(134,239,172,.2);border-top-color:var(--c5);border-radius:50%;animation:spin .8s linear infinite}
@@ -531,7 +535,7 @@ body{display:flex;align-items:center;justify-content:center}
 
     <!-- CANCHAS -->
     <div class="sc" id="sc-canchas">
-      <div class="hdr"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Canchas ⛳</div></div>
+      <div class="hdr"><div style="display:flex;align-items:center;gap:12px"><button class="sc-back" onclick="tab(document.querySelector('[data-sc=sc-perfil]'),'sc-perfil')">← VOLVER</button><div><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Canchas ⛳</div></div></div></div>
       <div style="padding:14px 16px"><input id="cancha-search" style="width:100%;background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r12);padding:12px 15px;font-size:14px;color:var(--tx);font-family:'Barlow',sans-serif;outline:none" placeholder="🔍 Buscar cancha o ciudad..." oninput="filterCanchas(this.value)"></div>
       <div class="sec sec-b" id="canchas-list"></div>
     </div>
@@ -544,7 +548,7 @@ body{display:flex;align-items:center;justify-content:center}
 
     <!-- HISTORIAL / ESTADÍSTICAS -->
     <div class="sc" id="sc-historial">
-      <div class="hdr"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Estadísticas 📊</div></div>
+      <div class="hdr"><div style="display:flex;align-items:center;gap:12px"><button class="sc-back" onclick="tab(document.querySelector('[data-sc=sc-perfil]'),'sc-perfil')">← VOLVER</button><div><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Estadísticas 📊</div></div></div></div>
 
       <!-- TABS -->
       <div style="display:flex;gap:0;margin:0 16px 14px;background:var(--bg2);border-radius:var(--r12);padding:4px;border:0.5px solid var(--bd)">
@@ -654,8 +658,8 @@ body{display:flex;align-items:center;justify-content:center}
       <div class="sec sec-b">
         <div class="card">
           <div class="ct">⚙️ Opciones</div>
-          <div class="li" style="cursor:pointer" onclick="tab(document.querySelector('[data-sc=sc-historial]'),'sc-historial')"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)">📋 Ver historial</span><span style="color:var(--tx3)">›</span></div>
-          <div class="li" style="cursor:pointer" onclick="go('sc-canchas')"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)">⛳ Explorar canchas</span><span style="color:var(--tx3)">›</span></div>
+          <div class="li" style="cursor:pointer" onclick="go('sc-historial');loadHistorial()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)">📋 Ver historial</span><span style="color:var(--tx3)">›</span></div>
+          <div class="li" style="cursor:pointer" onclick="go('sc-canchas');if(!window._allCanchas||!window._allCanchas.length)renderStaticData();else renderCanchas('')"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)">⛳ Explorar canchas</span><span style="color:var(--tx3)">›</span></div>
           <div class="li" style="cursor:pointer;display:none" id="install-li" onclick="installApp()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--c3)">📲 Instalar como app</span><span style="color:var(--c3)">›</span></div>
           <div class="li" style="cursor:pointer" onclick="doLogout()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--red)">🚪 Cerrar sesión</span></div>
         </div>
@@ -688,6 +692,7 @@ body{display:flex;align-items:center;justify-content:center}
     <button class="nbi" data-sc="sc-perfil" onclick="tab(this,'sc-perfil')"><span class="nbi-i">👤</span><span class="nbi-l">PERFIL</span></button>
   </div>
 
+  <div class="ptr-bar" id="ptr-bar"><div class="ptr-spin"></div><div class="ptr-txt">Actualizando...</div></div>
   <div class="toast" id="toast"></div>
   <div class="loader" id="loader"><div class="spin"></div><div class="loader-t" id="loader-t">Cargando...</div></div>
 </div>
@@ -963,6 +968,7 @@ async function loadJugador(){
 function showApp(){
   stopLoad()
   document.getElementById('navbar').style.display='flex'
+  history.replaceState({sc:'sc-home'},'')
   go('sc-home')
   loadDashboard()
   renderStaticData()
@@ -982,14 +988,12 @@ async function doLogout(){
 function go(id){
   document.querySelectorAll('.sc').forEach(s=>s.classList.remove('cur'))
   document.getElementById(id).classList.add('cur')
-  if(id==='sc-canchas'){
-    if(window._allCanchas&&window._allCanchas.length) renderCanchas(document.getElementById('cancha-search')?.value||'')
-    else renderStaticData()
-  }
+  // Push state for hardware back button support
+  if(id!=='sc-auth') history.pushState({sc:id},'')
 }
 function tab(btn,id){
   document.querySelectorAll('.nbi').forEach(b=>b.classList.remove('on'))
-  btn.classList.add('on')
+  if(btn) btn.classList.add('on')
   go(id)
   if(id==='sc-historial') loadHistorial()
   if(id==='sc-perfil') loadPerfil()
@@ -997,6 +1001,27 @@ function tab(btn,id){
   if(id==='sc-gps') getGPS()
   if(id==='sc-clima') loadClima()
 }
+// Hardware back button: restore previous screen instead of closing app
+window.addEventListener('popstate', e=>{
+  const sc=e.state?.sc
+  if(sc){
+    const btn=document.querySelector(`[data-sc="${sc}"]`)
+    document.querySelectorAll('.sc').forEach(s=>s.classList.remove('cur'))
+    document.getElementById(sc)?.classList.add('cur')
+    document.querySelectorAll('.nbi').forEach(b=>b.classList.remove('on'))
+    if(btn) btn.classList.add('on')
+    if(sc==='sc-perfil') loadPerfil()
+    if(sc==='sc-ranking') loadRanking()
+  } else {
+    // Back from first screen — push a state so next back doesn't close
+    history.pushState({sc:'sc-home'},'')
+    const homeBtn=document.querySelector('[data-sc=sc-home]')
+    document.querySelectorAll('.sc').forEach(s=>s.classList.remove('cur'))
+    document.getElementById('sc-home')?.classList.add('cur')
+    document.querySelectorAll('.nbi').forEach(b=>b.classList.remove('on'))
+    if(homeBtn) homeBtn.classList.add('on')
+  }
+})
 
 async function loadDashboard(){
   if(!USER||!JUGADOR) return
@@ -2254,6 +2279,44 @@ if('serviceWorker' in navigator){
     window.location.reload()
   })
 }
+
+// ── Pull-to-refresh ──
+;(()=>{
+  let _ptY=0,_ptActive=false,_ptTriggered=false
+  const THR=70
+  document.addEventListener('touchstart',e=>{
+    const cur=document.querySelector('.sc.cur')
+    _ptY=e.touches[0].clientY
+    _ptActive=cur?cur.scrollTop<=0:false
+    _ptTriggered=false
+  },{passive:true})
+  document.addEventListener('touchmove',e=>{
+    if(!_ptActive) return
+    const dy=e.touches[0].clientY-_ptY
+    if(dy>20){
+      const bar=document.getElementById('ptr-bar')
+      if(dy>THR&&!_ptTriggered) bar.classList.add('show')
+      else if(dy<=THR) bar.classList.remove('show')
+    }
+  },{passive:true})
+  document.addEventListener('touchend',e=>{
+    if(!_ptActive) return
+    const dy=e.changedTouches[0].clientY-_ptY
+    const bar=document.getElementById('ptr-bar')
+    if(dy>THR&&!_ptTriggered){
+      _ptTriggered=true
+      setTimeout(()=>bar.classList.remove('show'),900)
+      const cur=document.querySelector('.sc.cur')?.id
+      if(cur==='sc-home'){ loadDashboard() }
+      else if(cur==='sc-torneos'){ renderStaticData() }
+      else if(cur==='sc-ranking'){ loadRanking() }
+      else if(cur==='sc-historial'){ loadHistorial() }
+      else if(cur==='sc-canchas'){ renderStaticData() }
+      else if(cur==='sc-perfil'){ loadPerfil() }
+    } else { bar.classList.remove('show') }
+    _ptActive=false
+  },{passive:true})
+})()
 
 let _installPrompt=null
 window.addEventListener('beforeinstallprompt', e=>{
