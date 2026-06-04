@@ -171,8 +171,11 @@ body{display:flex;align-items:center;justify-content:center}
 .psl{font-size:9px;color:rgba(134,239,172,.4);letter-spacing:.3px}
 
 /* TORNEOS / CANCHAS */
-.tc{background:var(--bg3);border-radius:var(--r22);border:0.5px solid var(--bd);overflow:hidden;margin-bottom:12px;box-shadow:var(--sh)}
-.tc-img{height:72px;display:flex;align-items:center;justify-content:center;font-size:32px;background:linear-gradient(135deg,var(--c1),var(--c2))}
+.tc{background:var(--bg3);border-radius:var(--r22);border:0.5px solid var(--bd);overflow:hidden;margin-bottom:12px;box-shadow:var(--sh);cursor:pointer;transition:transform .15s}
+.tc:active{transform:scale(.98)}
+.tc-img{height:130px;display:flex;align-items:center;justify-content:center;font-size:32px;background:linear-gradient(135deg,var(--c1),var(--c2));overflow:hidden;position:relative}
+.tc-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tc-img-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55) 0%,transparent 60%)}
 .tc-b{padding:14px 16px}
 .tc-n{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;color:var(--tx)}
 .tc-m{font-size:12px;color:var(--tx2);margin-top:3px;line-height:1.5}
@@ -736,6 +739,9 @@ body{display:flex;align-items:center;justify-content:center}
           <div id="p-torneos-list"><div class="empty"><div class="empty-i">🏆</div><div class="empty-t">Cargá tu primer torneo</div></div></div>
         </div>
       </div>
+      <div class="sec">
+        <div class="card" id="p-logros-sec"></div>
+      </div>
       <div class="sec sec-b">
         <div class="card">
           <div class="ct">⚙️ Opciones</div>
@@ -810,6 +816,27 @@ body{display:flex;align-items:center;justify-content:center}
       <input class="inp" type="number" id="er-golpes" placeholder="Ej: 51" min="1" style="margin-bottom:6px">
       <div style="font-size:11px;color:var(--tx3);margin-bottom:20px">Opcional — si no sabés el total dejalo vacío</div>
       <div id="er-pts-preview" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;color:rgba(255,193,7,.7);padding:10px;background:rgba(255,193,7,.06);border-radius:var(--r8);border:0.5px solid rgba(255,193,7,.15)"></div>
+    </div>
+  </div>
+
+  <!-- CANCHA DETAIL OVERLAY -->
+  <div id="cancha-detail-overlay" style="position:absolute;inset:0;background:var(--bg);z-index:280;display:none;flex-direction:column">
+    <div id="cd-photo" style="height:220px;background:linear-gradient(135deg,var(--c1),var(--c2));flex-shrink:0;position:relative;overflow:hidden">
+      <img id="cd-photo-img" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none">
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,rgba(0,0,0,.1) 60%)"></div>
+      <button onclick="closeCanchaDetail()" style="position:absolute;top:14px;left:14px;background:rgba(0,0,0,.5);border:none;border-radius:var(--r8);padding:7px 12px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;backdrop-filter:blur(4px)">← VOLVER</button>
+      <button onclick="changeCanchaPhoto()" style="position:absolute;top:14px;right:14px;background:rgba(0,0,0,.5);border:none;border-radius:var(--r8);padding:7px 12px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;backdrop-filter:blur(4px)">📷 FOTO</button>
+      <input type="file" id="cd-photo-input" accept="image/*" style="display:none" onchange="uploadCanchaPhoto(this.files[0]);this.value=''">
+      <div style="position:absolute;bottom:14px;left:16px;right:16px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:#fff;line-height:1.1" id="cd-nombre">—</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.7);margin-top:4px" id="cd-lugar">—</div>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px" id="cd-stats"></div>
+      <div id="cd-info-box" style="display:none;background:rgba(74,222,128,.08);border:0.5px solid rgba(74,222,128,.2);border-radius:var(--r12);padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--c3);font-weight:500"></div>
+      <button onclick="startRoundHere()" style="width:100%;background:var(--c3);border:none;border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(74,222,128,.4);margin-bottom:10px">⛳ JUGAR AQUÍ</button>
+      <div id="cd-rondas-section" style="margin-top:16px"></div>
     </div>
   </div>
 
@@ -2291,12 +2318,124 @@ async function renderStaticData(){
   renderEquipos()
 }
 
+function getCanchaFotoKey(c){ return'fg_cancha_foto_'+(c.id||c.nombre.toLowerCase().replace(/\s+/g,'_')) }
+
 function renderCanchas(f){
   const items=(window._allCanchas||[]).filter(c=>!f||c.nombre.toLowerCase().includes(f.toLowerCase())||c.ciudad.toLowerCase().includes(f.toLowerCase()))
   const difC={facil:'bg',media:'ba','difícil':'br',experto:'br'}
-  document.getElementById('canchas-list').innerHTML=items.map(c=>`<div class="tc"><div class="tc-img">⛳</div><div class="tc-b"><div class="tc-n">${c.nombre}</div><div class="tc-m">${c.pais} ${c.ciudad}</div>${c.info?`<div class="tc-m" style="color:var(--c3);font-weight:600;margin-top:4px">📌 ${c.info}</div>`:''}<div style="display:flex;gap:6px;margin-top:8px"><span class="badge bgr">${c.hoyos} hoyos</span><span class="badge bgr">Par ${c.par}</span><span class="badge ${difC[c.dif]||'bgr'}">${c.dif}</span></div></div></div>`).join('')
+  document.getElementById('canchas-list').innerHTML=items.map(c=>{
+    const foto=localStorage.getItem(getCanchaFotoKey(c))||c.imagen_url||''
+    const imgHtml=foto?`<img src="${foto}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`:'<span style="font-size:36px">⛳</span>'
+    return`<div class="tc" onclick="openCanchaDetail(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+      <div class="tc-img">${imgHtml}<div class="tc-img-ov"></div></div>
+      <div class="tc-b">
+        <div class="tc-n">${c.nombre}</div>
+        <div class="tc-m">${c.pais} ${c.ciudad}</div>
+        ${c.info?`<div class="tc-m" style="color:var(--c3);font-weight:600;margin-top:4px">📌 ${c.info}</div>`:''}
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <span class="badge bgr">${c.hoyos} hoyos</span>
+          <span class="badge bgr">Par ${c.par}</span>
+          <span class="badge ${difC[c.dif]||'bgr'}">${c.dif||'media'}</span>
+        </div>
+      </div>
+    </div>`
+  }).join('')
 }
 function filterCanchas(v){renderCanchas(v)}
+
+let _currentCancha=null
+
+function openCanchaDetail(c){
+  _currentCancha=c
+  const ov=document.getElementById('cancha-detail-overlay')
+  document.getElementById('cd-nombre').textContent=c.nombre
+  document.getElementById('cd-lugar').textContent=`${c.pais} ${c.ciudad}`
+  // Foto
+  const foto=localStorage.getItem(getCanchaFotoKey(c))||c.imagen_url||''
+  const img=document.getElementById('cd-photo-img')
+  if(foto){ img.src=foto; img.style.display='block'; img.onerror=()=>img.style.display='none' }
+  else img.style.display='none'
+  // Stats chips
+  const difC={facil:'var(--birdie)',media:'#fbbf24','difícil':'#f87171',experto:'#f43f5e'}
+  document.getElementById('cd-stats').innerHTML=[
+    {l:'HOYOS',v:c.hoyos||18},
+    {l:'PAR',v:c.par||72},
+    {l:'DIFICULTAD',v:(c.dif||'media').toUpperCase(),col:difC[c.dif]||'var(--tx2)'},
+  ].map(s=>`<div style="background:rgba(255,255,255,.06);border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r12);padding:12px;text-align:center">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:${s.col||'var(--tx)'}">${s.v}</div>
+    <div style="font-size:10px;color:var(--tx3);letter-spacing:.5px;margin-top:3px">${s.l}</div>
+  </div>`).join('')
+  // Info
+  const box=document.getElementById('cd-info-box')
+  if(c.info){ box.textContent='📌 '+c.info; box.style.display='block' }
+  else box.style.display='none'
+  // Rondas jugadas en esta cancha
+  const rondasSec=document.getElementById('cd-rondas-section')
+  rondasSec.innerHTML=''
+  if(USER&&_statData){
+    const mis=_statData.filter(r=>r.canchas?.nombre===c.nombre||r.cancha_id===c.id)
+    if(mis.length){
+      const best=mis.reduce((b,r)=>r.score_vs_par<b.score_vs_par?r:b,mis[0])
+      const avg=Math.round(mis.reduce((s,r)=>s+(r.score_vs_par||0),0)/mis.length)
+      const str=avg===0?'E':avg>0?'+'+avg:avg
+      const bestStr=best.score_vs_par===0?'E':best.score_vs_par>0?'+'+best.score_vs_par:best.score_vs_par
+      rondasSec.innerHTML=`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(134,239,172,.4);letter-spacing:1px;font-weight:700;margin-bottom:10px">TUS STATS AQUÍ</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div style="background:rgba(255,255,255,.06);border-radius:var(--r12);padding:12px;text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--tx)">${mis.length}</div><div style="font-size:10px;color:var(--tx3)">RONDAS</div></div>
+          <div style="background:rgba(255,255,255,.06);border-radius:var(--r12);padding:12px;text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:${best.score_vs_par<=0?'var(--birdie)':'#f87171'}">${bestStr}</div><div style="font-size:10px;color:var(--tx3)">MEJOR</div></div>
+          <div style="background:rgba(255,255,255,.06);border-radius:var(--r12);padding:12px;text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:${avg<=0?'var(--birdie)':'#f87171'}">${str}</div><div style="font-size:10px;color:var(--tx3)">PROMEDIO</div></div>
+        </div>`
+    }
+  }
+  ov.style.display='flex'
+}
+
+function closeCanchaDetail(){
+  document.getElementById('cancha-detail-overlay').style.display='none'
+}
+
+function startRoundHere(){
+  if(!_currentCancha) return
+  closeCanchaDetail()
+  // Seleccionar esta cancha y abrir selector
+  const match=COURSES.find(c=>c.nombre===_currentCancha.nombre)
+  if(match){ _selCourse=match; go('sc-scorecard'); renderScorecard() }
+  else{ go('sc-selector'); setTimeout(()=>{ const si=document.getElementById('sel-search'); if(si){si.value=_currentCancha.nombre;renderSelector()} },100) }
+}
+
+function changeCanchaPhoto(){
+  // Opción: URL o cámara
+  const url=prompt('Pegá la URL de una foto (ej: de Google Images):\n\nO dejá vacío para subir desde la cámara')
+  if(url===null) return
+  if(url.trim()){
+    localStorage.setItem(getCanchaFotoKey(_currentCancha),url.trim())
+    const img=document.getElementById('cd-photo-img')
+    img.src=url.trim(); img.style.display='block'
+    img.onerror=()=>{ img.style.display='none'; toast('URL no válida o sin acceso a la imagen') }
+    renderCanchas(document.getElementById('cancha-search')?.value||'')
+    toast('✓ Foto actualizada')
+  } else {
+    document.getElementById('cd-photo-input').click()
+  }
+}
+
+async function uploadCanchaPhoto(file){
+  if(!file||!_currentCancha) return
+  toast('⏳ Subiendo foto...')
+  try{
+    const blob=await resizeImage(file,800)
+    const key=(_currentCancha.id||_currentCancha.nombre.toLowerCase().replace(/\s+/g,'_'))+'.jpg'
+    const {error}=await SB.storage.from('canchas').upload(key,blob,{upsert:true,contentType:'image/jpeg'})
+    if(error) throw error
+    const {data:ud}=SB.storage.from('canchas').getPublicUrl(key)
+    const url=ud.publicUrl+'?t='+Date.now()
+    localStorage.setItem(getCanchaFotoKey(_currentCancha),url)
+    const img=document.getElementById('cd-photo-img')
+    img.src=url; img.style.display='block'
+    renderCanchas(document.getElementById('cancha-search')?.value||'')
+    toast('✓ Foto subida')
+  }catch(e){ toast('Error al subir foto') }
+}
 
 function renderEquipos(){
   const items=[
@@ -2615,8 +2754,7 @@ function generarAnalisis(ronda, holes, dist, svp, sameCourseBest){
 async function loadRanking(){
   const el=document.getElementById('ranking-list')
   el.innerHTML='<div class="empty" style="padding:24px 0"><div class="empty-i">⏳</div><div class="empty-t">Calculando...</div></div>'
-  // Calcular puntos World Tour de todos los jugadores de la app
-  const {data:jugadores}=await SB.from('jugadores').select('id,nombre,apellido,categoria,handicap,pais').catch(()=>({data:null}))
+  const {data:jugadores}=await SB.from('jugadores').select('id,nombre,apellido,categoria,handicap,pais,avatar_url').catch(()=>({data:null}))
   const {data:rondasAll}=await SB.from('rondas').select('jugador_id,tipo,posicion_final').eq('completada',true).catch(()=>({data:null}))
   const bgColors=['rgba(74,222,128,.15)','rgba(14,165,233,.12)','rgba(248,113,113,.12)','rgba(251,191,36,.12)']
   const fgColors=['#4ade80','#0369a1','#f87171','#fbbf24']
@@ -2626,20 +2764,17 @@ async function loadRanking(){
       const mis=rondasAll.filter(r=>r.jugador_id===j.id&&r.tipo&&r.tipo.startsWith('torneo_')&&r.posicion_final)
       const pts=mis.reduce((s,r)=>s+calcPuntosCat(r.tipo.replace('torneo_',''),r.posicion_final),0)
       const hcp=j.handicap!=null?(j.handicap>=0?'+'+parseFloat(j.handicap).toFixed(1):parseFloat(j.handicap).toFixed(1)):'—'
-      return{n:`${j.nombre} ${j.apellido}`,ini:`${j.nombre?.[0]||'?'}${j.apellido?.[0]||''}`,p:j.pais||'🇦🇷',cat:j.categoria||'Aficionado',hcp,pts}
+      return{id:j.id,n:`${j.nombre} ${j.apellido||''}`.trim(),ini:`${j.nombre?.[0]||'?'}${j.apellido?.[0]||''}`,p:j.pais||'🇦🇷',cat:j.categoria||'Aficionado',hcp,pts,avatar:j.avatar_url||''}
     }).sort((a,b)=>b.pts-a.pts)
   }
   if(!items.length){
-    // Fallback con datos reales conocidos de Giovanni + placeholders
     items=[
-      {ini:'GA',n:'Giovanni Anzisi',p:'🇦🇷',cat:'Elite',hcp:'+3.2',pts:5250},
-      {ini:'MP',n:'Matías Palferro',p:'🇦🇷',cat:'Elite',hcp:'+2.5',pts:4800},
-      {ini:'DT',n:'Diego Tripailao',p:'🇦🇷',cat:'Elite',hcp:'+2.1',pts:4200},
-      {ini:'SM',n:'Sebastián Muñoz',p:'🇦🇷',cat:'Masters',hcp:'+1.8',pts:3600},
-      {ini:'NA',n:'Nelson Alfonsín',p:'🇦🇷',cat:'Masters',hcp:'+1.5',pts:3100},
+      {ini:'GA',n:'Giovanni Anzisi',p:'🇦🇷',cat:'Elite',hcp:'+3.2',pts:5250,avatar:''},
+      {ini:'FA',n:'Fernando Anzisi',p:'🇦🇷',cat:'Masters',hcp:'+1.5',pts:0,avatar:''},
     ]
   }
   const pc=p=>p===1?'p1':p===2?'p2':p===3?'p3':'pn'
+  const medals=['🥇','🥈','🥉']
   el.innerHTML=`
     <div style="display:flex;justify-content:space-between;padding:6px 0 10px;border-bottom:0.5px solid var(--bd);margin-bottom:4px">
       <div style="font-size:10px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">JUGADOR</div>
@@ -2647,9 +2782,12 @@ async function loadRanking(){
     </div>`+
   items.map((r,i)=>{
     const pos=i+1,bg=bgColors[i]||'var(--bg2)',c=fgColors[i]||'var(--tx2)'
+    const avEl=r.avatar
+      ?`<div class="av" style="background:${bg};overflow:hidden;padding:0"><img src="${r.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentNode.innerHTML='${r.ini}'"></div>`
+      :`<div class="av" style="background:${bg};color:${c}">${r.ini}</div>`
     return`<div class="li">
-      <div class="pos-b ${pc(pos)}">${pos}</div>
-      <div class="av" style="background:${bg};color:${c}">${r.ini}</div>
+      <div class="pos-b ${pc(pos)}" style="font-size:${pos<=3?'16px':'13px'}">${medals[i]||pos}</div>
+      ${avEl}
       <div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${r.p} ${r.n}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${r.cat} · HCP ${r.hcp}</div></div>
       <div style="text-align:right"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:${r.pts?'#ffc107':'var(--tx3)'}">${r.pts}</div><div style="font-size:10px;color:var(--tx3)">pts</div></div>
     </div>`}).join('')
@@ -2758,7 +2896,7 @@ async function loadPerfil(){
       })
       tlist.innerHTML=torneoRows.length?torneoRows.join(''):'<div class="empty"><div class="empty-i">🏆</div><div class="empty-t">Cargá tu primer torneo</div></div>'
     }
-    // Load hole-by-hole for stat bars
+    // Load hole-by-hole for stat bars + logros
     const ids=rondas.map(r=>r.id)
     const {data:holes}=await SB.from('scorecard').select('golpes,par').in('ronda_id',ids).catch(()=>({data:null}))
     if(holes&&holes.length){
@@ -2772,12 +2910,52 @@ async function loadPerfil(){
         <div class="sbar-row"><div class="sbar-lbl" style="color:var(--bogey)">📍 Bogey</div><div class="sbar-bg"><div class="sbar-fill" style="width:${(t.bogey/tot*100).toFixed(1)}%;background:var(--bogey)"></div></div><div class="sbar-n">${t.bogey}</div></div>
         <div class="sbar-row"><div class="sbar-lbl" style="color:var(--dbl)">✌ Doble+</div><div class="sbar-bg"><div class="sbar-fill" style="width:${(t.dbl/tot*100).toFixed(1)}%;background:var(--dbl)"></div></div><div class="sbar-n">${t.dbl}</div></div>
         <div style="font-size:11px;color:var(--tx3);margin-top:10px;text-align:right">${tot} hoyos totales registrados</div>`
+      // Logros
+      renderLogros(rondas,t)
     } else {
       document.getElementById('p-golpes').innerHTML='<div class="empty"><div class="empty-i">⚽</div><div class="empty-t">Jugá tu primera ronda</div></div>'
     }
   } else {
     document.getElementById('p-golpes').innerHTML='<div class="empty"><div class="empty-i">⚽</div><div class="empty-t">Jugá tu primera ronda</div></div>'
   }
+}
+
+function renderLogros(rondas, tally){
+  const sec=document.getElementById('p-logros-sec')
+  if(!sec) return
+  const wins=rondas.filter(r=>r.posicion_final===1).length
+  const torneos=rondas.filter(r=>r.tipo&&r.tipo.startsWith('torneo')).length
+  const mundiales=rondas.filter(r=>r.tipo==='torneo_mundial').length
+  const allLogros=[
+    {id:'primera',ico:'⛳',label:'Primera ronda',desc:'Completaste tu primera ronda',ok:rondas.length>=1},
+    {id:'birdie',ico:'🐦',label:'Primer birdie',desc:'Hiciste al menos un birdie',ok:(tally?.birdie||0)>=1},
+    {id:'eagle',ico:'🦅',label:'Águila',desc:'Hiciste al menos un eagle',ok:(tally?.eagle||0)>=1},
+    {id:'5rondas',ico:'🎯',label:'5 rondas',desc:'Completaste 5 rondas',ok:rondas.length>=5},
+    {id:'10rondas',ico:'💪',label:'10 rondas',desc:'Completaste 10 rondas',ok:rondas.length>=10},
+    {id:'primer_torneo',ico:'🏆',label:'Primer torneo',desc:'Participaste en un torneo',ok:torneos>=1},
+    {id:'primer_win',ico:'🥇',label:'Primera victoria',desc:'Ganaste un torneo',ok:wins>=1},
+    {id:'3wins',ico:'👑',label:'Tricampeón',desc:'Ganaste 3 torneos',ok:wins>=3},
+    {id:'mundial',ico:'🌍',label:'Mundialista',desc:'Participaste en un Mundial FIFG',ok:mundiales>=1},
+    {id:'50rondas',ico:'🔥',label:'Veterano',desc:'50 rondas jugadas',ok:rondas.length>=50},
+  ]
+  const desbloqueados=allLogros.filter(l=>l.ok)
+  const bloqueados=allLogros.filter(l=>!l.ok)
+  sec.innerHTML=`
+    <div class="ct">🏅 Logros <span style="font-size:12px;color:var(--tx3);font-weight:500">${desbloqueados.length}/${allLogros.length}</span></div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+      ${desbloqueados.map(l=>`<div style="background:rgba(74,222,128,.1);border:0.5px solid rgba(74,222,128,.3);border-radius:var(--r12);padding:8px 12px;display:flex;align-items:center;gap:7px">
+        <span style="font-size:20px">${l.ico}</span>
+        <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--c3)">${l.label}</div><div style="font-size:11px;color:var(--tx3)">${l.desc}</div></div>
+      </div>`).join('')}
+    </div>
+    ${bloqueados.length?`<div style="font-size:11px;color:var(--tx3);margin-bottom:8px;font-weight:600">PRÓXIMOS LOGROS</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      ${bloqueados.slice(0,4).map(l=>`<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.07);border-radius:var(--r12);padding:8px 12px;display:flex;align-items:center;gap:7px;opacity:.5">
+        <span style="font-size:20px;filter:grayscale(1)">${l.ico}</span>
+        <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--tx2)">${l.label}</div><div style="font-size:11px;color:var(--tx3)">${l.desc}</div></div>
+      </div>`).join('')}
+    </div>`:''}
+  `
 }
 
 function toast(msg){
