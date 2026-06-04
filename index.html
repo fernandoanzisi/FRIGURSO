@@ -220,6 +220,8 @@ body{display:flex;align-items:center;justify-content:center}
 .tog-opt.on{background:var(--c3);color:#fff}
 .mundial-banner{background:linear-gradient(90deg,rgba(255,193,7,.15),rgba(255,193,7,.08));border:0.5px solid rgba(255,193,7,.3);border-radius:var(--r12);padding:12px 14px;margin-bottom:14px;display:none}
 .mundial-banner.on{display:block}
+.cat-t-opt{padding:7px 11px;border-radius:var(--r8);border:0.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:rgba(134,239,172,.4);cursor:pointer;transition:all .18s;letter-spacing:.3px}
+.cat-t-opt.on{background:rgba(74,222,128,.18);border-color:var(--c3);color:var(--c3)}
 
 /* ROUND SUMMARY OVERLAY */
 .sum-overlay{position:absolute;inset:0;background:var(--c1);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center}
@@ -343,6 +345,21 @@ body{display:flex;align-items:center;justify-content:center}
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#ffc107;letter-spacing:.5px">🌍 FIFG WORLD CUP ACAPULCO 2026</div>
           <div style="font-size:12px;color:rgba(255,193,7,.6);margin-top:3px">Tu ronda se registrará en el torneo mundial</div>
         </div>
+        <!-- Categoría de torneo (solo visible en modo torneo) -->
+        <div id="cat-torneo-wrap" style="display:none;margin-bottom:10px;background:rgba(255,255,255,.05);border-radius:var(--r12);padding:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(134,239,172,.4);letter-spacing:1px">CATEGORÍA DEL TORNEO</div>
+            <div id="cat-pts-hint" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--c3)">Hasta 250 pts</div>
+          </div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap">
+            <button class="cat-t-opt on" onclick="setCatTorneo('ra250',this)">RA250</button>
+            <button class="cat-t-opt" onclick="setCatTorneo('ra500',this)">RA500</button>
+            <button class="cat-t-opt" onclick="setCatTorneo('ra1000',this)">RA1000</button>
+            <button class="cat-t-opt" onclick="setCatTorneo('major',this)">🏆 MAJOR</button>
+            <button class="cat-t-opt" onclick="setCatTorneo('mundial',this)">🌍 MUNDIAL</button>
+          </div>
+          <input id="inp-posicion" class="inp" type="number" min="1" max="999" placeholder="Tu posición final (opcional)" style="margin-top:8px;margin-bottom:0">
+        </div>
         <!-- Inputs de grupo (se muestran solo en modo grupo) -->
         <div id="group-inputs" style="display:none;margin-bottom:10px;background:rgba(255,255,255,.05);border-radius:var(--r12);padding:12px">
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(134,239,172,.4);letter-spacing:1px;margin-bottom:10px">NOMBRES DEL GRUPO</div>
@@ -444,6 +461,39 @@ body{display:flex;align-items:center;justify-content:center}
       </div>
 
       <div class="divh"></div>
+      <!-- PANEL MUNDIAL 2026 -->
+      <div class="sec" style="padding-bottom:0">
+        <div style="background:linear-gradient(135deg,rgba(255,193,7,.12),rgba(74,222,128,.08));border:0.5px solid rgba(255,193,7,.25);border-radius:var(--r16);padding:16px;margin:0 16px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div style="font-size:28px">🌍</div>
+            <div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#ffc107;letter-spacing:.5px">FIFG WORLD CUP ACAPULCO 2026</div>
+              <div style="font-size:11px;color:rgba(255,193,7,.55);margin-top:1px">Turtle Dunes · Tres Vidas · Acapulco, México</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+            <div style="background:rgba(74,222,128,.08);border:0.5px solid rgba(74,222,128,.15);border-radius:var(--r8);padding:10px">
+              <div style="font-size:10px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">INDIVIDUAL</div>
+              <div style="font-size:13px;font-weight:600;color:var(--tx);margin-top:3px">27 May – 1 Jun</div>
+              <div id="wc-ind-badge" style="font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-top:4px"></div>
+            </div>
+            <div style="background:rgba(255,193,7,.07);border:0.5px solid rgba(255,193,7,.15);border-radius:var(--r8);padding:10px">
+              <div style="font-size:10px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">EQUIPOS</div>
+              <div style="font-size:13px;font-weight:600;color:var(--tx);margin-top:3px">2 – 7 Jun</div>
+              <div id="wc-eq-badge" style="font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-top:4px"></div>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,.04);border-radius:var(--r8);padding:10px;margin-bottom:10px">
+            <div style="font-size:11px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;margin-bottom:6px">🇦🇷 GIOVANNI ANZISI</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span style="background:rgba(74,222,128,.1);border:0.5px solid rgba(74,222,128,.2);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--c3);font-family:'Barlow Condensed',sans-serif;font-weight:700">🏅 Clasificado</span>
+              <span style="background:rgba(255,193,7,.1);border:0.5px solid rgba(255,193,7,.2);border-radius:20px;padding:3px 10px;font-size:11px;color:#ffc107;font-family:'Barlow Condensed',sans-serif;font-weight:700">Orlando 2023: 29° · -22</span>
+              <span style="background:rgba(167,139,250,.1);border:0.5px solid rgba(167,139,250,.2);border-radius:20px;padding:3px 10px;font-size:11px;color:#a78bfa;font-family:'Barlow Condensed',sans-serif;font-weight:700">Open Lobos: 1° · -21</span>
+            </div>
+          </div>
+          <a href="https://www.footgolf.sport/acapulcoworldcup2026/leaderboard-individual/" target="_blank" style="display:block;text-align:center;background:rgba(255,193,7,.1);border:0.5px solid rgba(255,193,7,.25);border-radius:var(--r8);padding:9px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#ffc107;text-decoration:none">🔴 Ver leaderboard oficial en vivo →</a>
+        </div>
+      </div>
       <div class="sec">
         <div class="card"><div class="ct">📅 Próximos torneos</div><div id="d-torneos"></div></div>
       </div>
@@ -602,7 +652,8 @@ body{display:flex;align-items:center;justify-content:center}
     <div class="sc" id="sc-ranking">
       <div class="rk-hdr">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:#fff;letter-spacing:1px">🏆 RANKING</div>
-        <div style="font-size:12px;color:rgba(134,239,172,.4);margin-top:4px">Temporada 2025 · Sudamérica</div>
+        <div style="font-size:12px;color:rgba(134,239,172,.4);margin-top:4px">World Tour Points · Temporada 2026</div>
+        <a href="https://www.footgolf.sport/rankings/" target="_blank" style="display:inline-block;margin-top:8px;background:rgba(255,193,7,.1);border:0.5px solid rgba(255,193,7,.2);border-radius:20px;padding:4px 12px;font-size:11px;color:#ffc107;text-decoration:none;font-family:'Barlow Condensed',sans-serif;font-weight:700">🌍 Ver ranking mundial FIFG →</a>
       </div>
       <div class="sec sec-b"><div class="card" id="ranking-list"></div></div>
     </div>
@@ -651,6 +702,11 @@ body{display:flex;align-items:center;justify-content:center}
           <div class="ps"><div class="psv" id="ps-vict">0</div><div class="psl">VICTORIAS</div></div>
           <div class="ps"><div class="psv" id="ps-torn">0</div><div class="psl">TORNEOS</div></div>
         </div>
+        <!-- Puntos World Tour -->
+        <div style="margin-top:12px;background:rgba(255,193,7,.08);border:0.5px solid rgba(255,193,7,.2);border-radius:var(--r12);padding:10px 16px;display:flex;align-items:center;justify-content:space-between">
+          <div><div style="font-size:10px;color:rgba(255,193,7,.5);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">PUNTOS WORLD TOUR</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:#ffc107" id="ps-pts">0</div></div>
+          <div style="text-align:right"><div style="font-size:10px;color:rgba(255,193,7,.5);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">LICENCIA FIFG</div><div style="font-size:14px;font-weight:600;color:var(--tx);margin-top:2px" id="ps-lic" onclick="editLicencia()" style="cursor:pointer">—</div></div>
+        </div>
       </div>
       <div class="sec">
         <div class="card">
@@ -658,9 +714,16 @@ body{display:flex;align-items:center;justify-content:center}
           <div id="p-golpes"><div class="empty"><div class="empty-i">⚽</div><div class="empty-t">Jugá tu primera ronda</div></div></div>
         </div>
       </div>
+      <div class="sec">
+        <div class="card">
+          <div class="ct">🏅 Mis torneos</div>
+          <div id="p-torneos-list"><div class="empty"><div class="empty-i">🏆</div><div class="empty-t">Cargá tu primer torneo</div></div></div>
+        </div>
+      </div>
       <div class="sec sec-b">
         <div class="card">
           <div class="ct">⚙️ Opciones</div>
+          <div class="li" style="cursor:pointer" onclick="editLicencia()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)">🪪 Licencia FIFG</span><span id="li-lic-val" style="color:var(--tx3);font-size:12px;margin-right:6px">—</span><span style="color:var(--tx3)">›</span></div>
           <div class="li" style="cursor:pointer" onclick="go('sc-historial');loadHistorial()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)">📋 Ver historial</span><span style="color:var(--tx3)">›</span></div>
           <div class="li" style="cursor:pointer" onclick="go('sc-canchas');if(!window._allCanchas||!window._allCanchas.length)renderStaticData();else renderCanchas('')"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)">⛳ Explorar canchas</span><span style="color:var(--tx3)">›</span></div>
           <div class="li" style="cursor:pointer;display:none" id="install-li" onclick="installApp()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--c3)">📲 Instalar como app</span><span style="color:var(--c3)">›</span></div>
@@ -678,7 +741,8 @@ body{display:flex;align-items:center;justify-content:center}
     <div class="sum-lbl" id="sum-lbl" style="color:rgba(134,239,172,.5)">AL PAR</div>
     <div style="margin-top:14px;font-size:13px;color:rgba(134,239,172,.5)" id="sum-course-lbl">—</div>
     <div class="sum-chips" id="sum-chips"></div>
-    <div id="sum-tour-note" style="display:none;background:rgba(255,193,7,.1);border:0.5px solid rgba(255,193,7,.25);border-radius:var(--r8);padding:9px 16px;font-size:13px;color:#ffc107;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:18px">🌍 Registrada en FIFG World Cup 2026</div>
+    <div id="sum-tour-note" style="display:none;background:rgba(255,193,7,.1);border:0.5px solid rgba(255,193,7,.25);border-radius:var(--r8);padding:9px 16px;font-size:13px;color:#ffc107;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:8px">🌍 Registrada en FIFG World Cup 2026</div>
+    <div id="sum-pts-note" style="display:none;background:rgba(74,222,128,.08);border:0.5px solid rgba(74,222,128,.2);border-radius:var(--r8);padding:9px 16px;font-size:13px;color:var(--c3);font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:8px;width:100%;text-align:center"></div>
     <div id="sum-save-status" style="display:none;width:100%;border-radius:var(--r8);padding:10px 14px;font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:4px;text-align:left"></div>
     <div style="display:flex;gap:10px;width:100%;margin-top:8px">
       <button onclick="shareRound()" style="flex:1;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.15);border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer">📤 COMPARTIR</button>
@@ -1043,6 +1107,14 @@ window.addEventListener('popstate', e=>{
 async function loadDashboard(){
   if(!USER||!JUGADOR) return
   document.getElementById('hdr-hi').textContent=`¡Hola, ${JUGADOR.nombre}! 👋`
+  // Mundial 2026 badges
+  ;(()=>{
+    const hoy=new Date()
+    const indFin=new Date('2026-06-01'),eqIni=new Date('2026-06-02'),eqFin=new Date('2026-06-07')
+    const indB=document.getElementById('wc-ind-badge'),eqB=document.getElementById('wc-eq-badge')
+    if(indB) indB.innerHTML=hoy<=indFin?'<span style="color:var(--red)">🔴 EN CURSO</span>':'<span style="color:var(--birdie)">✓ COMPLETADO</span>'
+    if(eqB) eqB.innerHTML=hoy<eqIni?'<span style="color:var(--tx3)">⏳ PRÓXIMO</span>':hoy<=eqFin?'<span style="color:var(--red)">🔴 EN CURSO</span>':'<span style="color:var(--birdie)">✓ COMPLETADO</span>'
+  })()
   const hcp=JUGADOR.handicap
   document.getElementById('hdr-hcp').textContent=hcp!=null?(hcp>=0?'+'+parseFloat(hcp).toFixed(1):parseFloat(hcp).toFixed(1)):'—'
   const {data:rondas}=await SB.from('rondas').select('score_vs_par,posicion_final,torneo_id').eq('jugador_id',USER.id).eq('completada',true)
@@ -1418,7 +1490,9 @@ async function saveRound(){
       return{name:n||('J'+(pi+1)),str:gd.length===0?'—':gsvp===0?'E':gsvp>0?'+'+gsvp:gsvp,svp:gsvp,tg:gtg,color:GP_COLORS[pi]}
     }).filter(Boolean)
   }
-  _lastRoundData={str,svp,tg,tp,tally,course:_selCourse,tourMode:_tourMode,groupSummary}
+  const _posF=parseInt(document.getElementById('inp-posicion')?.value)||null
+  const _pts=_tourMode&&_posF?calcPuntosCat(_catTorneo,_posF):null
+  _lastRoundData={str,svp,tg,tp,tally,course:_selCourse,tourMode:_tourMode,groupSummary,catTorneo:_catTorneo,puntos:_pts,posicion:_posF}
 
   // 1. Mostrar resumen SIEMPRE primero (UX inmediata)
   showSummary()
@@ -1448,15 +1522,18 @@ async function saveRound(){
       }
     }catch(_){}
 
+    const posInput=parseInt(document.getElementById('inp-posicion')?.value)||null
+    const puntos=_tourMode&&posInput?calcPuntosCat(_catTorneo,posInput):null
     const ins={
       jugador_id:USER.id,
       fecha:new Date().toISOString().split('T')[0],
-      tipo:_tourMode?'torneo':'practica',
+      tipo:_tourMode?'torneo_'+_catTorneo:'practica',
       total_golpes:tg,
       score_vs_par:svp,
       completada:done.length===H.length
     }
     if(canchaId) ins.cancha_id=canchaId
+    if(posInput) ins.posicion_final=posInput
 
     setStatus('⏳','rgba(134,239,172,.12)','rgba(134,239,172,.7)','Insertando ronda (cancha:'+(canchaId?'ok':'sin id')+')')
     const {data:ronda,error}=await SB.from('rondas').insert(ins).select().single()
@@ -1488,7 +1565,13 @@ function showSummary(){
   document.getElementById('sum-lbl').textContent=lbl
   document.getElementById('sum-course-lbl').textContent=`${d.course.emoji} ${d.course.nombre} · ${d.course.ciudad} · ${d.tg} golpes · Par ${d.tp}`
   const tn=document.getElementById('sum-tour-note')
-  tn.style.display=d.tourMode?'block':'none'
+  tn.style.display=d.tourMode&&d.catTorneo==='mundial'?'block':'none'
+  const pn=document.getElementById('sum-pts-note')
+  if(d.tourMode&&d.puntos){
+    const catLabel={ra250:'RA250',ra500:'RA500',ra1000:'RA1000',major:'Major 2000',mundial:'World Cup'}[d.catTorneo]||d.catTorneo
+    pn.textContent=`🏅 +${d.puntos} puntos World Tour · ${catLabel} · Pos. ${d.posicion}`
+    pn.style.display='block'
+  } else { pn.style.display='none' }
   if(d.groupSummary&&d.groupSummary.length>1){
     document.getElementById('sum-chips').innerHTML=d.groupSummary.map(p=>`
       <div class="sum-chip" style="min-width:80px">
@@ -1708,11 +1791,25 @@ function loadCustomCourses(){
   }catch(_){}
 }
 
+let _catTorneo='ra250'
 function toggleTourMode(m){
   _tourMode=m==='torneo'
   document.getElementById('tog-prac').classList.toggle('on',!_tourMode)
   document.getElementById('tog-torn').classList.toggle('on',_tourMode)
   document.getElementById('mundial-banner').classList.toggle('on',_tourMode)
+  document.getElementById('cat-torneo-wrap').style.display=_tourMode?'block':'none'
+}
+function setCatTorneo(cat,btn){
+  _catTorneo=cat
+  document.querySelectorAll('.cat-t-opt').forEach(b=>b.classList.remove('on'))
+  btn.classList.add('on')
+  const pts=calcPuntosCat(cat,1)
+  document.getElementById('cat-pts-hint').textContent='Hasta '+pts+' pts'
+}
+function calcPuntosCat(cat,pos){
+  const base={ra250:250,ra500:500,ra1000:1000,major:2000,mundial:5000}[cat]||0
+  const f=pos===1?1:pos===2?.85:pos===3?.75:pos<=5?.65:pos<=10?.50:pos<=20?.35:pos<=30?.20:.10
+  return Math.round(base*f)
 }
 
 function startRound(){
@@ -2272,22 +2369,46 @@ function generarAnalisis(ronda, holes, dist, svp, sameCourseBest){
 }
 
 async function loadRanking(){
-  const {data}=await SB.from('ranking_global').select('*').order('posicion_global').limit(20).catch(()=>({data:null}))
-  const items=data&&data.length?data.map((j,i)=>({pos:j.posicion_global||i+1,ini:(j.jugador||'??').slice(0,2).toUpperCase(),n:j.jugador||'—',p:'🌍',cat:j.categoria||'—',hcp:j.handicap>=0?'+'+j.handicap:j.handicap,pts:j.puntos_totales||0,bg:'rgba(74,222,128,.12)',c:'#4ade80'})):[
-    {pos:1,ini:'GA',n:'Giovanni Anzisi',p:'🇦🇷',cat:'Elite',hcp:'+3.2',pts:1240,bg:'rgba(74,222,128,.15)',c:'#4ade80'},
-    {pos:2,ini:'JS',n:'João Silva',p:'🇧🇷',cat:'Elite',hcp:'+2.8',pts:1180,bg:'rgba(14,165,233,.12)',c:'#0369a1'},
-    {pos:3,ini:'LT',n:'Luis Torres',p:'🇲🇽',cat:'Masters',hcp:'+2.1',pts:1050,bg:'rgba(248,113,113,.12)',c:'#f87171'},
-    {pos:4,ini:'AG',n:'Ana García',p:'🇺🇾',cat:'Masters',hcp:'+1.9',pts:980,bg:'rgba(251,191,36,.12)',c:'#fbbf24'},
-    {pos:5,ini:'PR',n:'Pedro Rojas',p:'🇨🇱',cat:'Abierta',hcp:'+0.5',pts:860,bg:'var(--bg2)',c:'var(--tx2)'},
-  ]
+  const el=document.getElementById('ranking-list')
+  el.innerHTML='<div class="empty" style="padding:24px 0"><div class="empty-i">⏳</div><div class="empty-t">Calculando...</div></div>'
+  // Calcular puntos World Tour de todos los jugadores de la app
+  const {data:jugadores}=await SB.from('jugadores').select('id,nombre,apellido,categoria,handicap,pais').catch(()=>({data:null}))
+  const {data:rondasAll}=await SB.from('rondas').select('jugador_id,tipo,posicion_final').eq('completada',true).catch(()=>({data:null}))
+  const bgColors=['rgba(74,222,128,.15)','rgba(14,165,233,.12)','rgba(248,113,113,.12)','rgba(251,191,36,.12)']
+  const fgColors=['#4ade80','#0369a1','#f87171','#fbbf24']
+  let items=[]
+  if(jugadores&&jugadores.length&&rondasAll){
+    items=jugadores.map(j=>{
+      const mis=rondasAll.filter(r=>r.jugador_id===j.id&&r.tipo&&r.tipo.startsWith('torneo_')&&r.posicion_final)
+      const pts=mis.reduce((s,r)=>s+calcPuntosCat(r.tipo.replace('torneo_',''),r.posicion_final),0)
+      const hcp=j.handicap!=null?(j.handicap>=0?'+'+parseFloat(j.handicap).toFixed(1):parseFloat(j.handicap).toFixed(1)):'—'
+      return{n:`${j.nombre} ${j.apellido}`,ini:`${j.nombre?.[0]||'?'}${j.apellido?.[0]||''}`,p:j.pais||'🇦🇷',cat:j.categoria||'Aficionado',hcp,pts}
+    }).sort((a,b)=>b.pts-a.pts)
+  }
+  if(!items.length){
+    // Fallback con datos reales conocidos de Giovanni + placeholders
+    items=[
+      {ini:'GA',n:'Giovanni Anzisi',p:'🇦🇷',cat:'Elite',hcp:'+3.2',pts:5250},
+      {ini:'MP',n:'Matías Palferro',p:'🇦🇷',cat:'Elite',hcp:'+2.5',pts:4800},
+      {ini:'DT',n:'Diego Tripailao',p:'🇦🇷',cat:'Elite',hcp:'+2.1',pts:4200},
+      {ini:'SM',n:'Sebastián Muñoz',p:'🇦🇷',cat:'Masters',hcp:'+1.8',pts:3600},
+      {ini:'NA',n:'Nelson Alfonsín',p:'🇦🇷',cat:'Masters',hcp:'+1.5',pts:3100},
+    ]
+  }
   const pc=p=>p===1?'p1':p===2?'p2':p===3?'p3':'pn'
-  document.getElementById('ranking-list').innerHTML=items.map(r=>`
-    <div class="li">
-      <div class="pos-b ${pc(r.pos)}">${r.pos}</div>
-      <div class="av" style="background:${r.bg};color:${r.c}">${r.ini}</div>
+  el.innerHTML=`
+    <div style="display:flex;justify-content:space-between;padding:6px 0 10px;border-bottom:0.5px solid var(--bd);margin-bottom:4px">
+      <div style="font-size:10px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">JUGADOR</div>
+      <div style="font-size:10px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">PTS WORLD TOUR</div>
+    </div>`+
+  items.map((r,i)=>{
+    const pos=i+1,bg=bgColors[i]||'var(--bg2)',c=fgColors[i]||'var(--tx2)'
+    return`<div class="li">
+      <div class="pos-b ${pc(pos)}">${pos}</div>
+      <div class="av" style="background:${bg};color:${c}">${r.ini}</div>
       <div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${r.p} ${r.n}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${r.cat} · HCP ${r.hcp}</div></div>
-      <div style="text-align:right"><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--c3)">${r.pts}</div><div style="font-size:10px;color:var(--tx3)">pts</div></div>
-    </div>`).join('')
+      <div style="text-align:right"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:${r.pts?'#ffc107':'var(--tx3)'}">${r.pts}</div><div style="font-size:10px;color:var(--tx3)">pts</div></div>
+    </div>`}).join('')
 }
 
 function triggerAvatarUpload(){ document.getElementById('avatar-input').click() }
@@ -2332,6 +2453,16 @@ async function uploadAvatar(file){
   }
 }
 
+function editLicencia(){
+  if(!USER) return
+  const actual=localStorage.getItem('fifg_licencia_'+USER.id)||''
+  const nueva=prompt('Número de licencia FIFG:', actual)
+  if(nueva===null) return
+  localStorage.setItem('fifg_licencia_'+USER.id, nueva.trim()||'—')
+  loadPerfil()
+  toast('Licencia guardada')
+}
+
 function showAvatar(url){
   const img=document.getElementById('p-av-img')
   const ini=document.getElementById('p-av-ini')
@@ -2351,10 +2482,38 @@ async function loadPerfil(){
   document.getElementById('p-meta').textContent=`${JUGADOR.categoria||'Aficionado'} · ${JUGADOR.ciudad||'Argentina'}`
   const hcp=JUGADOR.handicap
   document.getElementById('ps-hcp').textContent=hcp!=null?(hcp>=0?'+'+parseFloat(hcp).toFixed(1):parseFloat(hcp).toFixed(1)):'—'
-  const {data:rondas}=await SB.from('rondas').select('id,score_vs_par,posicion_final,torneo_id').eq('jugador_id',USER.id).eq('completada',true)
+  // Licencia FIFG
+  const licFifg=localStorage.getItem('fifg_licencia_'+USER.id)||'—'
+  const licEl=document.getElementById('ps-lic'),liLicVal=document.getElementById('li-lic-val')
+  if(licEl) licEl.textContent=licFifg
+  if(liLicVal) liLicVal.textContent=licFifg
+  const {data:rondas}=await SB.from('rondas').select('id,score_vs_par,posicion_final,torneo_id,tipo,fecha,canchas(nombre)').eq('jugador_id',USER.id).eq('completada',true).order('fecha',{ascending:false})
   if(rondas&&rondas.length){
     document.getElementById('ps-vict').textContent=rondas.filter(r=>r.posicion_final===1).length
-    document.getElementById('ps-torn').textContent=rondas.filter(r=>r.torneo_id).length
+    const torneos=rondas.filter(r=>r.tipo&&r.tipo.startsWith('torneo'))
+    document.getElementById('ps-torn').textContent=torneos.length
+    // Puntos World Tour acumulados
+    const ptsTot=rondas.reduce((sum,r)=>{
+      if(!r.tipo||!r.tipo.startsWith('torneo_')||!r.posicion_final) return sum
+      const cat=r.tipo.replace('torneo_','')
+      return sum+calcPuntosCat(cat,r.posicion_final)
+    },0)
+    const ptsEl=document.getElementById('ps-pts')
+    if(ptsEl) ptsEl.textContent=ptsTot
+    // Tabla de torneos
+    const tlist=document.getElementById('p-torneos-list')
+    if(tlist){
+      const catLabel={ra250:'RA250',ra500:'RA500',ra1000:'RA1000',major:'Major',mundial:'🌍 Mundial'}
+      const torneoRows=torneos.slice(0,10).map(r=>{
+        const cat=r.tipo?.replace('torneo_','')||'torneo'
+        const svp=r.score_vs_par,col=svp<0?'var(--birdie)':svp>0?'var(--bogey)':'var(--tx)'
+        const str=svp===0?'E':svp>0?'+'+svp:svp
+        const pts=r.posicion_final?calcPuntosCat(cat,r.posicion_final):null
+        const f=new Date(r.fecha+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'2-digit'})
+        return`<div class="li"><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${r.canchas?.nombre||'Torneo'}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${f}${r.posicion_final?' · '+r.posicion_final+'°':''} <span style="color:rgba(255,193,7,.6)">${catLabel[cat]||cat.toUpperCase()}</span></div></div><div style="text-align:right"><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:${col}">${str??'—'}</div>${pts?`<div style="font-size:10px;color:rgba(255,193,7,.6)">+${pts}pts</div>`:''}</div></div>`
+      })
+      tlist.innerHTML=torneoRows.length?torneoRows.join(''):'<div class="empty"><div class="empty-i">🏆</div><div class="empty-t">Cargá tu primer torneo</div></div>'
+    }
     // Load hole-by-hole for stat bars
     const ids=rondas.map(r=>r.id)
     const {data:holes}=await SB.from('scorecard').select('golpes,par').in('ronda_id',ids).catch(()=>({data:null}))
