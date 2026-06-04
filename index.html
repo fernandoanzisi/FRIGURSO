@@ -1170,6 +1170,7 @@ function tab(btn,id){
   if(id==='sc-ranking') loadRanking()
   if(id==='sc-gps') getGPS()
   if(id==='sc-clima') loadClima()
+  if(id==='sc-canchas') renderCanchas('')
 }
 // Hardware back button: restore previous screen instead of closing app
 window.addEventListener('popstate', e=>{
@@ -2483,19 +2484,7 @@ async function renderStaticData(){
   _torneosAll=[...circuitos,...otros]
   filterTorneos('todos')
   const {data:ca}=await SB.from('canchas').select('*,ciudades(nombre,paises(bandera))').eq('activa',true).order('nombre').catch(()=>({data:null}))
-  window._allCanchas=ca&&ca.length?ca.map(c=>({nombre:c.nombre,ciudad:c.ciudades?.nombre||'',pais:c.ciudades?.paises?.bandera||'🌍',hoyos:c.total_hoyos,par:c.par_total,dif:c.dificultad,info:c.info||''})):[
-    // 🇲🇽 México — sedes Mundial FIFG 2026
-    {nombre:'Tres Vidas Golf Club',ciudad:'Acapulco, Guerrero',pais:'🇲🇽',hoyos:18,par:72,dif:'difícil',info:'Sede Mundial FIFG 2026 · "La Joya del Pacífico" · Carretera Barra Vieja Km.7'},
-    {nombre:'Turtle Dunes Country Club',ciudad:'Acapulco, Guerrero',pais:'🇲🇽',hoyos:18,par:72,dif:'difícil',info:'Sede Mundial FIFG 2026 · Fairmont Princess Resort · Costera de las Palmas'},
-    // 🇦🇷 Argentina
-    {nombre:'Los Álamos FootGolf',ciudad:'General Roca, Río Negro',pais:'🇦🇷',hoyos:18,par:72,dif:'media',info:''},
-    {nombre:'Club Árabe FootGolf',ciudad:'Buenos Aires',pais:'🇦🇷',hoyos:18,par:70,dif:'difícil',info:''},
-    {nombre:'Parque Patagónico FG',ciudad:'Bariloche, Río Negro',pais:'🇦🇷',hoyos:9,par:36,dif:'fácil',info:''},
-    // 🇧🇷 Brasil
-    {nombre:'São Paulo FG Club',ciudad:'São Paulo',pais:'🇧🇷',hoyos:18,par:72,dif:'difícil',info:''},
-    // 🇺🇾 Uruguay
-    {nombre:'Montevideo FootGolf',ciudad:'Montevideo',pais:'🇺🇾',hoyos:18,par:71,dif:'media',info:''},
-  ]
+  window._allCanchas=ca&&ca.length?ca.map(c=>({nombre:c.nombre,ciudad:c.ciudades?.nombre||'',pais:c.ciudades?.paises?.bandera||'🌍',hoyos:c.total_hoyos,par:c.par_total,dif:c.dificultad,info:c.info||''})):COURSES.map(c=>({nombre:c.nombre,ciudad:c.ciudad,pais:c.pais,hoyos:c.hoyos,par:c.par,dif:'media',info:c.info||''}))
   renderCanchas('')
   renderEquipos()
 }
