@@ -986,6 +986,7 @@ const COURSES=[
   {id:'syd_fg',nombre:'Sydney FootGolf Club',ciudad:'Sídney, NSW',pais:'🇦🇺',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
 ]
 
+window._allCanchas=COURSES.map(c=>({nombre:c.nombre,ciudad:c.ciudad||'',pais:c.pais,hoyos:c.hoyos,par:c.par,dif:'media',info:c.info||''}))
 let _selCourse=COURSES[0], _tourMode=false, _lastRoundData=null, _selFilter=''
 let _groupEnabled=false, _groupNames=['','','','']
 let _gScores=[...Array(4)].map(()=>new Array(18).fill(null)), _activePlayer=0
