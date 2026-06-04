@@ -1170,7 +1170,7 @@ function tab(btn,id){
   if(id==='sc-ranking') loadRanking()
   if(id==='sc-gps') getGPS()
   if(id==='sc-clima') loadClima()
-  if(id==='sc-canchas') renderCanchas('')
+  if(id==='sc-canchas'){ if(window._allCanchas&&window._allCanchas.length) renderCanchas(''); else renderStaticData() }
 }
 // Hardware back button: restore previous screen instead of closing app
 window.addEventListener('popstate', e=>{
