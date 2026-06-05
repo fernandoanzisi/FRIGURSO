@@ -989,6 +989,7 @@ const COURSES=[
   {id:'villa_carlos_fg',nombre:'Villa Carlos Paz FootGolf',ciudad:'Villa Carlos Paz, Córdoba',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
   {id:'mendoza_fg',nombre:'Mendoza FootGolf Club',ciudad:'Mendoza',pais:'🇦🇷',par:72,hoyos:18,emoji:'🍇',mundial:false,info:'Entre los viñedos'},
   {id:'sanjuan_fg',nombre:'San Juan FootGolf',ciudad:'San Juan',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
+  {id:'villa_mercedes_fg',nombre:'Villa Mercedes Golf Club',ciudad:'Villa Mercedes, San Luis',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:'Circuito local · Salidas 10hs'},
   {id:'rosario_fg',nombre:'Rosario FootGolf Club',ciudad:'Rosario, Santa Fe',pais:'🇦🇷',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
   {id:'santafe_fg',nombre:'Santa Fe FootGolf',ciudad:'Santa Fe',pais:'🇦🇷',par:36,hoyos:9,emoji:'⛳',mundial:false,info:''},
   {id:'laplata_fg',nombre:'La Plata FootGolf',ciudad:'La Plata, Buenos Aires',pais:'🇦🇷',par:72,hoyos:18,emoji:'⛳',mundial:false,info:''},
@@ -1476,6 +1477,7 @@ async function deleteRonda(id, from){
 const WORLD_EVENTS=[
   {n:'FIFG World Cup — Individual',f:'2026-05-27',h:'2026-06-01',c:'Acapulco 🇲🇽',tipo:'mundial',emoji:'🌍'},
   {n:'FIFG World Cup — Equipos',f:'2026-06-02',h:'2026-06-07',c:'Acapulco 🇲🇽',tipo:'mundial',emoji:'🌍'},
+  {n:'Circuito Villa Mercedes — Fecha 3',f:'2026-06-07',h:'2026-06-07',c:'Villa Mercedes, San Luis 🇦🇷',tipo:'nacional',emoji:'⛳',info:'Socios $18.000 · No socios $22.000 · Salidas 10hs'},
   {n:'Copa Patagonia 2026',f:'2026-06-15',h:'2026-06-15',c:'General Roca 🇦🇷',tipo:'major',emoji:'🏆'},
   {n:'Open Nacional Argentina',f:'2026-06-28',h:'2026-06-28',c:'Buenos Aires 🇦🇷',tipo:'nacional',emoji:'🇦🇷'},
   {n:'RA1000 — Copa Sudamericana',f:'2026-07-10',h:'2026-07-12',c:'São Paulo 🇧🇷',tipo:'ra1000',emoji:'🌎'},
@@ -1509,7 +1511,7 @@ function demoTorneos(){
       `<span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:${col}">${fStr}</span>`
     return`<div class="li" onclick="tab(document.querySelector('[data-sc=sc-mundial]'),'sc-mundial')" style="cursor:pointer">
       <span style="font-size:18px">${e.emoji}</span>
-      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--tx)">${e.n}</div><div style="font-size:11px;color:var(--tx3);margin-top:1px">📍 ${e.c}</div></div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--tx)">${e.n}</div><div style="font-size:11px;color:var(--tx3);margin-top:1px">📍 ${e.c}</div>${e.info?`<div style="font-size:11px;color:var(--c3);margin-top:2px">💰 ${e.info}</div>`:''}</div>
       ${badge}
     </div>`
   }).join('')+`<div style="padding:10px 0 2px;text-align:center"><span onclick="tab(document.querySelector('[data-sc=sc-mundial]'),'sc-mundial')" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--c3);cursor:pointer">Ver todo el calendario mundial →</span></div>`
