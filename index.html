@@ -627,6 +627,7 @@ body{display:flex;align-items:center;justify-content:center}
             <button onclick="switchMundial('individual')" id="mtab-individual" style="background:var(--c3);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#000;cursor:pointer">SCORES</button>
             <button onclick="switchMundial('equipos')" id="mtab-equipos" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">CALENDAR</button>
             <button onclick="switchMundial('media')" id="mtab-media" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">📸</button>
+            <button onclick="switchMundial('marcador')" id="mtab-marcador" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">⚔️ MATCH</button>
             <button onclick="switchMundial('noticias')" id="mtab-noticias" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">INFO</button>
           </div>
         </div>
@@ -739,6 +740,31 @@ body{display:flex;align-items:center;justify-content:center}
         <button onclick="agregarVideo()" style="position:fixed;bottom:76px;right:16px;background:var(--c3);border:none;border-radius:50px;padding:12px 20px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#000;cursor:pointer;box-shadow:0 4px 20px rgba(74,222,128,.4);display:flex;align-items:center;gap:8px;z-index:50" id="btn-add-media">
           <span style="font-size:18px">+</span> AGREGAR VIDEO
         </button>
+      </div>
+
+      <!-- Marcador Match Play -->
+      <div id="mv-marcador" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+        <div style="padding:10px 16px 6px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(239,68,68,.7);letter-spacing:1px;font-weight:700">🔴 EN VIVO</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx)">Individual · Foursome · Fourball</div>
+          </div>
+          <button onclick="window.open('https://ais-pre-nnnraejf7hkhuppq4dp4sf-388850923884.us-east1.run.app/?mode=live','_blank')" style="background:rgba(255,255,255,.08);border:0.5px solid rgba(255,255,255,.15);border-radius:var(--r8);padding:7px 12px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--tx2);cursor:pointer">↗ ABRIR</button>
+        </div>
+        <div style="flex:1;position:relative;overflow:hidden">
+          <iframe id="marcador-iframe"
+            src="https://ais-pre-nnnraejf7hkhuppq4dp4sf-388850923884.us-east1.run.app/?mode=live"
+            style="width:100%;height:100%;border:none;background:#0d1f2d"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            allow="accelerometer"></iframe>
+          <div id="marcador-fallback" style="display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);gap:16px;padding:24px;text-align:center">
+            <div style="font-size:48px">⚔️</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--tx)">MATCH PLAY</div>
+            <div style="font-size:13px;color:var(--tx2)">Individual · Foursome · Fourball</div>
+            <button onclick="window.open('https://ais-pre-nnnraejf7hkhuppq4dp4sf-388850923884.us-east1.run.app/?mode=live','_blank')" style="background:var(--c3);border:none;border-radius:var(--r12);padding:13px 24px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#000;cursor:pointer;width:100%">⚔️ VER MARCADOR EN VIVO</button>
+            <div style="font-size:12px;color:var(--tx3)">Se abre en el navegador</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -3043,16 +3069,26 @@ function switchMundial(tab){
   document.getElementById('mv-equipos').style.display=tab==='equipos'?'block':'none'
   document.getElementById('mv-noticias').style.display=tab==='noticias'?'block':'none'
   document.getElementById('mv-media').style.display=tab==='media'?'block':'none'
+  document.getElementById('mv-marcador').style.display=tab==='marcador'?'flex':'none'
   document.querySelectorAll('#mundial-tabs button').forEach(b=>{
     b.style.background='rgba(255,255,255,.1)'; b.style.color='var(--tx2)'
   })
   const active=document.getElementById('mtab-'+tab)
-  if(active){active.style.background=tab==='tv'?'#ff0000':'var(--c3)';active.style.color=tab==='tv'?'#fff':'#000'}
+  if(active){active.style.background=tab==='tv'?'#ff0000':tab==='marcador'?'rgba(239,68,68,.3)':'var(--c3)';active.style.color=tab==='tv'||tab==='marcador'?'#fff':'#000'}
   if(tab==='tv') loadYT('live_stream?channel=UC8jyvrVBvIdIW-KASC7kIlQ')
   if(tab==='individual') loadMundialIframe()
   if(tab==='equipos') renderMundialCal()
   if(tab==='noticias') loadMundialNoticias()
   if(tab==='media') renderMedia('todos')
+  if(tab==='marcador'){
+    const iframe=document.getElementById('marcador-iframe')
+    iframe.onerror=()=>document.getElementById('marcador-fallback').style.display='flex'
+    setTimeout(()=>{
+      try{
+        if(!iframe.contentDocument&&!iframe.contentWindow?.location?.href) throw new Error()
+      }catch(e){ document.getElementById('marcador-fallback').style.display='flex' }
+    },4000)
+  }
 }
 
 // ═══ GALERÍA DE MEDIA ═══
