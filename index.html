@@ -423,11 +423,22 @@ body{display:flex;align-items:center;justify-content:center}
 
     <!-- HOME -->
     <div class="sc" id="sc-home">
-      <div class="hdr">
-        <div class="hdr-row">
-          <div><div class="hdr-sub">FRIGURSO</div><div class="hdr-title" id="hdr-hi">¡Hola! 👋</div></div>
+      <!-- Hero foto cancha rotante -->
+      <div id="home-hero" style="position:relative;width:100%;height:210px;overflow:hidden;flex-shrink:0;background:#0d1f2d">
+        <img id="home-hero-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease">
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(15,23,42,.45) 0%,rgba(15,23,42,.0) 40%,rgba(15,23,42,.85) 100%)"></div>
+        <!-- Greeting encima de la foto -->
+        <div style="position:absolute;top:14px;left:16px;right:16px;display:flex;align-items:center;justify-content:space-between">
+          <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(255,255,255,.6);letter-spacing:.5px">FRIGURSO</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:#fff" id="hdr-hi">¡Hola! 👋</div></div>
           <div class="hcp-box"><div class="hcp-v" id="hdr-hcp">—</div><div class="hcp-l">HCP</div></div>
         </div>
+        <!-- Caption cancha -->
+        <div style="position:absolute;bottom:10px;left:14px;right:50px">
+          <div id="home-hero-nombre" style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6)">—</div>
+          <div id="home-hero-loc" style="font-size:11px;color:rgba(255,255,255,.65);margin-top:1px">—</div>
+        </div>
+        <!-- Dots indicadores -->
+        <div id="home-hero-dots" style="position:absolute;bottom:14px;right:14px;display:flex;gap:4px"></div>
       </div>
       <div class="mets">
         <div class="met"><div class="met-v" id="d-mejor" style="color:var(--birdie)">—</div><div class="met-l">Mejor score</div><div class="met-s" id="d-mejor-s"> </div></div>
@@ -1134,6 +1145,47 @@ function generateHoles(par,hoyos){
 }
 function getCourseHoles(c){return c.holes||generateHoles(c.par,c.hoyos)}
 
+// ══ FOTOS DE CANCHAS (slideshow home) ══
+const COURSE_PHOTOS=[
+  {url:'https://www.footgolf.sport/acapulcoworldcup2026/wp-content/uploads/sites/7/2025/11/home_og-image-1024x576.jpg',nombre:'Tres Vidas Golf Club',ciudad:'Acapulco, México',pais:'🇲🇽'},
+  {url:'https://images.unsplash.com/photo-1709525616662-8d9f9a995ceb?w=800&q=80',nombre:'Los Álamos FootGolf',ciudad:'General Roca, Río Negro',pais:'🇦🇷'},
+  {url:'https://images.unsplash.com/photo-1562589461-cd172cbacbeb?w=800&q=80',nombre:'Los Cedros Golf Club',ciudad:'Pilar, Buenos Aires',pais:'🇦🇷'},
+  {url:'https://images.unsplash.com/photo-1569960574073-7f36eea04169?w=800&q=80',nombre:'Pilar Golf Club',ciudad:'Pilar, Buenos Aires',pais:'🇦🇷'},
+  {url:'https://images.unsplash.com/photo-1632244157566-af97bcf40911?w=800&q=80',nombre:'Las Praderas de Luján',ciudad:'Luján, Buenos Aires',pais:'🇦🇷'},
+  {url:'https://images.unsplash.com/photo-1724243846239-fe61d1499713?w=800&q=80',nombre:'Parque Patagónico FootGolf',ciudad:'Bariloche, Río Negro',pais:'🇦🇷'},
+  {url:'https://images.unsplash.com/photo-1611273261014-420a44179f56?w=800&q=80',nombre:'Tres Vidas — Hoyo 18',ciudad:'Acapulco, México',pais:'🇲🇽'},
+  {url:'https://images.unsplash.com/photo-1644703540196-3a0fd4ea3ac5?w=800&q=80',nombre:'Neuquén FootGolf Club',ciudad:'Neuquén Capital',pais:'🇦🇷'},
+  {url:'https://images.unsplash.com/photo-1709525617237-778500c895a8?w=800&q=80',nombre:'Club de Golf Chapultepec FG',ciudad:'Ciudad de México',pais:'🇲🇽'},
+  {url:'https://images.unsplash.com/photo-1776718114261-84c0c39890a3?w=800&q=80',nombre:'Villa Mercedes Golf Club',ciudad:'Villa Mercedes, San Luis',pais:'🇦🇷'},
+]
+let _photoIdx=0, _photoTimer=null
+
+function showHeroPhoto(idx){
+  const photos=COURSE_PHOTOS
+  if(!photos.length) return
+  const p=photos[idx%photos.length]
+  const img=document.getElementById('home-hero-img')
+  const nom=document.getElementById('home-hero-nombre')
+  const loc=document.getElementById('home-hero-loc')
+  const dots=document.getElementById('home-hero-dots')
+  if(!img) return
+  img.style.opacity='0'
+  setTimeout(()=>{
+    img.src=p.url
+    img.onerror=()=>{ _photoIdx++; showHeroPhoto(_photoIdx) }
+    img.onload=()=>{ img.style.opacity='1' }
+    if(nom) nom.textContent=p.nombre
+    if(loc) loc.textContent=`📍 ${p.ciudad} ${p.pais}`
+    if(dots) dots.innerHTML=photos.map((_,i)=>`<div style="width:${i===idx%photos.length?16:6}px;height:6px;border-radius:3px;background:${i===idx%photos.length?'#fff':'rgba(255,255,255,.35)'};transition:width .3s"></div>`).join('')
+  },400)
+}
+
+function startHeroSlideshow(){
+  if(_photoTimer) clearInterval(_photoTimer)
+  showHeroPhoto(_photoIdx)
+  _photoTimer=setInterval(()=>{ _photoIdx=(_photoIdx+1)%COURSE_PHOTOS.length; showHeroPhoto(_photoIdx) },6000)
+}
+
 const COURSES=[
   // 🇲🇽 MÉXICO — FIFG World Cup 2026
   {id:'tres_vidas',nombre:'Tres Vidas Golf Club',ciudad:'Acapulco, Guerrero',pais:'🇲🇽',par:72,hoyos:18,emoji:'🌊',mundial:true,info:'Sede FIFG World Cup 2026 · La Joya del Pacífico',
@@ -1410,6 +1462,8 @@ function tab(btn,id){
   document.querySelectorAll('.nbi').forEach(b=>b.classList.remove('on'))
   if(btn) btn.classList.add('on')
   go(id)
+  if(id!=='sc-home'&&_photoTimer){ clearInterval(_photoTimer); _photoTimer=null }
+  if(id==='sc-home') startHeroSlideshow()
   if(id==='sc-historial') loadHistorial()
   if(id==='sc-perfil') loadPerfil()
   if(id==='sc-ranking') loadRanking()
@@ -1443,6 +1497,7 @@ window.addEventListener('popstate', e=>{
 async function loadDashboard(){
   if(!USER||!JUGADOR) return
   document.getElementById('hdr-hi').textContent=`¡Hola, ${JUGADOR.nombre}! 👋`
+  startHeroSlideshow()
   // Mundial 2026 badges
   ;(()=>{
     const hoy=new Date()
