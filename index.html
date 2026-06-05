@@ -625,6 +625,7 @@ body{display:flex;align-items:center;justify-content:center}
             <button onclick="switchMundial('tv')" id="mtab-tv" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">📺 TV</button>
             <button onclick="switchMundial('individual')" id="mtab-individual" style="background:var(--c3);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#000;cursor:pointer">SCORES</button>
             <button onclick="switchMundial('equipos')" id="mtab-equipos" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">CALENDAR</button>
+            <button onclick="switchMundial('media')" id="mtab-media" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">📸</button>
             <button onclick="switchMundial('noticias')" id="mtab-noticias" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">INFO</button>
           </div>
         </div>
@@ -712,6 +713,27 @@ body{display:flex;align-items:center;justify-content:center}
             <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px">Cargando noticias...</div>
           </div>
         </div>
+      </div>
+
+      <!-- Media / Galería -->
+      <div id="mv-media" style="display:none;flex:1;overflow-y:auto">
+        <!-- Video player overlay dentro de la pantalla -->
+        <div id="media-player" style="display:none;background:#000;position:relative;width:100%;padding-top:56.25%;flex-shrink:0">
+          <iframe id="media-yt" style="position:absolute;inset:0;width:100%;height:100%;border:none" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;fullscreen" allowfullscreen></iframe>
+          <button onclick="closeMediaPlayer()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.7);border:none;border-radius:50%;width:32px;height:32px;color:#fff;font-size:16px;cursor:pointer;z-index:10">✕</button>
+        </div>
+        <div style="padding:12px 16px 4px;flex-shrink:0">
+          <!-- Categorías -->
+          <div id="media-cats" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none">
+            <button onclick="filterMedia('todos')" class="mcat on" data-cat="todos" style="background:var(--c3);border:none;border-radius:20px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:#000;cursor:pointer;white-space:nowrap;flex-shrink:0">TODOS</button>
+            <button onclick="filterMedia('acapulco')" class="mcat" data-cat="acapulco" style="background:rgba(255,255,255,.1);border:none;border-radius:20px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:var(--tx2);cursor:pointer;white-space:nowrap;flex-shrink:0">🌍 ACAPULCO 2026</button>
+            <button onclick="filterMedia('jugadas')" class="mcat" data-cat="jugadas" style="background:rgba(255,255,255,.1);border:none;border-radius:20px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:var(--tx2);cursor:pointer;white-space:nowrap;flex-shrink:0">⚽ JUGADAS</button>
+            <button onclick="filterMedia('premiacion')" class="mcat" data-cat="premiacion" style="background:rgba(255,255,255,.1);border:none;border-radius:20px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:var(--tx2);cursor:pointer;white-space:nowrap;flex-shrink:0">🏆 PREMIACIONES</button>
+            <button onclick="filterMedia('reportaje')" class="mcat" data-cat="reportaje" style="background:rgba(255,255,255,.1);border:none;border-radius:20px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:var(--tx2);cursor:pointer;white-space:nowrap;flex-shrink:0">🎙 REPORTAJES</button>
+            <button onclick="filterMedia('argentina')" class="mcat" data-cat="argentina" style="background:rgba(255,255,255,.1);border:none;border-radius:20px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:var(--tx2);cursor:pointer;white-space:nowrap;flex-shrink:0">🇦🇷 ARGENTINA</button>
+          </div>
+        </div>
+        <div id="media-grid" style="padding:8px 16px 80px"></div>
       </div>
     </div>
 
@@ -2789,6 +2811,7 @@ function switchMundial(tab){
   document.getElementById('mv-individual').style.display=tab==='individual'?'flex':'none'
   document.getElementById('mv-equipos').style.display=tab==='equipos'?'block':'none'
   document.getElementById('mv-noticias').style.display=tab==='noticias'?'block':'none'
+  document.getElementById('mv-media').style.display=tab==='media'?'block':'none'
   document.querySelectorAll('#mundial-tabs button').forEach(b=>{
     b.style.background='rgba(255,255,255,.1)'; b.style.color='var(--tx2)'
   })
@@ -2798,6 +2821,83 @@ function switchMundial(tab){
   if(tab==='individual') loadMundialIframe()
   if(tab==='equipos') renderMundialCal()
   if(tab==='noticias') loadMundialNoticias()
+  if(tab==='media') renderMedia('todos')
+}
+
+// ═══ GALERÍA DE MEDIA ═══
+const MEDIA_ITEMS=[
+  {id:'sGOvWHk5sJM',tipo:'video',cat:'acapulco',titulo:'FIFG World Cup Acapulco 2026 — Transmisión oficial',desc:'Cobertura completa del Mundial de FootGolf · Acapulco, México',emoji:'🌍',destacado:true},
+  {id:'UC8jyvrVBvIdIW-KASC7kIlQ',tipo:'canal',cat:'acapulco',titulo:'Canal oficial FIFG World Championship',desc:'Todos los videos del Mundial en vivo · Highlights · Premiaciones',emoji:'📺',destacado:true},
+  {id:'8WvMQ60LHiY',tipo:'video',cat:'jugadas',titulo:'Marco Palestra — Season Highlights 2025/26',desc:'Los mejores golpes de la temporada del top rankeado mundial',emoji:'⚽',destacado:true},
+  {id:'7KuYPuYYF2o',tipo:'video',cat:'jugadas',titulo:'Federico Fattori — Highlights 2025/26',desc:'Jugadas de élite del top jugador europeo · Temporada completa',emoji:'⚽',destacado:false},
+  {id:'t2DDJrtkVIM',tipo:'video',cat:'premiacion',titulo:'FIFG Club World Trophy Finals — Sorteo en vivo',desc:'Draw oficial del torneo de clubes más importante del mundo',emoji:'🏆',destacado:false},
+]
+
+let _mediaCatActual='todos'
+
+function filterMedia(cat){
+  _mediaCatActual=cat
+  document.querySelectorAll('.mcat').forEach(b=>{
+    b.style.background='rgba(255,255,255,.1)'; b.style.color='var(--tx2)'
+  })
+  const active=document.querySelector(`.mcat[data-cat="${cat}"]`)
+  if(active){active.style.background='var(--c3)';active.style.color='#000'}
+  renderMedia(cat)
+}
+
+async function renderMedia(cat){
+  const grid=document.getElementById('media-grid')
+  // Intentar cargar desde Supabase
+  let items=[]
+  const q=SB.from('media_posts').select('*').order('created_at',{ascending:false})
+  const {data:dbItems}=await q.catch(()=>({data:null}))
+  if(dbItems&&dbItems.length){
+    items=cat==='todos'?dbItems:dbItems.filter(i=>i.categoria===cat||i.categoria==='todos')
+  } else {
+    items=cat==='todos'?MEDIA_ITEMS:MEDIA_ITEMS.filter(i=>i.cat===cat)
+  }
+  if(!items.length){
+    grid.innerHTML=`<div style="text-align:center;padding:40px 0"><div style="font-size:36px;margin-bottom:10px">📭</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--tx2)">Sin contenido en esta categoría</div></div>`
+    return
+  }
+  grid.innerHTML=items.map(it=>{
+    const ytId=it.youtube_id||it.id
+    const thumb=`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`
+    const titulo=it.titulo||it.title||'—'
+    const desc=it.descripcion||it.desc||''
+    const emoji=it.emoji||'▶️'
+    const esCanal=it.tipo==='canal'
+    return`<div onclick="${esCanal?`window.open('https://www.youtube.com/channel/${ytId}','_blank')`:`playMedia('${ytId}','${titulo.replace(/'/g,"\\'")}')`}" style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r16);overflow:hidden;margin-bottom:12px;cursor:pointer;active:opacity:.85">
+      <div style="position:relative;width:100%;padding-top:56.25%;background:#111;overflow:hidden">
+        <img src="${thumb}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center">
+          <div style="background:rgba(0,0,0,.75);border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center">
+            <span style="font-size:22px;margin-left:${esCanal?'0':'3'}px">${esCanal?'📺':'▶'}</span>
+          </div>
+        </div>
+        ${it.destacado?`<div style="position:absolute;top:8px;left:8px;background:var(--c3);border-radius:20px;padding:3px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;color:#000">DESTACADO</div>`:''}
+      </div>
+      <div style="padding:12px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx);margin-bottom:4px;line-height:1.2">${titulo}</div>
+        <div style="font-size:12px;color:var(--tx3);line-height:1.4">${desc}</div>
+      </div>
+    </div>`
+  }).join('')
+}
+
+function playMedia(ytId,titulo){
+  const player=document.getElementById('media-player')
+  const iframe=document.getElementById('media-yt')
+  iframe.src=`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`
+  player.style.display='block'
+  document.getElementById('mv-media').scrollTo({top:0,behavior:'smooth'})
+}
+
+function closeMediaPlayer(){
+  const player=document.getElementById('media-player')
+  const iframe=document.getElementById('media-yt')
+  iframe.src=''
+  player.style.display='none'
 }
 
 function loadYT(videoOrPath){
