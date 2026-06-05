@@ -1,4 +1,4 @@
-const CACHE = 'frigurso-v29'
+const CACHE = 'frigurso-v30'
 const PRECACHE = ['/', '/index.html', '/icon-192.png', '/icon-512.png', '/manifest.json']
 
 self.addEventListener('install', e => {
