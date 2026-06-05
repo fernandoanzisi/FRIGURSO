@@ -622,9 +622,37 @@ body{display:flex;align-items:center;justify-content:center}
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div><div class="hdr-sub">FIFG ACAPULCO 2026</div><div class="hdr-title">Mundial 🌍</div></div>
           <div style="display:flex;gap:8px" id="mundial-tabs">
-            <button onclick="switchMundial('individual')" id="mtab-individual" style="background:var(--c3);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#000;cursor:pointer">INDIVIDUAL</button>
-            <button onclick="switchMundial('equipos')" id="mtab-equipos" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">EQUIPOS</button>
-            <button onclick="switchMundial('noticias')" id="mtab-noticias" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">NOTICIAS</button>
+            <button onclick="switchMundial('tv')" id="mtab-tv" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">📺 TV</button>
+            <button onclick="switchMundial('individual')" id="mtab-individual" style="background:var(--c3);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#000;cursor:pointer">SCORES</button>
+            <button onclick="switchMundial('equipos')" id="mtab-equipos" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">CALENDAR</button>
+            <button onclick="switchMundial('noticias')" id="mtab-noticias" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">INFO</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TV / Stream -->
+      <div id="mv-tv" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+        <div style="background:#000;flex-shrink:0;position:relative;width:100%;padding-top:56.25%">
+          <iframe id="yt-iframe" style="position:absolute;inset:0;width:100%;height:100%;border:none"
+            src="https://www.youtube.com/embed/live_stream?channel=UC8jyvrVBvIdIW-KASC7kIlQ&autoplay=1&rel=0&modestbranding=1"
+            allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;fullscreen"
+            allowfullscreen></iframe>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:14px 16px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(134,239,172,.5);letter-spacing:1px;font-weight:700;margin-bottom:10px">TRANSMISIONES OFICIALES</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button onclick="loadYT('live_stream?channel=UC8jyvrVBvIdIW-KASC7kIlQ')" style="background:rgba(255,0,0,.15);border:0.5px solid rgba(255,0,0,.3);border-radius:var(--r12);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left">
+              <span style="font-size:24px">▶️</span>
+              <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff">Canal Oficial FIFG</div><div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">FIFG FootGolf World Championship Acapulco 2026</div></div>
+            </button>
+            <button onclick="loadYT('sGOvWHk5sJM')" style="background:rgba(255,0,0,.15);border:0.5px solid rgba(255,0,0,.3);border-radius:var(--r12);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left">
+              <span style="font-size:24px">🎬</span>
+              <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff">Transmisión del Mundial</div><div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">Stream oficial · Acapulco 2026</div></div>
+            </button>
+            <button onclick="window.open('https://www.acapulco2026.com/blank-1-1-1-2-2','_blank')" style="background:rgba(255,255,255,.07);border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r12);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left">
+              <span style="font-size:24px">📺</span>
+              <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff">Televisa Univisión</div><div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">Broadcast oficial · Canal autorizado</div></div>
+            </button>
           </div>
         </div>
       </div>
@@ -2757,6 +2785,7 @@ let _mundialTab='individual'
 
 function switchMundial(tab){
   _mundialTab=tab
+  document.getElementById('mv-tv').style.display=tab==='tv'?'flex':'none'
   document.getElementById('mv-individual').style.display=tab==='individual'?'flex':'none'
   document.getElementById('mv-equipos').style.display=tab==='equipos'?'block':'none'
   document.getElementById('mv-noticias').style.display=tab==='noticias'?'block':'none'
@@ -2764,10 +2793,20 @@ function switchMundial(tab){
     b.style.background='rgba(255,255,255,.1)'; b.style.color='var(--tx2)'
   })
   const active=document.getElementById('mtab-'+tab)
-  if(active){active.style.background='var(--c3)';active.style.color='#000'}
+  if(active){active.style.background=tab==='tv'?'#ff0000':'var(--c3)';active.style.color=tab==='tv'?'#fff':'#000'}
+  if(tab==='tv') loadYT('live_stream?channel=UC8jyvrVBvIdIW-KASC7kIlQ')
   if(tab==='individual') loadMundialIframe()
   if(tab==='equipos') renderMundialCal()
   if(tab==='noticias') loadMundialNoticias()
+}
+
+function loadYT(videoOrPath){
+  const iframe=document.getElementById('yt-iframe')
+  if(!iframe) return
+  const src=videoOrPath.startsWith('live_stream')
+    ?`https://www.youtube.com/embed/${videoOrPath}&autoplay=1&rel=0&modestbranding=1`
+    :`https://www.youtube.com/embed/${videoOrPath}?autoplay=1&rel=0&modestbranding=1`
+  iframe.src=src
 }
 
 function loadMundialIframe(){
@@ -2842,7 +2881,7 @@ function renderMundialCal(){
 }
 
 function loadMundial(){
-  switchMundial('individual')
+  switchMundial('tv')
 }
 
 function renderEquipos(){
