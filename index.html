@@ -734,6 +734,10 @@ body{display:flex;align-items:center;justify-content:center}
           </div>
         </div>
         <div id="media-grid" style="padding:8px 16px 80px"></div>
+        <!-- Botón agregar video -->
+        <button onclick="agregarVideo()" style="position:fixed;bottom:76px;right:16px;background:var(--c3);border:none;border-radius:50px;padding:12px 20px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#000;cursor:pointer;box-shadow:0 4px 20px rgba(74,222,128,.4);display:flex;align-items:center;gap:8px;z-index:50" id="btn-add-media">
+          <span style="font-size:18px">+</span> AGREGAR VIDEO
+        </button>
       </div>
     </div>
 
@@ -2856,6 +2860,10 @@ async function renderMedia(cat){
   } else {
     items=cat==='todos'?MEDIA_ITEMS:MEDIA_ITEMS.filter(i=>i.cat===cat)
   }
+  // Agregar videos guardados localmente
+  const custom=JSON.parse(localStorage.getItem('fg_media_custom')||'[]')
+  const customFilt=cat==='todos'?custom:custom.filter(i=>i.cat===cat||i.cat==='todos')
+  items=[...customFilt,...items]
   if(!items.length){
     grid.innerHTML=`<div style="text-align:center;padding:40px 0"><div style="font-size:36px;margin-bottom:10px">📭</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--tx2)">Sin contenido en esta categoría</div></div>`
     return
@@ -2891,6 +2899,30 @@ function playMedia(ytId,titulo){
   iframe.src=`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`
   player.style.display='block'
   document.getElementById('mv-media').scrollTo({top:0,behavior:'smooth'})
+}
+
+function extraerYtId(url){
+  // Soporta: watch?v=, youtu.be/, /live/, /shorts/, /embed/
+  const m=url.match(/(?:v=|youtu\.be\/|\/live\/|\/shorts\/|\/embed\/)([a-zA-Z0-9_-]{11})/)
+  return m?m[1]:null
+}
+
+function agregarVideo(){
+  const url=prompt('Pegá la URL del video de YouTube:')
+  if(!url) return
+  const ytId=extraerYtId(url.trim())
+  if(!ytId){ toast('❌ URL de YouTube no válida'); return }
+  const titulo=prompt('Título del video:')||'Video FootGolf'
+  const cats=['todos','acapulco','jugadas','premiacion','reportaje','argentina']
+  const catLabels='0=TODOS  1=ACAPULCO 2026  2=JUGADAS  3=PREMIACIONES  4=REPORTAJES  5=ARGENTINA'
+  const catNum=prompt(`Categoría:\n${catLabels}\n\nEscribí el número:`)
+  const cat=cats[parseInt(catNum)]||'todos'
+  // Guardar en localStorage
+  const guardados=JSON.parse(localStorage.getItem('fg_media_custom')||'[]')
+  guardados.unshift({id:ytId,youtube_id:ytId,tipo:'video',cat,titulo,desc:'',emoji:'▶️',destacado:false,agregado:Date.now()})
+  localStorage.setItem('fg_media_custom',JSON.stringify(guardados))
+  toast('✓ Video agregado')
+  renderMedia(_mediaCatActual)
 }
 
 function closeMediaPlayer(){
