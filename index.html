@@ -657,6 +657,14 @@ body{display:flex;align-items:center;justify-content:center}
               <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff">Televisa Univisión</div><div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">Broadcast oficial · Canal autorizado</div></div>
             </button>
           </div>
+          <!-- Cargar cualquier stream de YouTube -->
+          <div style="margin-top:14px;background:rgba(255,255,255,.05);border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r12);padding:12px">
+            <div style="font-size:11px;color:var(--tx3);font-weight:600;margin-bottom:8px">📡 PEGAR LINK DE TRANSMISIÓN</div>
+            <div style="display:flex;gap:8px">
+              <input id="tv-url-input" type="url" placeholder="https://youtube.com/watch?v=..." style="flex:1;background:var(--bg);border:0.5px solid var(--bd);border-radius:var(--r8);padding:10px 12px;color:var(--tx);font-size:13px;outline:none">
+              <button onclick="cargarTVUrl()" style="background:rgba(255,0,0,.8);border:none;border-radius:var(--r8);padding:10px 16px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#fff;cursor:pointer">▶ VER</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -737,9 +745,37 @@ body{display:flex;align-items:center;justify-content:center}
         </div>
         <div id="media-grid" style="padding:8px 16px 80px"></div>
         <!-- Botón agregar video -->
-        <button onclick="agregarVideo()" style="position:fixed;bottom:76px;right:16px;background:var(--c3);border:none;border-radius:50px;padding:12px 20px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#000;cursor:pointer;box-shadow:0 4px 20px rgba(74,222,128,.4);display:flex;align-items:center;gap:8px;z-index:50" id="btn-add-media">
+        <button onclick="abrirFormMedia()" style="position:fixed;bottom:76px;right:16px;background:var(--c3);border:none;border-radius:50px;padding:12px 20px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#000;cursor:pointer;box-shadow:0 4px 20px rgba(74,222,128,.4);display:flex;align-items:center;gap:8px;z-index:50" id="btn-add-media">
           <span style="font-size:18px">+</span> AGREGAR VIDEO
         </button>
+        <!-- Panel agregar video (reemplaza prompt()) -->
+        <div id="add-media-panel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-end">
+          <div style="background:var(--bg2);border-radius:20px 20px 0 0;padding:20px 16px 32px;width:100%;border-top:0.5px solid var(--bd)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--tx)">AGREGAR VIDEO</div>
+              <button onclick="cerrarFormMedia()" style="background:rgba(255,255,255,.1);border:none;border-radius:50%;width:32px;height:32px;color:var(--tx);font-size:16px;cursor:pointer">✕</button>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="font-size:11px;color:var(--tx3);margin-bottom:5px;font-weight:600">URL DE YOUTUBE</div>
+              <input id="add-media-url" type="url" placeholder="https://youtube.com/watch?v=..." class="inp" style="margin-bottom:0">
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="font-size:11px;color:var(--tx3);margin-bottom:5px;font-weight:600">TÍTULO</div>
+              <input id="add-media-titulo" type="text" placeholder="Ej: Final del Mundial 2026" class="inp" style="margin-bottom:0">
+            </div>
+            <div style="margin-bottom:18px">
+              <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;font-weight:600">CATEGORÍA</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px" id="add-media-cats">
+                <button onclick="selCatMedia('todos')" class="addcat on" data-c="todos" style="background:var(--c3);border:none;border-radius:20px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:#000;cursor:pointer">TODOS</button>
+                <button onclick="selCatMedia('acapulco')" class="addcat" data-c="acapulco" style="background:rgba(255,255,255,.1);border:none;border-radius:20px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:var(--tx2);cursor:pointer">🌍 ACAPULCO</button>
+                <button onclick="selCatMedia('jugadas')" class="addcat" data-c="jugadas" style="background:rgba(255,255,255,.1);border:none;border-radius:20px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:var(--tx2);cursor:pointer">⚽ JUGADAS</button>
+                <button onclick="selCatMedia('premiacion')" class="addcat" data-c="premiacion" style="background:rgba(255,255,255,.1);border:none;border-radius:20px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:var(--tx2);cursor:pointer">🏆 PREMIOS</button>
+                <button onclick="selCatMedia('argentina')" class="addcat" data-c="argentina" style="background:rgba(255,255,255,.1);border:none;border-radius:20px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:var(--tx2);cursor:pointer">🇦🇷 ARG</button>
+              </div>
+            </div>
+            <button onclick="confirmarAgregarVideo()" style="width:100%;background:var(--c3);border:none;border-radius:var(--r12);padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#000;cursor:pointer">GUARDAR VIDEO</button>
+          </div>
+        </div>
       </div>
 
       <!-- Marcador Match Play -->
@@ -3170,23 +3206,51 @@ function extraerYtId(url){
   return m?m[1]:null
 }
 
-function agregarVideo(){
-  const url=prompt('Pegá la URL del video de YouTube:')
-  if(!url) return
-  const ytId=extraerYtId(url.trim())
+let _addMediaCat='todos'
+
+function abrirFormMedia(){
+  document.getElementById('add-media-url').value=''
+  document.getElementById('add-media-titulo').value=''
+  selCatMedia('todos')
+  document.getElementById('add-media-panel').style.display='flex'
+}
+
+function cerrarFormMedia(){
+  document.getElementById('add-media-panel').style.display='none'
+}
+
+function selCatMedia(cat){
+  _addMediaCat=cat
+  document.querySelectorAll('.addcat').forEach(b=>{
+    b.style.background='rgba(255,255,255,.1)'; b.style.color='var(--tx2)'
+  })
+  const active=document.querySelector(`.addcat[data-c="${cat}"]`)
+  if(active){active.style.background='var(--c3)';active.style.color='#000'}
+}
+
+function confirmarAgregarVideo(){
+  const url=document.getElementById('add-media-url').value.trim()
+  const titulo=document.getElementById('add-media-titulo').value.trim()||'Video FootGolf'
+  if(!url){ toast('Pegá la URL de YouTube'); return }
+  const ytId=extraerYtId(url)
   if(!ytId){ toast('❌ URL de YouTube no válida'); return }
-  const titulo=prompt('Título del video:')||'Video FootGolf'
-  const cats=['todos','acapulco','jugadas','premiacion','reportaje','argentina']
-  const catLabels='0=TODOS  1=ACAPULCO 2026  2=JUGADAS  3=PREMIACIONES  4=REPORTAJES  5=ARGENTINA'
-  const catNum=prompt(`Categoría:\n${catLabels}\n\nEscribí el número:`)
-  const cat=cats[parseInt(catNum)]||'todos'
-  // Guardar en localStorage
   const guardados=JSON.parse(localStorage.getItem('fg_media_custom')||'[]')
-  guardados.unshift({id:ytId,youtube_id:ytId,tipo:'video',cat,titulo,desc:'',emoji:'▶️',destacado:false,agregado:Date.now()})
+  guardados.unshift({id:ytId,youtube_id:ytId,tipo:'video',cat:_addMediaCat,titulo,desc:'',emoji:'▶️',destacado:false,agregado:Date.now()})
   localStorage.setItem('fg_media_custom',JSON.stringify(guardados))
+  cerrarFormMedia()
   toast('✓ Video agregado')
   renderMedia(_mediaCatActual)
 }
+
+function cargarTVUrl(){
+  const url=document.getElementById('tv-url-input').value.trim()
+  if(!url){ toast('Pegá una URL de YouTube'); return }
+  const ytId=extraerYtId(url)
+  if(ytId){ loadYT(ytId) }
+  else { toast('❌ URL no válida') }
+}
+
+function agregarVideo(){ abrirFormMedia() }
 
 function closeMediaPlayer(){
   const player=document.getElementById('media-player')
