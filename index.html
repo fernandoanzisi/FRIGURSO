@@ -622,13 +622,13 @@ body{display:flex;align-items:center;justify-content:center}
       <div class="hdr" style="flex-shrink:0">
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div><div class="hdr-sub">FIFG ACAPULCO 2026</div><div class="hdr-title">Mundial 🌍</div></div>
-          <div style="display:flex;gap:8px" id="mundial-tabs">
-            <button onclick="switchMundial('tv')" id="mtab-tv" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">📺 TV</button>
-            <button onclick="switchMundial('individual')" id="mtab-individual" style="background:var(--c3);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#000;cursor:pointer">SCORES</button>
-            <button onclick="switchMundial('equipos')" id="mtab-equipos" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">CALENDAR</button>
-            <button onclick="switchMundial('media')" id="mtab-media" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">📸</button>
-            <button onclick="switchMundial('marcador')" id="mtab-marcador" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">⚔️ MATCH</button>
-            <button onclick="switchMundial('noticias')" id="mtab-noticias" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer">INFO</button>
+          <div style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch" id="mundial-tabs">
+            <button onclick="switchMundial('tv')" id="mtab-tv" style="flex-shrink:0;background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer;white-space:nowrap">📺 TV</button>
+            <button onclick="switchMundial('individual')" id="mtab-individual" style="flex-shrink:0;background:var(--c3);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#000;cursor:pointer;white-space:nowrap">SCORES</button>
+            <button onclick="switchMundial('marcador')" id="mtab-marcador" style="flex-shrink:0;background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer;white-space:nowrap">⚔️ MATCH</button>
+            <button onclick="switchMundial('equipos')" id="mtab-equipos" style="flex-shrink:0;background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer;white-space:nowrap">CALENDAR</button>
+            <button onclick="switchMundial('media')" id="mtab-media" style="flex-shrink:0;background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer;white-space:nowrap">📸</button>
+            <button onclick="switchMundial('noticias')" id="mtab-noticias" style="flex-shrink:0;background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer;white-space:nowrap">INFO</button>
           </div>
         </div>
       </div>
