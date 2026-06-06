@@ -2136,7 +2136,8 @@ function suspendRound(){
 }
 
 async function saveRound(){
-  const H=getCourseHoles(_selCourse)
+  const savedCourse=_selCourse  // snapshot — evita que cambios async arrastren cancha equivocada
+  const H=getCourseHoles(savedCourse)
   const sc=getCurScores()
   const allSc=_groupEnabled?_gScores[0]:sc
   const done=allSc.filter(s=>s!==null)
@@ -2171,12 +2172,12 @@ async function saveRound(){
   }
   const _posF=parseInt(document.getElementById('inp-posicion')?.value)||null
   const _pts=_tourMode&&_posF?calcPuntosCat(_catTorneo,_posF):null
-  _lastRoundData={str,svp,tg,tp,tally,course:_selCourse,tourMode:_tourMode,groupSummary,catTorneo:_catTorneo,puntos:_pts,posicion:_posF}
+  _lastRoundData={str,svp,tg,tp,tally,course:savedCourse,tourMode:_tourMode,groupSummary,catTorneo:_catTorneo,puntos:_pts,posicion:_posF}
 
   // 1. Mostrar resumen SIEMPRE primero (UX inmediata)
   showSummary()
   // 2. Resetear scorecard
-  scores=new Array(getCourseHoles(_selCourse).length).fill(null)
+  scores=new Array(getCourseHoles(savedCourse).length).fill(null)
   _gScores=[...Array(4)].map(()=>new Array(18).fill(null))
   hi=0; renderScorecard()
 
@@ -2187,16 +2188,18 @@ async function saveRound(){
   const setStatus=(icon,bg,col,txt)=>{if(statusEl){statusEl.style.display='block';statusEl.style.background=bg;statusEl.style.color=col;statusEl.textContent=icon+' '+txt}}
   setStatus('⏳','rgba(134,239,172,.12)','rgba(134,239,172,.7)','Guardando...')
   try{
-    // Buscar cancha_id (no crítico si falla)
-    let canchaId=null
-    try{
-      const {data:ca,error:ce}=await SB.from('canchas').select('id').ilike('nombre','%'+_selCourse.nombre.split(' ').slice(0,2).join(' ')+'%').limit(1)
-      if(ca&&ca.length) canchaId=ca[0].id
-      if(!canchaId&&!ce){
-        const {data:nv}=await SB.from('canchas').insert({nombre:_selCourse.nombre,par_total:_selCourse.par,total_hoyos:_selCourse.hoyos,activa:true}).select('id').single()
-        if(nv) canchaId=nv.id
-      }
-    }catch(_){}
+    // Buscar cancha_id — usa savedCourse para evitar race conditions
+    let canchaId=savedCourse.cancha_id||null  // si la cancha custom ya tiene id de DB, usarlo directamente
+    if(!canchaId){
+      try{
+        const {data:ca}=await SB.from('canchas').select('id').ilike('nombre',savedCourse.nombre).limit(1)
+        if(ca?.length) canchaId=ca[0].id
+        if(!canchaId){
+          const {data:nv}=await SB.from('canchas').insert({nombre:savedCourse.nombre,par_total:savedCourse.par,total_hoyos:savedCourse.hoyos,activa:true}).select('id').single()
+          if(nv) canchaId=nv.id
+        }
+      }catch(_){}
+    }
 
     const posInput=parseInt(document.getElementById('inp-posicion')?.value)||null
     const puntos=_tourMode&&posInput?calcPuntosCat(_catTorneo,posInput):null
@@ -2479,8 +2482,20 @@ function submitAddCourse(){
     saved.push(course)
     localStorage.setItem('fg_custom_courses',JSON.stringify(saved))
   }catch(_){}
-  // Intentar guardar en Supabase
-  if(USER) SB.from('canchas').insert({nombre,par_total:par,total_hoyos:_acHoyos,activa:true}).catch(()=>{})
+  // Intentar guardar en Supabase y capturar el id devuelto
+  if(USER){
+    SB.from('canchas').insert({nombre,par_total:par,total_hoyos:_acHoyos,activa:true}).select('id').single()
+      .then(({data})=>{
+        if(data?.id){
+          course.cancha_id=data.id
+          try{
+            const saved=JSON.parse(localStorage.getItem('fg_custom_courses')||'[]')
+            const idx=saved.findIndex(c=>c.id===course.id)
+            if(idx>=0){ saved[idx].cancha_id=data.id; localStorage.setItem('fg_custom_courses',JSON.stringify(saved)) }
+          }catch(_){}
+        }
+      }).catch(()=>{})
+  }
   _selCourse=course
   document.getElementById('add-course-form').style.display='none'
   document.getElementById('ac-nombre').value=''
