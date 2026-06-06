@@ -951,7 +951,15 @@ body{display:flex;align-items:center;justify-content:center}
       <div class="sec sec-b">
         <div class="card">
           <div class="ct">⚙️ Opciones</div>
-          <div class="li" style="cursor:pointer" onclick="editLicencia()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)">🪪 Licencia FIFG</span><span id="li-lic-val" style="color:var(--tx3);font-size:12px;margin-right:6px">—</span><span style="color:var(--tx3)">›</span></div>
+          <div>
+            <div class="li" style="cursor:pointer" onclick="toggleLicenciaEdit()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)">🪪 Licencia FIFG</span><span id="li-lic-val" style="color:var(--tx3);font-size:12px;margin-right:6px">—</span><span style="color:var(--tx3)">›</span></div>
+            <div id="licencia-edit-panel" style="display:none;padding:10px 14px 12px;border-top:0.5px solid rgba(255,255,255,.06)">
+              <div style="display:flex;gap:8px">
+                <input type="text" id="licencia-input" placeholder="Nro. de licencia FIFG" maxlength="20" style="flex:1;background:rgba(255,255,255,.08);border:0.5px solid rgba(255,255,255,.15);border-radius:var(--r8);padding:9px 12px;color:#fff;font-size:14px;font-family:'Barlow Condensed',sans-serif">
+                <button onclick="saveLicencia()" style="background:var(--c3);border:none;border-radius:var(--r8);padding:9px 16px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#fff;cursor:pointer">OK</button>
+              </div>
+            </div>
+          </div>
           <div class="li" style="cursor:pointer" onclick="go('sc-historial');loadHistorial()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)">📋 Ver historial</span><span style="color:var(--tx3)">›</span></div>
           <div class="li" style="cursor:pointer" onclick="go('sc-canchas');if(!window._allCanchas||!window._allCanchas.length)renderStaticData();else renderCanchas('')"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)">⛳ Explorar canchas</span><span style="color:var(--tx3)">›</span></div>
           <div class="li" style="cursor:pointer;display:none" id="install-li" onclick="installApp()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--c3)">📲 Instalar como app</span><span style="color:var(--c3)">›</span></div>
@@ -1041,8 +1049,15 @@ body{display:flex;align-items:center;justify-content:center}
       <img id="cd-photo-img" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none">
       <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,rgba(0,0,0,.1) 60%)"></div>
       <button onclick="closeCanchaDetail()" style="position:absolute;top:14px;left:14px;background:rgba(0,0,0,.5);border:none;border-radius:var(--r8);padding:7px 12px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;backdrop-filter:blur(4px)">← VOLVER</button>
-      <button onclick="changeCanchaPhoto()" style="position:absolute;top:14px;right:14px;background:rgba(0,0,0,.5);border:none;border-radius:var(--r8);padding:7px 12px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;backdrop-filter:blur(4px)">📷 FOTO</button>
+      <button onclick="toggleCanchaPhotoPanel()" style="position:absolute;top:14px;right:14px;background:rgba(0,0,0,.5);border:none;border-radius:var(--r8);padding:7px 12px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;backdrop-filter:blur(4px)">📷 FOTO</button>
       <input type="file" id="cd-photo-input" accept="image/*" style="display:none" onchange="uploadCanchaPhoto(this.files[0]);this.value=''">
+      <div id="cd-photo-panel" style="display:none;position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);padding:12px 14px;border-top:0.5px solid rgba(255,255,255,.12)">
+        <div style="display:flex;gap:8px">
+          <input type="url" id="cd-photo-url" placeholder="Pegá URL de imagen..." style="flex:1;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:var(--r8);padding:8px 10px;color:#fff;font-size:13px;font-family:'Barlow Condensed',sans-serif">
+          <button onclick="applyCanchaPhotoURL()" style="background:var(--c3);border:none;border-radius:var(--r8);padding:8px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#fff;cursor:pointer;flex-shrink:0">OK</button>
+          <button onclick="document.getElementById('cd-photo-input').click()" style="background:rgba(255,255,255,.15);border:none;border-radius:var(--r8);padding:8px 12px;font-size:13px;cursor:pointer;flex-shrink:0">📁</button>
+        </div>
+      </div>
       <div style="position:absolute;bottom:14px;left:16px;right:16px">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:#fff;line-height:1.1" id="cd-nombre">—</div>
         <div style="font-size:13px;color:rgba(255,255,255,.7);margin-top:4px" id="cd-lugar">—</div>
@@ -2030,7 +2045,7 @@ function autoSaveDraft(){
     totalHoles:H.length,
     svp
   }
-  localStorage.setItem(DRAFT_KEY,JSON.stringify(draft))
+  try{ localStorage.setItem(DRAFT_KEY,JSON.stringify(draft)) }catch(_){ return }
   // Indicador visual breve
   const pill=document.getElementById('autosave-pill')
   if(pill){
@@ -2378,20 +2393,6 @@ async function shareRound(){
   }
 }
 
-function roundRect(ctx,x,y,w,h,r){
-  ctx.beginPath()
-  ctx.moveTo(x+r,y)
-  ctx.lineTo(x+w-r,y)
-  ctx.arcTo(x+w,y,x+w,y+r,r)
-  ctx.lineTo(x+w,y+h-r)
-  ctx.arcTo(x+w,y+h,x+w-r,y+h,r)
-  ctx.lineTo(x+r,y+h)
-  ctx.arcTo(x,y+h,x,y+h-r,r)
-  ctx.lineTo(x,y+r)
-  ctx.arcTo(x,y,x+r,y,r)
-  ctx.closePath()
-}
-
 function openSelector(){
   scores=new Array(getCourseHoles(_selCourse).length).fill(null)
   _gScores=[...Array(4)].map(()=>new Array(18).fill(null))
@@ -2444,7 +2445,10 @@ function renderSelector(){
 
 function selectCourse(id){
   _selCourse=COURSES.find(c=>c.id===id)||COURSES[0]
-  scores=new Array(getCourseHoles(_selCourse).length).fill(null);hi=0
+  const len=getCourseHoles(_selCourse).length
+  scores=new Array(len).fill(null)
+  _gScores=[...Array(4)].map(()=>new Array(len).fill(null))
+  hi=0
   renderSelector()
 }
 
@@ -3050,28 +3054,40 @@ function closeCanchaDetail(){
 function startRoundHere(){
   if(!_currentCancha) return
   closeCanchaDetail()
-  // Seleccionar esta cancha y abrir selector
   const match=COURSES.find(c=>c.nombre===_currentCancha.nombre)
-  if(match){ _selCourse=match; go('sc-scorecard'); renderScorecard() }
-  else{ go('sc-selector'); setTimeout(()=>{ const si=document.getElementById('sel-search'); if(si){si.value=_currentCancha.nombre;renderSelector()} },100) }
-}
-
-function changeCanchaPhoto(){
-  // Opción: URL o cámara
-  const url=prompt('Pegá la URL de una foto (ej: de Google Images):\n\nO dejá vacío para subir desde la cámara')
-  if(url===null) return
-  if(url.trim()){
-    localStorage.setItem(getCanchaFotoKey(_currentCancha),url.trim())
-    const img=document.getElementById('cd-photo-img')
-    img.src=url.trim(); img.style.display='block'
-    img.onerror=()=>{ img.style.display='none'; toast('URL no válida o sin acceso a la imagen') }
-    renderCanchas(document.getElementById('cancha-search')?.value||'')
-    toast('✓ Foto actualizada')
+  if(match){
+    _selCourse=match
+    const len=getCourseHoles(_selCourse).length
+    scores=new Array(len).fill(null)
+    _gScores=[...Array(4)].map(()=>new Array(len).fill(null))
+    hi=0
+    go('sc-scorecard'); renderScorecard()
   } else {
-    document.getElementById('cd-photo-input').click()
+    go('sc-selector')
+    setTimeout(()=>{ const si=document.getElementById('sel-search'); if(si){si.value=_currentCancha.nombre;renderSelector()} },100)
   }
 }
 
+function toggleCanchaPhotoPanel(){
+  const p=document.getElementById('cd-photo-panel')
+  p.style.display=p.style.display==='none'?'block':'none'
+}
+function applyCanchaPhotoURL(){
+  const url=document.getElementById('cd-photo-url').value.trim()
+  if(!url){ toast('Ingresá una URL'); return }
+  localStorage.setItem(getCanchaFotoKey(_currentCancha),url)
+  const img=document.getElementById('cd-photo-img')
+  img.src=url; img.style.display='block'
+  img.onerror=()=>{ img.style.display='none'; toast('URL no válida o sin acceso a la imagen') }
+  document.getElementById('cd-photo-panel').style.display='none'
+  document.getElementById('cd-photo-url').value=''
+  renderCanchas(document.getElementById('cancha-search')?.value||'')
+  toast('✓ Foto actualizada')
+}
+function changeCanchaPhoto(){
+  // legacy — mantener compatibilidad
+  toggleCanchaPhotoPanel()
+}
 async function uploadCanchaPhoto(file){
   if(!file||!_currentCancha) return
   toast('⏳ Subiendo foto...')
@@ -3781,7 +3797,7 @@ function generarAnalisis(ronda, holes, dist, svp, sameCourseBest){
     }
     // Consistency metric
     const varianza=holes.map(h=>Math.pow(h.golpes-h.par,2)).reduce((a,b)=>a+b,0)/holes.length
-    const consistencia=varianza<1?'Alta':'varianza<2'?'Media':'En desarrollo'
+    const consistencia=varianza<1?'Alta':varianza<2?'Media':'En desarrollo'
     holesAnalysis=`<div style="display:flex;gap:8px;margin-bottom:12px">
       <div style="flex:1;background:rgba(255,255,255,.04);border-radius:var(--r8);padding:10px;text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--tx)">${holes.length}</div><div style="font-size:10px;color:var(--tx3)">HOYOS</div></div>
       <div style="flex:1;background:rgba(255,255,255,.04);border-radius:var(--r8);padding:10px;text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--birdie)">${dist.birdie+dist.eagle}</div><div style="font-size:10px;color:var(--tx3)">BAJO PAR</div></div>
@@ -3959,15 +3975,28 @@ async function uploadAvatar(file){
   }
 }
 
-function editLicencia(){
-  if(!USER) return
-  const actual=localStorage.getItem('fifg_licencia_'+USER.id)||''
-  const nueva=prompt('Número de licencia FIFG:', actual)
-  if(nueva===null) return
-  localStorage.setItem('fifg_licencia_'+USER.id, nueva.trim()||'—')
-  loadPerfil()
-  toast('Licencia guardada')
+function toggleLicenciaEdit(){
+  const panel=document.getElementById('licencia-edit-panel')
+  if(!panel) return
+  const open=panel.style.display!=='none'
+  panel.style.display=open?'none':'block'
+  if(!open&&USER){
+    const actual=localStorage.getItem('fifg_licencia_'+USER.id)||''
+    const inp=document.getElementById('licencia-input')
+    if(inp) inp.value=actual==='—'?'':actual
+    setTimeout(()=>inp?.focus(),50)
+  }
 }
+function saveLicencia(){
+  if(!USER) return
+  const inp=document.getElementById('licencia-input')
+  const val=(inp?.value||'').trim()
+  localStorage.setItem('fifg_licencia_'+USER.id, val||'—')
+  document.getElementById('licencia-edit-panel').style.display='none'
+  loadPerfil()
+  toast('✓ Licencia guardada')
+}
+function editLicencia(){ toggleLicenciaEdit() }
 
 function showAvatar(url){
   const img=document.getElementById('p-av-img')
