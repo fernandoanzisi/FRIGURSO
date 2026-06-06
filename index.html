@@ -572,7 +572,8 @@ body{display:flex;align-items:center;justify-content:center}
     <div class="sc" id="sc-gps">
       <div class="gps-hdr">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-          <div class="live" style="width:9px;height:9px;border-radius:50%;background:var(--c5)"></div>
+          <button onclick="history.back()" style="background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.15);border-radius:var(--r8);padding:5px 12px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:none">← VOLVER</button>
+          <div class="live" style="width:9px;height:9px;border-radius:50%;background:var(--c5);margin-left:4px"></div>
           <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:rgba(134,239,172,.5);letter-spacing:.8px">GPS EN VIVO</span>
           <button onclick="getGPS()" style="margin-left:auto;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:var(--r8);padding:5px 12px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;cursor:pointer">📡 ACTIVAR</button>
         </div>
@@ -1022,6 +1023,13 @@ body{display:flex;align-items:center;justify-content:center}
       <input class="inp" type="number" id="er-golpes" placeholder="Ej: 51" min="1" style="margin-bottom:6px">
       <div style="font-size:11px;color:var(--tx3);margin-bottom:20px">Opcional — si no sabés el total dejalo vacío</div>
       <div id="er-pts-preview" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;color:rgba(255,193,7,.7);padding:10px;background:rgba(255,193,7,.06);border-radius:var(--r8);border:0.5px solid rgba(255,193,7,.15)"></div>
+      <div style="margin-top:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="inp-lbl" style="margin-bottom:0">HOYOS</div>
+          <button onclick="saveHolesEdit()" style="background:var(--c3);border:none;border-radius:var(--r8);padding:5px 14px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#fff;cursor:pointer">GUARDAR HOYOS</button>
+        </div>
+        <div id="er-holes-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px"></div>
+      </div>
     </div>
   </div>
 
@@ -1629,17 +1637,19 @@ function actualizarErPtsPreview(){
     prev.style.display='block'
   } else { prev.style.display='none' }
 }
-function openEditRonda(id){
-  // Buscar en _statData primero, luego en las últimas del dashboard
-  const r=_statData?.find(x=>x.id===id)
-  if(!r){ toast('Cargá el historial primero'); return }
+async function openEditRonda(id){
+  let r=_statData?.find(x=>x.id===id)
+  if(!r){
+    const {data}=await SB.from('rondas').select('*,canchas(nombre)').eq('id',id).single()
+    if(!data){ toast('No se pudo cargar la ronda'); return }
+    r=data
+  }
   document.getElementById('er-id').value=id
   document.getElementById('er-cancha-name').textContent=r.canchas?.nombre||'—'
   document.getElementById('er-fecha').value=r.fecha||''
   document.getElementById('er-svp').value=r.score_vs_par??''
   document.getElementById('er-pos').value=r.posicion_final??''
   document.getElementById('er-golpes').value=r.total_golpes??''
-  // Tipo
   _erTipo=r.tipo||'practica'
   document.querySelectorAll('.er-tipo-opt').forEach(b=>{
     b.classList.toggle('on', b.getAttribute('onclick')?.includes(`'${_erTipo}'`))
@@ -1647,6 +1657,7 @@ function openEditRonda(id){
   actualizarErPtsPreview()
   document.getElementById('er-pos').addEventListener('input', actualizarErPtsPreview)
   document.getElementById('edit-ronda-overlay').style.display='flex'
+  loadHolesForEdit(id)
 }
 function closeEditRonda(){
   document.getElementById('edit-ronda-overlay').style.display='none'
@@ -1673,6 +1684,43 @@ async function saveEditRonda(){
   renderStatMiJuego()
   loadDashboard()
   toast('✓ Ronda actualizada')
+}
+
+let _erHoles=[]
+async function loadHolesForEdit(rondaId){
+  const grid=document.getElementById('er-holes-grid')
+  if(!grid) return
+  grid.innerHTML='<div style="grid-column:1/-1;color:var(--tx3);font-size:12px;text-align:center;padding:8px">Cargando hoyos...</div>'
+  const {data}=await SB.from('scorecard').select('*').eq('ronda_id',rondaId).order('hoyo')
+  _erHoles=data||[]
+  if(!_erHoles.length){
+    grid.innerHTML='<div style="grid-column:1/-1;color:var(--tx3);font-size:12px;text-align:center;padding:8px">Sin hoyos registrados</div>'
+    return
+  }
+  grid.innerHTML=_erHoles.map(h=>`
+    <div style="background:rgba(255,255,255,.04);border-radius:6px;padding:6px;text-align:center">
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:2px">H${h.hoyo}</div>
+      <div style="font-size:9px;color:var(--tx3);margin-bottom:4px">P${h.par}</div>
+      <input type="number" min="1" max="20" value="${h.golpes}" data-hoyo="${h.hoyo}" data-par="${h.par}" style="width:100%;background:rgba(255,255,255,.08);border:0.5px solid rgba(255,255,255,.12);border-radius:4px;color:#fff;font-size:15px;font-family:'Barlow Condensed',sans-serif;font-weight:700;text-align:center;padding:4px 0;box-sizing:border-box">
+    </div>
+  `).join('')
+}
+async function saveHolesEdit(){
+  const rondaId=document.getElementById('er-id').value
+  const inputs=[...document.querySelectorAll('#er-holes-grid input[data-hoyo]')]
+  if(!inputs.length){ toast('Sin hoyos para guardar'); return }
+  const updates=inputs.map(inp=>({ronda_id:rondaId,hoyo:parseInt(inp.getAttribute('data-hoyo')),par:parseInt(inp.getAttribute('data-par')),golpes:parseInt(inp.value)||1}))
+  const {error}=await SB.from('scorecard').upsert(updates,{onConflict:'ronda_id,hoyo'})
+  if(error){ toast('Error al guardar hoyos'); console.error(error); return }
+  const tg=updates.reduce((a,u)=>a+u.golpes,0)
+  const tp=updates.reduce((a,u)=>a+u.par,0)
+  const svp=tg-tp
+  await SB.from('rondas').update({total_golpes:tg,score_vs_par:svp}).eq('id',rondaId)
+  document.getElementById('er-svp').value=svp
+  document.getElementById('er-golpes').value=tg
+  if(_statData){ const idx=_statData.findIndex(r=>r.id===rondaId); if(idx>=0) _statData[idx]={..._statData[idx],total_golpes:tg,score_vs_par:svp} }
+  toast('✓ Hoyos actualizados')
+  loadDashboard()
 }
 
 async function deleteRonda(id, from){
@@ -2016,6 +2064,14 @@ async function saveRound(){
   const allSc=_groupEnabled?_gScores[0]:sc
   const done=allSc.filter(s=>s!==null)
   if(!done.length){toast('Ingresá al menos un hoyo');return}
+  if(_groupEnabled){
+    const names=getGroupNames()
+    for(let pi=1;pi<=3;pi++){
+      if(_gScores[pi].some(s=>s!==null)&&!names[pi]){ toast('Ingresá el nombre del jugador '+(pi+1)); return }
+    }
+    const activeNames=names.filter(Boolean)
+    if(new Set(activeNames).size<activeNames.length){ toast('Los nombres de jugadores no pueden repetirse'); return }
+  }
   const tg=done.reduce((a,b)=>a+b,0)
   const tp=H.filter((_,i)=>allSc[i]!==null).reduce((a,h)=>a+h.par,0)
   const svp=tg-tp
@@ -2042,10 +2098,7 @@ async function saveRound(){
 
   // 1. Mostrar resumen SIEMPRE primero (UX inmediata)
   showSummary()
-  // 2. Limpiar draft (ronda completada, ya no se puede retomar)
-  localStorage.removeItem(DRAFT_KEY)
-  document.getElementById('draft-card') && (document.getElementById('draft-card').style.display='none')
-  // 3. Resetear scorecard
+  // 2. Resetear scorecard
   scores=new Array(getCourseHoles(_selCourse).length).fill(null)
   _gScores=[...Array(4)].map(()=>new Array(18).fill(null))
   hi=0; renderScorecard()
@@ -2105,6 +2158,8 @@ async function saveRound(){
       if(rows.length) await SB.from('scorecard').insert(rows)
     }catch(se){console.warn('scorecard insert:',se)}
     setStatus('✓','rgba(26,122,58,.15)','#4ade80','Ronda guardada correctamente')
+    localStorage.removeItem(DRAFT_KEY)
+    document.getElementById('draft-card') && (document.getElementById('draft-card').style.display='none')
     loadDashboard()
   }catch(e){
     const msg=e?.message||e?.error_description||e?.code||JSON.stringify(e)||'Error desconocido'
