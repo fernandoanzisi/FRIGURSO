@@ -956,6 +956,7 @@ body{display:flex;align-items:center;justify-content:center}
           <div class="li" style="cursor:pointer" onclick="go('sc-canchas');if(!window._allCanchas||!window._allCanchas.length)renderStaticData();else renderCanchas('')"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)">⛳ Explorar canchas</span><span style="color:var(--tx3)">›</span></div>
           <div class="li" style="cursor:pointer;display:none" id="install-li" onclick="installApp()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--c3)">📲 Instalar como app</span><span style="color:var(--c3)">›</span></div>
           <div class="li" style="cursor:pointer" id="notif-li" onclick="toggleNotificaciones()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)" id="notif-li-txt">🔔 Activar notificaciones de torneos</span><span id="notif-li-badge" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--tx3)">OFF</span></div>
+          <div class="li" style="cursor:pointer" onclick="toggleSound()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)"><span id="sound-li-icon">🔊</span> Sonidos y vibración</span><span id="sound-li-badge" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--tx3)">ON</span></div>
           <div class="li" style="cursor:pointer" onclick="openLiveView()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)">📡 Ver jugador en vivo</span><span style="color:var(--tx3)">›</span></div>
           <div class="li" style="cursor:pointer" onclick="doLogout()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--red)">🚪 Cerrar sesión</span></div>
         </div>
@@ -1948,13 +1949,20 @@ function scMove(d){hi=Math.max(0,Math.min(getCourseHoles(_selCourse).length-1,hi
 // SONIDOS — Web Audio API, sin archivos externos
 // ══════════════════════════════════════════════════════════════
 let _soundOn=localStorage.getItem('fg_sound')!=='0'
+function _syncSoundUI(){
+  const icon=_soundOn?'🔊':'🔇'
+  const badge=_soundOn?'ON':'OFF'
+  const btn=document.getElementById('btn-sound'); if(btn) btn.textContent=icon
+  const li=document.getElementById('sound-li-icon'); if(li) li.textContent=icon
+  const lb=document.getElementById('sound-li-badge'); if(lb) lb.textContent=badge
+}
 function toggleSound(){
   _soundOn=!_soundOn
   localStorage.setItem('fg_sound',_soundOn?'1':'0')
-  const btn=document.getElementById('btn-sound')
-  if(btn) btn.textContent=_soundOn?'🔊':'🔇'
+  _syncSoundUI()
   if(_soundOn) _playNotes([[523.25,0,.08,.25]])
 }
+function _vib(pat){ try{ if(navigator.vibrate) navigator.vibrate(pat) }catch(_){} }
 function _playNotes(notes){
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)()
@@ -1976,12 +1984,22 @@ function _playNotes(notes){
 function playSoundResult(golpes,par){
   if(!_soundOn) return
   const d=golpes-par
-  if(golpes===1)         _playNotes([[523.25,0,.1],[659.25,.1,.1],[783.99,.2,.1],[1046.5,.32,.4,.6]])  // Hole in one 🎉
-  else if(d<=-2)         _playNotes([[523.25,0,.1],[659.25,.11,.1],[783.99,.22,.1],[1046.5,.33,.32,.5]])  // Eagle
-  else if(d===-1)        _playNotes([[523.25,0,.1,.4],[659.25,.13,.25,.4]])  // Birdie
-  else if(d===0)         _playNotes([[392,0,.2,.28]])  // Par
-  else if(d===1)         _playNotes([[392,0,.1,.28],[329.63,.13,.22,.25]])  // Bogey
-  else                   _playNotes([[392,0,.1,.28],[329.63,.13,.1,.22],[261.63,.25,.22,.22]])  // Dbl bogey+
+  if(golpes===1){         _playNotes([[523.25,0,.1],[659.25,.1,.1],[783.99,.2,.1],[1046.5,.32,.4,.6]]); _vib([80,40,80,40,200]) }  // Hole in one
+  else if(d<=-2){         _playNotes([[523.25,0,.1],[659.25,.11,.1],[783.99,.22,.1],[1046.5,.33,.32,.5]]); _vib([60,30,120]) }     // Eagle
+  else if(d===-1){        _playNotes([[523.25,0,.1,.4],[659.25,.13,.25,.4]]); _vib([60]) }                                         // Birdie
+  else if(d===0){         _playNotes([[392,0,.2,.28]]); _vib([25]) }                                                               // Par
+  else if(d===1){         _playNotes([[392,0,.1,.28],[329.63,.13,.22,.25]]); _vib([40,25,40]) }                                    // Bogey
+  else{                   _playNotes([[392,0,.1,.28],[329.63,.13,.1,.22],[261.63,.25,.22,.22]]); _vib([50,25,50,25,50]) }          // Dbl bogey+
+}
+function playSoundSave(){
+  if(!_soundOn) return
+  _playNotes([[392,0,.08,.3],[523.25,.1,.08,.35],[659.25,.2,.25,.4]])
+  _vib([40,20,80])
+}
+function playSoundLivePing(){
+  if(!_soundOn) return
+  _playNotes([[880,0,.06,.2],[1108.73,.08,.12,.18]])
+  _vib([30])
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2202,6 +2220,7 @@ async function saveRound(){
       if(rows.length) await SB.from('scorecard').insert(rows)
     }catch(se){console.warn('scorecard insert:',se)}
     setStatus('✓','rgba(26,122,58,.15)','#4ade80','Ronda guardada correctamente')
+    playSoundSave()
     localStorage.removeItem(DRAFT_KEY)
     document.getElementById('draft-card') && (document.getElementById('draft-card').style.display='none')
     loadDashboard()
@@ -3144,6 +3163,7 @@ function conectarLive(jugadorId, nombre){
   if(window._liveViewChannel) SB.removeChannel(window._liveViewChannel)
   window._liveViewChannel=SB.channel('live:'+jugadorId)
   window._liveViewChannel.on('broadcast',{event:'score'},({payload:p})=>{
+    playSoundLivePing()
     const svpStr=p.score_vs_par===0?'E':p.score_vs_par>0?'+'+p.score_vs_par:p.score_vs_par
     const col=p.score_vs_par<0?'var(--birdie)':p.score_vs_par>0?'var(--bogey)':'var(--tx)'
     content.innerHTML=`
@@ -4023,6 +4043,7 @@ async function loadPerfil(){
     document.getElementById('p-golpes').innerHTML='<div class="empty"><div class="empty-i">⚽</div><div class="empty-t">Jugá tu primera ronda</div></div>'
   }
   actualizarNotifUI()
+  _syncSoundUI()
 }
 
 function renderLogros(rondas, tally){
