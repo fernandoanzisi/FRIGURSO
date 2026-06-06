@@ -1461,7 +1461,7 @@ function tab(btn,id){
   if(btn) btn.classList.add('on')
   go(id)
   if(id!=='sc-home'&&_photoTimer){ clearInterval(_photoTimer); _photoTimer=null }
-  if(id==='sc-home') startHeroSlideshow()
+  if(id==='sc-home'){ startHeroSlideshow(); loadDashboard() }
   if(id==='sc-historial') loadHistorial()
   if(id==='sc-perfil') loadPerfil()
   if(id==='sc-ranking') loadRanking()
