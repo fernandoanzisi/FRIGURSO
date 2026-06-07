@@ -757,11 +757,13 @@ body{display:flex;align-items:center;justify-content:center}
             <button onclick="filterMedia('argentina')" class="mcat" data-cat="argentina" style="background:rgba(255,255,255,.1);border:none;border-radius:20px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:var(--tx2);cursor:pointer;white-space:nowrap;flex-shrink:0">🇦🇷 ARGENTINA</button>
           </div>
         </div>
+        <!-- Botón agregar video — visible y accesible -->
+        <div style="padding:8px 16px 0">
+          <button onclick="abrirFormMedia()" style="width:100%;background:rgba(74,222,128,.12);border:1px dashed rgba(74,222,128,.4);border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--c3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+            <span style="font-size:20px">+</span> SUBIR VIDEO DE YOUTUBE (visible para todos)
+          </button>
+        </div>
         <div id="media-grid" style="padding:8px 16px 80px"></div>
-        <!-- Botón agregar video -->
-        <button onclick="abrirFormMedia()" style="position:fixed;bottom:76px;right:16px;background:var(--c3);border:none;border-radius:50px;padding:12px 20px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#000;cursor:pointer;box-shadow:0 4px 20px rgba(74,222,128,.4);display:flex;align-items:center;gap:8px;z-index:50" id="btn-add-media">
-          <span style="font-size:18px">+</span> AGREGAR VIDEO
-        </button>
         <!-- Panel agregar video (reemplaza prompt()) -->
         <div id="add-media-panel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-end">
           <div style="background:var(--bg2);border-radius:20px 20px 0 0;padding:20px 16px 32px;width:100%;border-top:0.5px solid var(--bd)">
@@ -3442,18 +3444,38 @@ function selCatMedia(cat){
   if(active){active.style.background='var(--c3)';active.style.color='#000'}
 }
 
-function confirmarAgregarVideo(){
+async function confirmarAgregarVideo(){
   const url=document.getElementById('add-media-url').value.trim()
   const titulo=document.getElementById('add-media-titulo').value.trim()||'Video FootGolf'
   if(!url){ toast('Pegá la URL de YouTube'); return }
   const ytId=extraerYtId(url)
   if(!ytId){ toast('❌ URL no reconocida — pegá el link de YouTube completo'); return }
-  const guardados=JSON.parse(localStorage.getItem('fg_media_custom')||'[]')
-  if(guardados.some(g=>g.youtube_id===ytId)){ toast('Ese video ya está agregado'); return }
-  guardados.unshift({id:ytId,youtube_id:ytId,tipo:'video',cat:_addMediaCat,titulo,desc:'',emoji:'▶️',destacado:false,agregado:Date.now()})
-  try{ localStorage.setItem('fg_media_custom',JSON.stringify(guardados)) }catch(_){ toast('Error al guardar'); return }
+
   cerrarFormMedia()
-  toast('✓ Video agregado: '+titulo)
+  toast('⏳ Subiendo para todos...')
+
+  // Guardar en Supabase — visible para TODOS los usuarios
+  const {error}=await SB.from('media_posts').insert({
+    youtube_id:ytId,
+    titulo,
+    tipo:'video',
+    categoria:_addMediaCat,
+    emoji:'▶️',
+    destacado:false,
+    subido_por:USER?.id||null
+  })
+
+  if(error){
+    // Fallback: guardar solo local si falla Supabase
+    const guardados=JSON.parse(localStorage.getItem('fg_media_custom')||'[]')
+    if(!guardados.some(g=>g.youtube_id===ytId)){
+      guardados.unshift({id:ytId,youtube_id:ytId,tipo:'video',cat:_addMediaCat,titulo,desc:'',emoji:'▶️',destacado:false,agregado:Date.now()})
+      try{ localStorage.setItem('fg_media_custom',JSON.stringify(guardados)) }catch(_){}
+    }
+    toast('✓ Video guardado (solo en tu dispositivo)')
+  } else {
+    toast('✓ "'+titulo+'" — visible para todos')
+  }
   renderMedia(_mediaCatActual)
 }
 
