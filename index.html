@@ -3459,12 +3459,30 @@ function confirmarAgregarVideo(){
   guardados.unshift({id:ytId,youtube_id:ytId,tipo:'video',cat:_addMediaCat,titulo,desc:'',emoji:'▶️',destacado:false,agregado:Date.now()})
   try{ localStorage.setItem('fg_media_custom',JSON.stringify(guardados)) }catch(_){}
 
-  // 2. Cerrar panel y reproducir el video AHORA MISMO — sin buscar en la grilla
+  // 2. Cerrar panel y mostrar el video en la grilla inmediatamente
   cerrarFormMedia()
-  playMedia(ytId, titulo)
-  toast('✓ "'+titulo+'" — tocá ▶ para ver')
 
-  // 3. Actualizar grilla en segundo plano
+  // Insertar la card del video al tope de la grilla SIN esperar Supabase
+  const grid=document.getElementById('media-grid')
+  if(grid){
+    const thumb=`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`
+    const card=document.createElement('div')
+    card.innerHTML=`<div onclick="playMedia('${ytId}','${titulo.replace(/'/g,"\\'")}')" style="background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.3);border-radius:var(--r16);overflow:hidden;margin-bottom:12px;cursor:pointer">
+      <div style="position:relative;width:100%;padding-top:56.25%;background:#111;overflow:hidden">
+        <img src="${thumb}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center">
+          <div style="background:rgba(0,0,0,.75);border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center"><span style="font-size:22px;margin-left:3px">▶</span></div>
+        </div>
+        <div style="position:absolute;top:8px;left:8px;background:var(--c3);border-radius:20px;padding:3px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;color:#000">NUEVO</div>
+      </div>
+      <div style="padding:12px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx)">${titulo}</div></div>
+    </div>`
+    grid.prepend(card)
+    document.getElementById('mv-media')?.scrollTo({top:0,behavior:'smooth'})
+  }
+  toast('✓ Video agregado — tocá para reproducir')
+
+  // 3. Actualizar grilla completa en segundo plano
   filterMedia('todos')
 
   // 4. Sincronizar con Supabase (para que otros también lo vean)
@@ -3519,14 +3537,31 @@ async function loadMundialNoticias(){
   // Cargar noticias del mundial desde Supabase
   const {data}=await SB.from('mundial_noticias').select('*').order('created_at',{ascending:false}).limit(20).catch(()=>({data:null}))
   if(!data||!data.length){
-    feed.innerHTML=`<div style="text-align:center;padding:30px 0">
-      <div style="font-size:36px;margin-bottom:10px">🌍</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--tx);margin-bottom:8px">SIGUE EL MUNDIAL EN VIVO</div>
-      <div style="font-size:14px;color:var(--tx2);margin-bottom:20px">Resultados, noticias y highlights del FIFG World Cup Acapulco 2026</div>
-      <button onclick="window.open('https://www.instagram.com/fifgfootgolfworldchampionship/','_blank')" style="width:100%;background:linear-gradient(135deg,#e1306c,#f77737);border:none;border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;margin-bottom:10px">📸 Instagram Oficial FIFG</button>
-      <button onclick="window.open('https://www.footgolf.sport/acapulcoworldcup2026/','_blank')" style="width:100%;background:rgba(255,255,255,.1);border:none;border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--tx);cursor:pointer;margin-bottom:10px">🌐 Sitio Oficial</button>
-      <button onclick="window.open('https://www.acapulco2026.com/full-competition','_blank')" style="width:100%;background:rgba(255,255,255,.1);border:none;border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--tx);cursor:pointer">🏆 Todos los resultados</button>
-    </div>`
+    feed.innerHTML=`
+      <div style="background:linear-gradient(135deg,rgba(74,222,128,.12),rgba(14,165,233,.08));border:0.5px solid rgba(74,222,128,.25);border-radius:var(--r16);padding:16px;margin-bottom:14px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(74,222,128,.6);font-weight:700;letter-spacing:1px;margin-bottom:6px">🌍 FIFG WORLD CUP 2026</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px">Acapulco, México</div>
+        <div style="font-size:13px;color:var(--tx2)">Tres Vidas Golf Club · Turtle Dunes Country Club</div>
+        <div style="font-size:12px;color:var(--tx3);margin-top:6px">5–7 de junio de 2026</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        <div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r12);padding:12px;text-align:center">
+          <div style="font-size:28px;margin-bottom:4px">🇦🇷</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--tx)">ARGENTINA</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:2px">Selección Nacional</div>
+        </div>
+        <div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r12);padding:12px;text-align:center">
+          <div style="font-size:28px;margin-bottom:4px">⛳</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--tx)">18 HOYOS</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:2px">Individual + Equipos</div>
+        </div>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--tx3);font-weight:700;letter-spacing:.5px;margin-bottom:8px">LINKS OFICIALES</div>
+      <button onclick="window.open('https://www.footgolf.sport/acapulcoworldcup2026/leaderboard-individual/','_blank')" style="width:100%;background:rgba(74,222,128,.1);border:0.5px solid rgba(74,222,128,.3);border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--c3);cursor:pointer;margin-bottom:8px;text-align:left">🏆 Leaderboard Individual →</button>
+      <button onclick="window.open('https://www.footgolf.sport/acapulcoworldcup2026/leaderboard-group','_blank')" style="width:100%;background:rgba(74,222,128,.1);border:0.5px solid rgba(74,222,128,.3);border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--c3);cursor:pointer;margin-bottom:8px;text-align:left">👥 Leaderboard Equipos →</button>
+      <button onclick="window.open('https://www.instagram.com/fifgfootgolfworldchampionship/','_blank')" style="width:100%;background:linear-gradient(135deg,rgba(225,48,108,.15),rgba(247,119,55,.15));border:0.5px solid rgba(225,48,108,.3);border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#e1306c;cursor:pointer;margin-bottom:8px;text-align:left">📸 Instagram Oficial FIFG →</button>
+      <button onclick="window.open('https://www.footgolf.sport/acapulcoworldcup2026/','_blank')" style="width:100%;background:rgba(255,255,255,.06);border:0.5px solid var(--bd);border-radius:var(--r12);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--tx2);cursor:pointer;text-align:left">🌐 Sitio oficial WC 2026 →</button>
+    `
     return
   }
   feed.innerHTML=data.map(n=>`
