@@ -3350,7 +3350,9 @@ function filterMedia(cat){
   })
   const active=document.querySelector(`.mcat[data-cat="${cat}"]`)
   if(active){active.style.background='var(--c3)';active.style.color='#000'}
-  renderMedia(cat)
+  renderMedia(cat).then(()=>{
+    document.getElementById('mv-media')?.scrollTo({top:0,behavior:'smooth'})
+  })
 }
 
 async function renderMedia(cat){
@@ -3444,39 +3446,31 @@ function selCatMedia(cat){
   if(active){active.style.background='var(--c3)';active.style.color='#000'}
 }
 
-async function confirmarAgregarVideo(){
+function confirmarAgregarVideo(){
   const url=document.getElementById('add-media-url').value.trim()
   const titulo=document.getElementById('add-media-titulo').value.trim()||'Video FootGolf'
   if(!url){ toast('Pegá la URL de YouTube'); return }
   const ytId=extraerYtId(url)
-  if(!ytId){ toast('❌ URL no reconocida — pegá el link de YouTube completo'); return }
+  if(!ytId){ toast('❌ URL no reconocida — pegá el link completo de YouTube'); return }
 
+  // 1. Guardar en localStorage inmediatamente (sin esperar red)
+  const guardados=JSON.parse(localStorage.getItem('fg_media_custom')||'[]')
+  if(guardados.some(g=>g.youtube_id===ytId)){ toast('Ese video ya está en la lista'); return }
+  const item={id:ytId,youtube_id:ytId,tipo:'video',cat:_addMediaCat,titulo,desc:'',emoji:'▶️',destacado:false,agregado:Date.now()}
+  guardados.unshift(item)
+  try{ localStorage.setItem('fg_media_custom',JSON.stringify(guardados)) }catch(_){}
+
+  // 2. Mostrar inmediatamente arriba de todo
   cerrarFormMedia()
-  toast('⏳ Subiendo para todos...')
+  filterMedia('todos')  // ir a TODOS para que siempre se vea
+  toast('✓ "'+titulo+'" agregado')
 
-  // Guardar en Supabase — visible para TODOS los usuarios
-  const {error}=await SB.from('media_posts').insert({
-    youtube_id:ytId,
-    titulo,
-    tipo:'video',
-    categoria:_addMediaCat,
-    emoji:'▶️',
-    destacado:false,
-    subido_por:USER?.id||null
-  })
-
-  if(error){
-    // Fallback: guardar solo local si falla Supabase
-    const guardados=JSON.parse(localStorage.getItem('fg_media_custom')||'[]')
-    if(!guardados.some(g=>g.youtube_id===ytId)){
-      guardados.unshift({id:ytId,youtube_id:ytId,tipo:'video',cat:_addMediaCat,titulo,desc:'',emoji:'▶️',destacado:false,agregado:Date.now()})
-      try{ localStorage.setItem('fg_media_custom',JSON.stringify(guardados)) }catch(_){}
-    }
-    toast('✓ Video guardado (solo en tu dispositivo)')
-  } else {
-    toast('✓ "'+titulo+'" — visible para todos')
+  // 3. Intentar sincronizar con Supabase en segundo plano (para que otros lo vean)
+  if(USER){
+    SB.from('media_posts').insert({youtube_id:ytId,titulo,tipo:'video',categoria:_addMediaCat,emoji:'▶️',destacado:false,subido_por:USER.id})
+      .then(({error})=>{ if(!error) console.log('media synced to DB') })
+      .catch(()=>{})
   }
-  renderMedia(_mediaCatActual)
 }
 
 function cargarTVUrl(){
