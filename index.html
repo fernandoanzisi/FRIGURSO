@@ -771,7 +771,7 @@ body{display:flex;align-items:center;justify-content:center}
             </div>
             <div style="margin-bottom:12px">
               <div style="font-size:11px;color:var(--tx3);margin-bottom:5px;font-weight:600">URL DE YOUTUBE</div>
-              <input id="add-media-url" type="url" placeholder="https://youtube.com/watch?v=..." class="inp" style="margin-bottom:0">
+              <input id="add-media-url" type="text" inputmode="url" placeholder="https://youtube.com/watch?v=..." class="inp" style="margin-bottom:0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
             </div>
             <div style="margin-bottom:12px">
               <div style="font-size:11px;color:var(--tx3);margin-bottom:5px;font-weight:600">TÍTULO</div>
@@ -3404,9 +3404,20 @@ function playMedia(ytId,titulo){
 }
 
 function extraerYtId(url){
-  // Soporta: watch?v=, youtu.be/, /live/, /shorts/, /embed/
-  const m=url.match(/(?:v=|youtu\.be\/|\/live\/|\/shorts\/|\/embed\/)([a-zA-Z0-9_-]{11})/)
-  return m?m[1]:null
+  if(!url) return null
+  url=url.trim()
+  // Si pegan solo el ID directamente (11 chars alfanuméricos)
+  if(/^[a-zA-Z0-9_-]{11}$/.test(url)) return url
+  // watch?v=, ?v=, &v=
+  let m=url.match(/[?&]v=([a-zA-Z0-9_-]{11})/)
+  if(m) return m[1]
+  // youtu.be/ID, youtu.be/ID?si=...
+  m=url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/)
+  if(m) return m[1]
+  // /live/ID, /shorts/ID, /embed/ID
+  m=url.match(/\/(?:live|shorts|embed)\/([a-zA-Z0-9_-]{11})/)
+  if(m) return m[1]
+  return null
 }
 
 let _addMediaCat='todos'
@@ -3436,12 +3447,13 @@ function confirmarAgregarVideo(){
   const titulo=document.getElementById('add-media-titulo').value.trim()||'Video FootGolf'
   if(!url){ toast('Pegá la URL de YouTube'); return }
   const ytId=extraerYtId(url)
-  if(!ytId){ toast('❌ URL de YouTube no válida'); return }
+  if(!ytId){ toast('❌ URL no reconocida — pegá el link de YouTube completo'); return }
   const guardados=JSON.parse(localStorage.getItem('fg_media_custom')||'[]')
+  if(guardados.some(g=>g.youtube_id===ytId)){ toast('Ese video ya está agregado'); return }
   guardados.unshift({id:ytId,youtube_id:ytId,tipo:'video',cat:_addMediaCat,titulo,desc:'',emoji:'▶️',destacado:false,agregado:Date.now()})
-  localStorage.setItem('fg_media_custom',JSON.stringify(guardados))
+  try{ localStorage.setItem('fg_media_custom',JSON.stringify(guardados)) }catch(_){ toast('Error al guardar'); return }
   cerrarFormMedia()
-  toast('✓ Video agregado')
+  toast('✓ Video agregado: '+titulo)
   renderMedia(_mediaCatActual)
 }
 
