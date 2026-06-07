@@ -3453,23 +3453,23 @@ function confirmarAgregarVideo(){
   const ytId=extraerYtId(url)
   if(!ytId){ toast('❌ URL no reconocida — pegá el link completo de YouTube'); return }
 
-  // 1. Guardar en localStorage inmediatamente (sin esperar red)
+  // 1. Guardar en localStorage
   const guardados=JSON.parse(localStorage.getItem('fg_media_custom')||'[]')
   if(guardados.some(g=>g.youtube_id===ytId)){ toast('Ese video ya está en la lista'); return }
-  const item={id:ytId,youtube_id:ytId,tipo:'video',cat:_addMediaCat,titulo,desc:'',emoji:'▶️',destacado:false,agregado:Date.now()}
-  guardados.unshift(item)
+  guardados.unshift({id:ytId,youtube_id:ytId,tipo:'video',cat:_addMediaCat,titulo,desc:'',emoji:'▶️',destacado:false,agregado:Date.now()})
   try{ localStorage.setItem('fg_media_custom',JSON.stringify(guardados)) }catch(_){}
 
-  // 2. Mostrar inmediatamente arriba de todo
+  // 2. Cerrar panel y reproducir el video AHORA MISMO — sin buscar en la grilla
   cerrarFormMedia()
-  filterMedia('todos')  // ir a TODOS para que siempre se vea
-  toast('✓ "'+titulo+'" agregado')
+  playMedia(ytId, titulo)
+  toast('✓ "'+titulo+'" — tocá ▶ para ver')
 
-  // 3. Intentar sincronizar con Supabase en segundo plano (para que otros lo vean)
+  // 3. Actualizar grilla en segundo plano
+  filterMedia('todos')
+
+  // 4. Sincronizar con Supabase (para que otros también lo vean)
   if(USER){
-    SB.from('media_posts').insert({youtube_id:ytId,titulo,tipo:'video',categoria:_addMediaCat,emoji:'▶️',destacado:false,subido_por:USER.id})
-      .then(({error})=>{ if(!error) console.log('media synced to DB') })
-      .catch(()=>{})
+    SB.from('media_posts').insert({youtube_id:ytId,titulo,tipo:'video',categoria:_addMediaCat,emoji:'▶️',destacado:false,subido_por:USER.id}).catch(()=>{})
   }
 }
 
