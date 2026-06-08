@@ -826,6 +826,58 @@ body{display:flex;align-items:center;justify-content:center}
       <div class="sec sec-b" id="equipos-list"></div>
     </div>
 
+    <!-- COMUNIDAD -->
+    <div class="sc" id="sc-comunidad">
+      <div class="hdr" style="flex-shrink:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+          <div><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Comunidad 🏘</div></div>
+          <button onclick="loadComunidad()" style="background:rgba(255,255,255,.08);border:none;border-radius:var(--r8);padding:8px 12px;color:var(--tx2);font-size:18px;cursor:pointer">↻</button>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px" id="com-list">
+        <div style="text-align:center;padding:30px 0;color:var(--tx3)">Cargando...</div>
+      </div>
+      <!-- Feed overlay -->
+      <div id="com-feed-ov" style="position:absolute;inset:0;background:var(--bg);z-index:310;display:none;flex-direction:column">
+        <div style="background:var(--c1);padding:14px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;border-bottom:0.5px solid rgba(74,222,128,.12)">
+          <button onclick="cerrarComFeed()" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:7px 14px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer">← VOLVER</button>
+          <div style="flex:1;min-width:0">
+            <div id="com-feed-nombre" style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+            <div id="com-feed-ciudad" style="font-size:11px;color:var(--tx3)"></div>
+          </div>
+          <button onclick="abrirNuevoPost()" style="background:var(--c3);border:none;border-radius:var(--r8);padding:7px 14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#fff;cursor:pointer;flex-shrink:0">+ POST</button>
+        </div>
+        <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px" id="com-feed-posts"></div>
+      </div>
+      <!-- Nuevo post overlay -->
+      <div id="com-nuevo-post" style="position:absolute;inset:0;background:var(--bg);z-index:320;display:none;flex-direction:column">
+        <div style="background:var(--c1);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:0.5px solid rgba(74,222,128,.12)">
+          <button onclick="cerrarNuevoPost()" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:7px 14px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer">✕</button>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#fff">NUEVO POST</div>
+          <button id="btn-publicar" onclick="publicarPost()" style="background:var(--c3);border:none;border-radius:var(--r8);padding:7px 16px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#fff;cursor:pointer">PUBLICAR</button>
+        </div>
+        <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:12px">
+          <div style="font-size:11px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">COMUNIDAD</div>
+          <div id="np-cancha-lbl" style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:var(--c3);margin-top:-6px"></div>
+          <textarea id="np-texto" placeholder="¿Qué querés compartir?" style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r12);padding:14px;color:var(--tx);font-size:15px;resize:none;min-height:100px;font-family:inherit;outline:none;-webkit-appearance:none" rows="4"></textarea>
+          <div>
+            <div style="font-size:11px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;margin-bottom:8px">FOTO</div>
+            <input type="file" id="np-foto-input" accept="image/*" style="display:none" onchange="previewFoto(this)">
+            <div id="np-foto-preview" style="display:none;position:relative;margin-bottom:8px">
+              <img id="np-foto-img" style="width:100%;border-radius:var(--r12);max-height:220px;object-fit:cover">
+              <button onclick="quitarFoto()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.7);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:14px;cursor:pointer">✕</button>
+            </div>
+            <button onclick="document.getElementById('np-foto-input').click()" style="width:100%;background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.2);border-radius:var(--r12);padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--tx2);cursor:pointer">📷 AGREGAR FOTO</button>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;margin-bottom:8px">VIDEO DE YOUTUBE (opcional)</div>
+            <input type="text" inputmode="url" id="np-yt-url" placeholder="https://youtube.com/..." class="inp" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="margin-bottom:0">
+          </div>
+          <div id="np-status" style="display:none;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--c3);padding:8px">Publicando...</div>
+        </div>
+      </div>
+    </div>
+
     <!-- HISTORIAL / ESTADÍSTICAS -->
     <div class="sc" id="sc-historial">
       <div class="hdr"><div style="display:flex;align-items:center;gap:12px"><button class="sc-back" onclick="tab(document.querySelector('[data-sc=sc-perfil]'),'sc-perfil')">← VOLVER</button><div><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Estadísticas 📊</div></div></div></div>
@@ -985,6 +1037,12 @@ body{display:flex;align-items:center;justify-content:center}
     <div id="sum-tour-note" style="display:none;background:rgba(255,193,7,.1);border:0.5px solid rgba(255,193,7,.25);border-radius:var(--r8);padding:9px 16px;font-size:13px;color:#ffc107;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:8px">🌍 Registrada en FIFG World Cup 2026</div>
     <div id="sum-pts-note" style="display:none;background:rgba(74,222,128,.08);border:0.5px solid rgba(74,222,128,.2);border-radius:var(--r8);padding:9px 16px;font-size:13px;color:var(--c3);font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:8px;width:100%;text-align:center"></div>
     <div id="sum-save-status" style="display:none;width:100%;border-radius:var(--r8);padding:10px 14px;font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:4px;text-align:left"></div>
+    <div id="sum-actividad" style="display:none;width:100%;background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r12);padding:12px;margin-bottom:8px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.5px;margin-bottom:10px">ACTIVIDAD</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px" id="sum-act-stats"></div>
+      <div id="sum-act-clima" style="display:none;background:rgba(14,165,233,.08);border:0.5px solid rgba(14,165,233,.2);border-radius:var(--r8);padding:8px 12px;font-size:12px;color:rgba(122,184,245,.8);margin-bottom:10px"></div>
+      <div id="sum-act-mapa" style="display:none"></div>
+    </div>
     <div style="display:flex;gap:10px;width:100%;margin-top:8px">
       <button onclick="shareRound()" style="flex:1;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.15);border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer">📤 COMPARTIR</button>
       <button onclick="closeSummary()" style="flex:1.6;background:var(--c3);border:none;border-radius:var(--r16);padding:15px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(74,222,128,.4)">✓ CONTINUAR</button>
@@ -1138,7 +1196,7 @@ body{display:flex;align-items:center;justify-content:center}
   <div class="nb" id="navbar" style="display:none">
     <button class="nbi on" data-sc="sc-home" onclick="tab(this,'sc-home')"><span class="nbi-i">🏠</span><span class="nbi-l">INICIO</span></button>
     <button class="nbi" data-sc="sc-torneos" onclick="tab(this,'sc-torneos')"><span class="nbi-i">🏆</span><span class="nbi-l">TORNEOS</span></button>
-    <button class="nbi" data-sc="sc-mundial" onclick="tab(this,'sc-mundial')"><span class="nbi-i">🌍</span><span class="nbi-l">MUNDIAL</span></button>
+    <button class="nbi" data-sc="sc-comunidad" onclick="tab(this,'sc-comunidad')"><span class="nbi-i">🏘</span><span class="nbi-l">COMUNIDAD</span></button>
     <button class="nbi" data-sc="sc-ranking" onclick="tab(this,'sc-ranking')"><span class="nbi-i">🥇</span><span class="nbi-l">RANKING</span></button>
     <button class="nbi" data-sc="sc-perfil" onclick="tab(this,'sc-perfil')"><span class="nbi-i">👤</span><span class="nbi-l">PERFIL</span></button>
   </div>
@@ -1495,6 +1553,7 @@ function tab(btn,id){
   if(id==='sc-gps') getGPS()
   if(id==='sc-clima') loadClima()
   if(id==='sc-mundial') loadMundial()
+  if(id==='sc-comunidad') loadComunidad()
   if(id==='sc-canchas'){ if(window._allCanchas&&window._allCanchas.length) renderCanchas(''); else renderStaticData() }
 }
 // Hardware back button: restore previous screen instead of closing app
@@ -2240,6 +2299,7 @@ async function saveRound(){
     }catch(se){console.warn('scorecard insert:',se)}
     setStatus('✓','rgba(26,122,58,.15)','#4ade80','Ronda guardada correctamente')
     playSoundSave()
+    await _procesarActividad()
     localStorage.removeItem(DRAFT_KEY)
     document.getElementById('draft-card') && (document.getElementById('draft-card').style.display='none')
     loadDashboard()
@@ -2284,6 +2344,7 @@ function showSummary(){
     ].filter(x=>x.v>0).map(x=>`<div class="sum-chip"><div class="sum-chip-v" style="color:${x.c}">${x.e} ${x.v}</div><div class="sum-chip-l">${x.l}</div></div>`).join('')
   }
   document.getElementById('sum-overlay').classList.add('on')
+  _showActividadEnSummary()
 }
 
 function closeSummary(){
@@ -2624,6 +2685,8 @@ function startRound(){
   _gScores=[...Array(4)].map(()=>new Array(getCourseHoles(_selCourse).length).fill(null))
   _activePlayer=0
   scores=new Array(getCourseHoles(_selCourse).length).fill(null)
+  _actividadData=null
+  _startGPSTrack()
   renderScorecard()
   go('sc-scorecard')
 }
@@ -3070,6 +3133,7 @@ function closeCanchaDetail(){
 function startRoundHere(){
   if(!_currentCancha) return
   closeCanchaDetail()
+  _actividadData=null; _startGPSTrack()
   const match=COURSES.find(c=>c.nombre===_currentCancha.nombre)
   if(match){
     _selCourse=match
@@ -4289,6 +4353,260 @@ function installApp(){
   } else {
     toast('Abrí ⋮ → Instalar app en Chrome')
   }
+}
+
+// ═══════════════════════════════════════════════
+// 🏘 COMUNIDAD
+// ═══════════════════════════════════════════════
+let _comCanchaActual=null
+
+async function loadComunidad(){
+  const list=document.getElementById('com-list')
+  if(!list) return
+  // Card WC archivado
+  const wc=`<div onclick="tab(document.querySelector('[data-sc=sc-mundo]'),'sc-mundial')" style="background:linear-gradient(135deg,rgba(255,193,7,.15),rgba(74,222,128,.08));border:0.5px solid rgba(255,193,7,.3);border-radius:var(--r16);padding:16px;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;gap:14px">
+    <div style="font-size:34px">🏆</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#ffc107;letter-spacing:.3px">WC ACAPULCO 2026</div>
+      <div style="font-size:11px;color:rgba(255,193,7,.55);margin-top:2px">Archivo histórico · FIFG World Cup</div>
+    </div>
+    <div style="font-size:18px;color:rgba(255,193,7,.4)">→</div>
+  </div>`
+  list.innerHTML=wc+`<div style="text-align:center;padding:16px;color:var(--tx3)"><div class="spin" style="margin:0 auto"></div></div>`
+  const {data:canchas}=await SB.from('canchas').select('id,nombre,ciudades(nombre)').eq('activa',true).order('nombre').catch(()=>({data:null}))
+  if(!canchas||!canchas.length){list.innerHTML=wc+`<div style="text-align:center;padding:20px;color:var(--tx3)">Sin canchas cargadas</div>`;return}
+  const {data:counts}=await SB.from('comunidad_posts').select('cancha_id').catch(()=>({data:null}))
+  const cm={}; if(counts) counts.forEach(r=>{cm[r.cancha_id]=(cm[r.cancha_id]||0)+1})
+  list.innerHTML=wc+canchas.map(c=>{
+    const ciudad=c.ciudades?.nombre||''; const n=cm[c.id]||0
+    return`<div onclick="abrirComFeed('${c.id}','${c.nombre.replace(/'/g,"\\'")}','${ciudad.replace(/'/g,"\\'")}')}" style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r16);padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px">
+      <div style="width:44px;height:44px;border-radius:50%;background:rgba(74,222,128,.12);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⛳</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.nombre}</div>
+        ${ciudad?`<div style="font-size:11px;color:var(--tx3);margin-top:1px">📍 ${ciudad}</div>`:''}
+      </div>
+      ${n>0?`<div style="background:var(--c3);border-radius:20px;padding:2px 9px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:#000;flex-shrink:0">${n}</div>`:''}
+    </div>`
+  }).join('')
+}
+
+function abrirComFeed(id,nombre,ciudad){
+  _comCanchaActual={id,nombre,ciudad}
+  document.getElementById('com-feed-nombre').textContent=nombre
+  document.getElementById('com-feed-ciudad').textContent=ciudad?'📍 '+ciudad:''
+  document.getElementById('com-feed-ov').style.display='flex'
+  cargarComPosts()
+}
+
+function cerrarComFeed(){
+  document.getElementById('com-feed-ov').style.display='none'
+  _comCanchaActual=null
+}
+
+async function cargarComPosts(){
+  const el=document.getElementById('com-feed-posts')
+  el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--tx3)"><div class="spin" style="margin:0 auto"></div></div>`
+  if(!_comCanchaActual) return
+  const {data}=await SB.from('comunidad_posts').select('*').eq('cancha_id',_comCanchaActual.id).order('created_at',{ascending:false}).limit(60).catch(()=>({data:null}))
+  if(!data||!data.length){
+    el.innerHTML=`<div style="text-align:center;padding:40px 0;color:var(--tx3)"><div style="font-size:36px;margin-bottom:10px">📸</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700">Sin posts todavía</div><div style="font-size:12px;margin-top:4px">¡Sé el primero en publicar algo!</div></div>`
+    return
+  }
+  el.innerHTML=data.map(p=>{
+    const t=_tiempoRel(p.created_at); const ini=(p.jugador_nombre||'U').charAt(0).toUpperCase()
+    let media=''
+    if(p.foto_url) media+=`<img src="${p.foto_url}" style="width:100%;border-radius:var(--r12);margin-top:10px;max-height:320px;object-fit:cover" loading="lazy" onerror="this.style.display='none'">`
+    if(p.youtube_id){
+      const th=`https://img.youtube.com/vi/${p.youtube_id}/maxresdefault.jpg`
+      media+=`<div onclick="playMedia('${p.youtube_id}','')" style="position:relative;width:100%;padding-top:56.25%;border-radius:var(--r12);overflow:hidden;margin-top:10px;cursor:pointer;background:#111"><img src="${th}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3)"><div style="background:rgba(0,0,0,.75);border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center"><span style="font-size:20px;margin-left:3px">▶</span></div></div></div>`
+    }
+    return`<div style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r16);padding:14px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:36px;height:36px;border-radius:50%;background:rgba(74,222,128,.18);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--c3);flex-shrink:0">${ini}</div>
+        <div style="flex:1"><div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--tx)">${p.jugador_nombre||'Jugador'}</div><div style="font-size:11px;color:var(--tx3)">${t}</div></div>
+        ${USER&&USER.id===p.jugador_id?`<button onclick="borrarComPost('${p.id}')" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:18px;cursor:pointer;padding:4px">🗑</button>`:''}
+      </div>
+      ${p.texto?`<div style="font-size:14px;color:var(--tx);line-height:1.5">${p.texto}</div>`:''}
+      ${media}
+    </div>`
+  }).join('')
+}
+
+function _tiempoRel(iso){
+  const s=(Date.now()-new Date(iso))/1000
+  if(s<60) return 'Ahora'
+  if(s<3600) return Math.floor(s/60)+' min'
+  if(s<86400) return Math.floor(s/3600)+' h'
+  if(s<604800) return Math.floor(s/86400)+' d'
+  return new Date(iso).toLocaleDateString('es-AR',{day:'numeric',month:'short'})
+}
+
+let _npFotoFile=null
+
+function abrirNuevoPost(){
+  if(!USER){toast('Iniciá sesión para publicar');return}
+  document.getElementById('np-texto').value=''
+  document.getElementById('np-yt-url').value=''
+  quitarFoto()
+  document.getElementById('np-status').style.display='none'
+  document.getElementById('np-cancha-lbl').textContent=_comCanchaActual?.nombre||''
+  document.getElementById('com-nuevo-post').style.display='flex'
+}
+
+function cerrarNuevoPost(){
+  document.getElementById('com-nuevo-post').style.display='none'
+  _npFotoFile=null
+}
+
+function previewFoto(input){
+  const file=input.files[0]; if(!file) return
+  _npFotoFile=file
+  const r=new FileReader()
+  r.onload=e=>{
+    document.getElementById('np-foto-img').src=e.target.result
+    document.getElementById('np-foto-preview').style.display='block'
+  }
+  r.readAsDataURL(file)
+}
+
+function quitarFoto(){
+  _npFotoFile=null
+  document.getElementById('np-foto-input').value=''
+  document.getElementById('np-foto-preview').style.display='none'
+  document.getElementById('np-foto-img').src=''
+}
+
+async function publicarPost(){
+  const texto=document.getElementById('np-texto').value.trim()
+  const ytRaw=document.getElementById('np-yt-url').value.trim()
+  const ytId=ytRaw?extraerYtId(ytRaw):null
+  if(!texto&&!_npFotoFile&&!ytId){toast('Agregá texto, foto o video');return}
+  if(!USER||!_comCanchaActual) return
+  const btn=document.getElementById('btn-publicar'); const st=document.getElementById('np-status')
+  btn.disabled=true; st.style.display='block'; st.textContent='Publicando...'
+  try{
+    let fotoUrl=null
+    if(_npFotoFile){
+      st.textContent='Subiendo foto...'
+      const ext=_npFotoFile.name.split('.').pop()||'jpg'
+      const path=`${USER.id}/${Date.now()}.${ext}`
+      const {data:up,error:upE}=await SB.storage.from('comunidad').upload(path,_npFotoFile,{contentType:_npFotoFile.type,upsert:false})
+      if(upE) throw upE
+      fotoUrl=SB.storage.from('comunidad').getPublicUrl(up.path).data.publicUrl
+    }
+    const nombre=JUGADOR?`${JUGADOR.nombre} ${JUGADOR.apellido||''}`.trim():'Jugador'
+    const post={cancha_id:_comCanchaActual.id,jugador_id:USER.id,jugador_nombre:nombre}
+    if(texto) post.texto=texto
+    if(fotoUrl) post.foto_url=fotoUrl
+    if(ytId) post.youtube_id=ytId
+    const {error}=await SB.from('comunidad_posts').insert(post)
+    if(error) throw error
+    cerrarNuevoPost(); toast('✓ Post publicado')
+    cargarComPosts(); loadComunidad()
+  }catch(e){toast('Error: '+(e.message||'Intentá de nuevo'));console.error(e)}
+  finally{btn.disabled=false; st.style.display='none'}
+}
+
+async function borrarComPost(id){
+  if(!confirm('¿Borrar este post?')) return
+  await SB.from('comunidad_posts').delete().eq('id',id).catch(()=>{})
+  toast('Post eliminado'); cargarComPosts()
+}
+
+// ═══════════════════════════════════════════════
+// 🏃 ACTIVITY TRACKING (GPS + clima + distancia)
+// ═══════════════════════════════════════════════
+let _gpsTrack=[], _gpsWatchId=null, _actividadData=null
+
+function _startGPSTrack(){
+  _gpsTrack=[]
+  if(!navigator.geolocation) return
+  _gpsWatchId=navigator.geolocation.watchPosition(
+    pos=>{ _gpsTrack.push({lat:pos.coords.latitude,lon:pos.coords.longitude,t:Date.now()}) },
+    ()=>{},
+    {enableHighAccuracy:true,maximumAge:5000,timeout:10000}
+  )
+}
+
+function _stopGPSTrack(){
+  if(_gpsWatchId!=null){ navigator.geolocation.clearWatch(_gpsWatchId); _gpsWatchId=null }
+}
+
+function _haversineKm(la1,lo1,la2,lo2){
+  const R=6371,dL=(la2-la1)*Math.PI/180,dO=(lo2-lo1)*Math.PI/180
+  const a=Math.sin(dL/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dO/2)**2
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
+}
+
+function _calcDistancia(track){
+  let d=0
+  for(let i=1;i<track.length;i++) d+=_haversineKm(track[i-1].lat,track[i-1].lon,track[i].lat,track[i].lon)
+  return d
+}
+
+async function _fetchClimaRonda(lat,lon){
+  try{
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,weather_code,precipitation&timezone=auto`).then(r=>r.json())
+    if(!r.current) return null
+    const c=r.current
+    return{temp:Math.round(c.temperature_2m),viento:Math.round(c.wind_speed_10m),lluvia:c.precipitation>0,emoji:wcEmoji(c.weather_code),desc:wcDesc(c.weather_code)}
+  }catch(e){return null}
+}
+
+function _rutaSVG(track){
+  if(track.length<2) return ''
+  const lats=track.map(p=>p.lat),lons=track.map(p=>p.lon)
+  const minLa=Math.min(...lats),maxLa=Math.max(...lats),minLo=Math.min(...lons),maxLo=Math.max(...lons)
+  const W=280,H=150,pad=14
+  const sx=maxLo>minLo?(W-2*pad)/(maxLo-minLo):1
+  const sy=maxLa>minLa?(H-2*pad)/(maxLa-minLa):1
+  const s=Math.min(sx,sy)
+  const pts=track.map(p=>({x:pad+(p.lon-minLo)*s,y:H-pad-(p.lat-minLa)*s}))
+  const path=pts.map((p,i)=>(i===0?'M':'L')+p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ')
+  const f=pts[0],l=pts[pts.length-1]
+  return`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;border-radius:10px;background:#0a1a14;width:100%;height:auto">
+    <path d="${path}" fill="none" stroke="rgba(74,222,128,.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${f.x.toFixed(1)}" cy="${f.y.toFixed(1)}" r="5" fill="#4ade80"/>
+    <circle cx="${l.x.toFixed(1)}" cy="${l.y.toFixed(1)}" r="5" fill="#f87171"/>
+    <text x="${f.x.toFixed(1)}" y="${(+f.y-8).toFixed(1)}" fill="#4ade80" font-size="9" text-anchor="middle">INICIO</text>
+    <text x="${l.x.toFixed(1)}" y="${(+l.y-8).toFixed(1)}" fill="#f87171" font-size="9" text-anchor="middle">FIN</text>
+  </svg>`
+}
+
+async function _procesarActividad(){
+  const track=[..._gpsTrack]
+  _stopGPSTrack()
+  if(track.length<3){_actividadData=null;return}
+  const dist=_calcDistancia(track)
+  if(dist<0.05){_actividadData=null;return} // menos de 50m = no válido
+  const pasos=Math.round(dist*1300)
+  const cal=Math.round(dist*65)
+  const last=track[track.length-1]
+  const clima=await _fetchClimaRonda(last.lat,last.lon)
+  const durMin=Math.round((track[track.length-1].t-track[0].t)/60000)
+  _actividadData={dist:dist.toFixed(2),pasos,cal,durMin,clima,track}
+}
+
+function _showActividadEnSummary(){
+  const d=_actividadData
+  const el=document.getElementById('sum-actividad')
+  if(!el) return
+  if(!d){el.style.display='none';return}
+  el.style.display='block'
+  document.getElementById('sum-act-stats').innerHTML=[
+    {e:'📏',v:d.dist+' km',l:'DISTANCIA'},
+    {e:'👣',v:d.pasos.toLocaleString(),l:'PASOS'},
+    {e:'🔥',v:d.cal+' kcal',l:'CALORÍAS'},
+  ].map(x=>`<div style="background:rgba(255,255,255,.05);border-radius:var(--r8);padding:8px;text-align:center"><div style="font-size:18px;margin-bottom:2px">${x.e}</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--tx)">${x.v}</div><div style="font-size:10px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700">${x.l}</div></div>`).join('')
+  const climaEl=document.getElementById('sum-act-clima')
+  if(d.clima){
+    climaEl.style.display='block'
+    climaEl.innerHTML=`${d.clima.emoji} ${d.clima.desc} · ${d.clima.temp}°C · Viento ${d.clima.viento} km/h${d.clima.lluvia?' · 🌧 Lluvia':''}`
+  } else {climaEl.style.display='none'}
+  const mapaEl=document.getElementById('sum-act-mapa')
+  const svg=_rutaSVG(d.track)
+  if(svg){mapaEl.style.display='block';mapaEl.innerHTML=`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.5px;margin-bottom:6px">RECORRIDO</div>${svg}`}
+  else mapaEl.style.display='none'
 }
 </script>
 </body>
