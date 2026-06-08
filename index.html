@@ -827,7 +827,7 @@ body{display:flex;align-items:center;justify-content:center}
     </div>
 
     <!-- COMUNIDAD -->
-    <div class="sc" id="sc-comunidad">
+    <div class="sc flex" id="sc-comunidad">
       <div class="hdr" style="flex-shrink:0">
         <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
           <div><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Comunidad 🏘</div></div>
@@ -4365,30 +4365,37 @@ const _WC_CARD=`<div onclick="tab(document.querySelector('[data-sc=sc-mundial]')
 async function loadComunidad(force){
   const list=document.getElementById('com-list')
   if(!list) return
-  // Mostrar caché inmediatamente si existe (<2 min)
-  if(!force&&_comCache&&Date.now()-_comCacheTs<120000){
-    list.innerHTML=_comCache; return
+  if(!force&&_comCache&&Date.now()-_comCacheTs<120000){list.innerHTML=_comCache;return}
+  list.innerHTML=_WC_CARD+`<div style="text-align:center;padding:20px;color:var(--tx3)">Cargando canchas...</div>`
+  try{
+    // Sin join — más rápido, ciudad viene de COURSES si está disponible
+    const [{data:canchas},{data:counts}]=await Promise.all([
+      SB.from('canchas').select('id,nombre,ciudad_id').eq('activa',true).order('nombre').catch(()=>({data:[]})),
+      SB.from('comunidad_posts').select('cancha_id').catch(()=>({data:[]}))
+    ])
+    const cm={}; if(counts) counts.forEach(r=>{cm[r.cancha_id]=(cm[r.cancha_id]||0)+1})
+    // Usar canchas de Supabase + las de COURSES como fallback
+    let lista=canchas&&canchas.length?canchas:(COURSES||[]).map(c=>({id:c.cancha_id||c.id,nombre:c.nombre,ciudad_id:null}))
+    if(!lista.length){list.innerHTML=_WC_CARD+`<div style="text-align:center;padding:20px;color:var(--tx3)">Sin canchas cargadas</div>`;return}
+    const html=_WC_CARD+lista.map(c=>{
+      const nombre=c.nombre||'Cancha'; const n=cm[c.id]||0
+      // Buscar ciudad en COURSES local
+      const local=COURSES&&COURSES.find(x=>x.nombre===nombre)
+      const ciudad=local?.ciudad||''
+      return`<div onclick="abrirComFeed('${c.id}','${nombre.replace(/'/g,"\\'")}','${ciudad.replace(/'/g,"\\'")}');" style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r16);padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:50%;background:rgba(74,222,128,.12);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⛳</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nombre}</div>
+          ${ciudad?`<div style="font-size:11px;color:var(--tx3);margin-top:1px">📍 ${ciudad}</div>`:''}
+        </div>
+        ${n>0?`<div style="background:var(--c3);border-radius:20px;padding:2px 9px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:#000;flex-shrink:0">${n}</div>`:''}
+      </div>`
+    }).join('')
+    list.innerHTML=html; _comCache=html; _comCacheTs=Date.now()
+  }catch(e){
+    list.innerHTML=_WC_CARD+`<div style="text-align:center;padding:20px;color:var(--tx3)">Error al cargar. Tocá ↻ para reintentar.</div>`
+    console.error('loadComunidad:',e)
   }
-  list.innerHTML=_WC_CARD+`<div style="text-align:center;padding:20px;color:var(--tx3)"><div class="spin" style="margin:0 auto"></div></div>`
-  // Ambas queries en paralelo
-  const [{data:canchas},{data:counts}]=await Promise.all([
-    SB.from('canchas').select('id,nombre,ciudades(nombre)').eq('activa',true).order('nombre').catch(()=>({data:null})),
-    SB.from('comunidad_posts').select('cancha_id').catch(()=>({data:null}))
-  ])
-  if(!canchas||!canchas.length){list.innerHTML=_WC_CARD+`<div style="text-align:center;padding:20px;color:var(--tx3)">Sin canchas cargadas</div>`;return}
-  const cm={}; if(counts) counts.forEach(r=>{cm[r.cancha_id]=(cm[r.cancha_id]||0)+1})
-  const html=_WC_CARD+canchas.map(c=>{
-    const ciudad=c.ciudades?.nombre||''; const n=cm[c.id]||0
-    return`<div onclick="abrirComFeed('${c.id}','${c.nombre.replace(/'/g,"\\'")}','${ciudad.replace(/'/g,"\\'")}');" style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r16);padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px">
-      <div style="width:44px;height:44px;border-radius:50%;background:rgba(74,222,128,.12);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⛳</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.nombre}</div>
-        ${ciudad?`<div style="font-size:11px;color:var(--tx3);margin-top:1px">📍 ${ciudad}</div>`:''}
-      </div>
-      ${n>0?`<div style="background:var(--c3);border-radius:20px;padding:2px 9px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:#000;flex-shrink:0">${n}</div>`:''}
-    </div>`
-  }).join('')
-  list.innerHTML=html; _comCache=html; _comCacheTs=Date.now()
 }
 
 function abrirComFeed(id,nombre,ciudad){
