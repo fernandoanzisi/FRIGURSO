@@ -1022,11 +1022,35 @@ body{display:flex;align-items:center;justify-content:center}
           <div class="li" style="cursor:pointer" id="notif-li" onclick="toggleNotificaciones()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)" id="notif-li-txt">🔔 Activar notificaciones de torneos</span><span id="notif-li-badge" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--tx3)">OFF</span></div>
           <div class="li" style="cursor:pointer" onclick="toggleSound()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)"><span id="sound-li-icon">🔊</span> Sonidos y vibración</span><span id="sound-li-badge" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--tx3)">ON</span></div>
           <div class="li" style="cursor:pointer" onclick="openLiveView()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--tx)">📡 Ver jugador en vivo</span><span style="color:var(--tx3)">›</span></div>
+          <div class="li" id="admin-li" style="cursor:pointer;display:none" onclick="openAdmin()"><span style="flex:1;font-size:14px;font-weight:500;color:#fbbf24">🛡 Panel de administración</span><span style="background:rgba(251,191,36,.2);color:#fbbf24;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;padding:2px 8px;border-radius:99px" id="admin-li-badge"></span></div>
           <div class="li" style="cursor:pointer" onclick="doLogout()"><span style="flex:1;font-size:14px;font-weight:500;color:var(--red)">🚪 Cerrar sesión</span></div>
         </div>
       </div>
     </div>
 
+  </div>
+
+  <!-- CUENTA BLOQUEADA -->
+  <div id="sc-bloqueada" style="position:fixed;inset:0;background:var(--bg);z-index:900;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center">
+    <div style="font-size:56px;margin-bottom:16px">🔒</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:8px">ACCESO RESTRINGIDO</div>
+    <div style="font-size:14px;color:var(--tx2);line-height:1.6;max-width:280px;margin-bottom:32px">Tu cuenta está pendiente de aprobación. Contactá al administrador para habilitar el acceso.</div>
+    <button onclick="doLogout()" style="background:rgba(255,255,255,.08);border:0.5px solid rgba(255,255,255,.15);border-radius:var(--r16);padding:14px 28px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--tx2);cursor:pointer">Cerrar sesión</button>
+  </div>
+
+  <!-- PANEL ADMIN -->
+  <div id="admin-overlay" style="position:fixed;inset:0;background:var(--bg);z-index:800;display:none;flex-direction:column">
+    <div style="background:var(--c1);padding:12px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;border-bottom:0.5px solid rgba(251,191,36,.2)">
+      <button onclick="cerrarAdmin()" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:8px 12px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0">←</button>
+      <div style="flex:1">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fbbf24">🛡 PANEL DE ADMIN</div>
+        <div id="admin-subtitle" style="font-size:11px;color:var(--tx3)">Cargando...</div>
+      </div>
+      <button onclick="loadAdmin()" style="background:rgba(255,255,255,.08);border:none;border-radius:var(--r8);padding:8px 12px;color:var(--tx2);font-size:16px;cursor:pointer">↻</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px" id="admin-list">
+      <div style="text-align:center;padding:40px;color:var(--tx3)">Cargando usuarios...</div>
+    </div>
   </div>
 
   <!-- ROUND SUMMARY -->
@@ -1215,6 +1239,7 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const SB = supabase.createClient(SB_URL, SB_KEY, {auth:{persistSession:true,storage:localStorage}})
 
 let USER=null, JUGADOR=null
+const ADMIN_ID='f75cfb24-7361-4f7a-8791-3ae23b75d094'
 function _fechaHoy(){const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`}
 
 function generateHoles(par,hoyos){
@@ -1526,7 +1551,16 @@ async function loadJugador(){
 
 function showApp(){
   stopLoad()
+  if(JUGADOR&&JUGADOR.activo===false&&USER?.id!==ADMIN_ID){
+    document.getElementById('navbar').style.display='none'
+    document.getElementById('sc-bloqueada').style.display='flex'
+    return
+  }
+  document.getElementById('sc-bloqueada').style.display='none'
   document.getElementById('navbar').style.display='flex'
+  // Mostrar botón admin solo para el admin
+  const ali=document.getElementById('admin-li')
+  if(ali) ali.style.display=USER?.id===ADMIN_ID?'flex':'none'
   history.replaceState({sc:'sc-home'},'')
   go('sc-home')
   loadDashboard()
@@ -4620,6 +4654,64 @@ async function borrarComPost(id){
 // ═══════════════════════════════════════════════
 // 🏃 ACTIVITY TRACKING (GPS + clima + distancia)
 // ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+// 🛡 PANEL DE ADMIN
+// ═══════════════════════════════════════════════
+function openAdmin(){
+  if(USER?.id!==ADMIN_ID) return
+  document.getElementById('admin-overlay').style.display='flex'
+  loadAdmin()
+}
+function cerrarAdmin(){
+  document.getElementById('admin-overlay').style.display='none'
+}
+async function loadAdmin(){
+  const list=document.getElementById('admin-list')
+  const sub=document.getElementById('admin-subtitle')
+  list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--tx3)"><div class="spin" style="margin:0 auto 12px"></div>Cargando usuarios...</div>`
+  try{
+    const [{data:jugs},{data:rondas}]=await Promise.all([
+      SB.from('jugadores').select('id,nombre,apellido,activo,created_at,email').order('created_at',{ascending:false}),
+      SB.from('rondas').select('jugador_id').eq('completada',true)
+    ])
+    const rc={}; (rondas||[]).forEach(r=>{rc[r.jugador_id]=(rc[r.jugador_id]||0)+1})
+    const total=(jugs||[]).length
+    const activos=(jugs||[]).filter(j=>j.activo!==false).length
+    if(sub) sub.textContent=`${total} usuarios · ${activos} activos`
+    const aliB=document.getElementById('admin-li-badge')
+    if(aliB) aliB.textContent=total+' usuarios'
+    if(!jugs||!jugs.length){list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--tx3)">Sin usuarios registrados</div>`;return}
+    list.innerHTML=jugs.map(j=>{
+      const activo=j.activo!==false
+      const nombre=`${j.nombre||'?'} ${j.apellido||''}`.trim()
+      const fecha=j.created_at?new Date(j.created_at).toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'numeric'}):'—'
+      const nRondas=rc[j.id]||0
+      const esAdmin=j.id===ADMIN_ID
+      return`<div style="background:var(--bg2);border:0.5px solid ${activo?'var(--bd)':'rgba(248,113,113,.3)'};border-radius:var(--r16);padding:14px 16px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div style="width:40px;height:40px;border-radius:50%;background:${activo?'rgba(74,222,128,.12)':'rgba(248,113,113,.12)'};display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:${activo?'var(--c3)':'var(--red)'};flex-shrink:0">${(j.nombre||'?').charAt(0).toUpperCase()}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--tx)">${nombre}${esAdmin?' 🛡':''}</div>
+            <div style="font-size:11px;color:var(--tx3);margin-top:1px">Registrado ${fecha} · ${nRondas} ronda${nRondas!==1?'s':''}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <div style="background:${activo?'rgba(74,222,128,.15)':'rgba(248,113,113,.15)'};color:${activo?'var(--c3)':'var(--red)'};font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;padding:2px 8px;border-radius:99px">${activo?'ACTIVO':'INACTIVO'}</div>
+            ${!esAdmin?`<button onclick="toggleActivo('${j.id}',${activo})" style="background:${activo?'rgba(248,113,113,.1)':'rgba(74,222,128,.1)'};border:0.5px solid ${activo?'rgba(248,113,113,.3)':'rgba(74,222,128,.3)'};border-radius:var(--r8);padding:5px 12px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:${activo?'var(--red)':'var(--c3)'};cursor:pointer">${activo?'DESACTIVAR':'ACTIVAR'}</button>`:''}
+          </div>
+        </div>
+      </div>`
+    }).join('')
+  }catch(e){
+    list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--red)">Error al cargar usuarios</div>`
+    console.error('loadAdmin:',e)
+  }
+}
+async function toggleActivo(jugadorId, activo){
+  const {error}=await SB.from('jugadores').update({activo:!activo}).eq('id',jugadorId)
+  if(error){toast('Error: verificá el permiso SQL en Supabase');console.error(error)}
+  else{toast(activo?'Usuario desactivado':'Usuario activado');loadAdmin()}
+}
+
 let _gpsTrack=[], _gpsWatchId=null, _actividadData=null
 
 function _startGPSTrack(){
