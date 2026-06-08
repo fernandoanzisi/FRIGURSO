@@ -510,7 +510,7 @@ body{display:flex;align-items:center;justify-content:center}
               <span style="background:rgba(167,139,250,.1);border:0.5px solid rgba(167,139,250,.2);border-radius:20px;padding:3px 10px;font-size:11px;color:#a78bfa;font-family:'Barlow Condensed',sans-serif;font-weight:700">Open Lobos: 1° · -21</span>
             </div>
           </div>
-          <a href="https://www.footgolf.sport/acapulcoworldcup2026/leaderboard-individual/" target="_blank" style="display:block;text-align:center;background:rgba(255,193,7,.1);border:0.5px solid rgba(255,193,7,.25);border-radius:var(--r8);padding:9px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#ffc107;text-decoration:none">🔴 Ver leaderboard oficial en vivo →</a>
+          <a href="https://www.footgolf.sport/acapulcoworldcup2026/leaderboard-individual/" target="_blank" style="display:block;text-align:center;background:rgba(255,193,7,.1);border:0.5px solid rgba(255,193,7,.25);border-radius:var(--r8);padding:9px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#ffc107;text-decoration:none">🏆 Ver resultados finales →</a>
         </div>
       </div>
       <div class="sec">
@@ -1593,7 +1593,6 @@ async function loadDashboard(){
     document.getElementById('d-vict').textContent=vict
     document.getElementById('d-rondas').textContent=rondas.length
     // Racha bajo par
-    const rOrden=[...rondas].sort((a,b)=>0)
     let racha=0
     for(let i=rondas.length-1;i>=0;i--){if(rondas[i].score_vs_par!==null&&rondas[i].score_vs_par<0)racha++;else break}
     const rachaEl=document.getElementById('d-racha')
@@ -3230,7 +3229,7 @@ async function enviarComentario(){
   const txt=document.getElementById('comentario-input').value.trim()
   if(!txt||!_comentariosRondaId||!USER) return
   const {error}=await SB.from('comentarios_rondas').insert({ronda_id:_comentariosRondaId,jugador_id:USER.id,texto:txt}).catch(()=>({error:true}))
-  if(error){ toast('Para comentar necesitás la tabla en Supabase — pedile a Fernando'); return }
+  if(error){ toast('No se pudo publicar el comentario'); return }
   document.getElementById('comentario-input').value=''
   toast('✓ Comentario publicado')
   openComentarios(_comentariosRondaId)
@@ -3251,7 +3250,7 @@ async function enviarResena(){
   if(!_currentCancha||!USER){ toast('Iniciá sesión primero'); return }
   const txt=document.getElementById('cd-resena-txt').value.trim()
   const {error}=await SB.from('resenas_canchas').insert({cancha_nombre:_currentCancha.nombre,jugador_id:USER.id,rating:_resenaStars,comentario:txt}).catch(()=>({error:true}))
-  if(error){ toast('Para reseñas necesitás la tabla en Supabase'); return }
+  if(error){ toast('No se pudo publicar la reseña'); return }
   document.getElementById('cd-resena-txt').value=''; setResenaStars(0)
   toast('✓ Reseña publicada')
   cargarResenas()
@@ -3940,10 +3939,8 @@ async function loadRanking(){
     }).sort((a,b)=>b.pts-a.pts)
   }
   if(!items.length){
-    items=[
-      {ini:'GA',n:'Giovanni Anzisi',p:'🇦🇷',cat:'Elite',hcp:'+3.2',pts:5250,avatar:''},
-      {ini:'FA',n:'Fernando Anzisi',p:'🇦🇷',cat:'Masters',hcp:'+1.5',pts:0,avatar:''},
-    ]
+    el.innerHTML=`<div style="text-align:center;padding:30px 0;color:var(--tx3)"><div style="font-size:32px;margin-bottom:8px">🏆</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700">Sin datos de ranking aún</div><div style="font-size:12px;margin-top:4px">Jugá torneos para aparecer aquí</div></div>`
+    return
   }
   const pc=p=>p===1?'p1':p===2?'p2':p===3?'p3':'pn'
   const medals=['🥇','🥈','🥉']
