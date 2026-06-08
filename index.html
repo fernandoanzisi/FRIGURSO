@@ -4671,7 +4671,7 @@ async function loadAdmin(){
   list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--tx3)"><div class="spin" style="margin:0 auto 12px"></div>Cargando usuarios...</div>`
   try{
     const [{data:jugs},{data:rondas}]=await Promise.all([
-      SB.from('jugadores').select('id,nombre,apellido,activo,created_at,email').order('created_at',{ascending:false}),
+      SB.from('jugadores').select('id,nombre,apellido,activo,created_at').order('created_at',{ascending:false}),
       SB.from('rondas').select('jugador_id').eq('completada',true)
     ])
     const rc={}; (rondas||[]).forEach(r=>{rc[r.jugador_id]=(rc[r.jugador_id]||0)+1})
