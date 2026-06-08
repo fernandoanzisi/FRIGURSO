@@ -834,6 +834,9 @@ body{display:flex;align-items:center;justify-content:center}
           <button onclick="loadComunidad(true)" style="background:rgba(255,255,255,.08);border:none;border-radius:var(--r8);padding:8px 12px;color:var(--tx2);font-size:18px;cursor:pointer">↻</button>
         </div>
       </div>
+      <div id="com-search-wrap" style="display:none;padding:0 16px 10px;flex-shrink:0">
+        <input type="search" id="com-buscar" placeholder="🔍 Buscar cancha o ciudad..." oninput="filtrarCanchas(this.value)" style="width:100%;box-sizing:border-box;background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r12);padding:10px 14px;color:var(--tx);font-size:14px;outline:none;-webkit-appearance:none;-webkit-tap-highlight-color:transparent">
+      </div>
       <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px" id="com-list">
         <div style="text-align:center;padding:30px 0;color:var(--tx3)">Cargando...</div>
       </div>
@@ -4368,7 +4371,7 @@ const _WC_CARD=`<div onclick="tab(document.querySelector('[data-sc=sc-mundial]')
 async function loadComunidad(force){
   const list=document.getElementById('com-list')
   if(!list) return
-  if(!force&&_comCache&&Date.now()-_comCacheTs<120000){list.innerHTML=_comCache;return}
+  if(!force&&_comCache&&Date.now()-_comCacheTs<120000){list.innerHTML=_comCache;const sw=document.getElementById('com-search-wrap');if(sw)sw.style.display='block';return}
   list.innerHTML=_WC_CARD+`<div style="text-align:center;padding:20px;color:var(--tx3)">Cargando canchas...</div>`
   try{
     const [{data:canchas},{data:counts}]=await Promise.all([
@@ -4386,7 +4389,7 @@ async function loadComunidad(force){
     })
     const html=_WC_CARD+_comCanchas.map((c,i)=>{
       const n=cm[c.id]||0
-      return`<div onclick="abrirComFeedIdx(${i})" style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r16);padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px">
+      return`<div class="com-cc" data-search="${(c.nombre+' '+c.ciudad).toLowerCase()}" onclick="abrirComFeedIdx(${i})" style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r16);padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px">
         <div style="width:44px;height:44px;border-radius:50%;background:rgba(74,222,128,.12);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⛳</div>
         <div style="flex:1;min-width:0">
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.nombre}</div>
@@ -4396,10 +4399,27 @@ async function loadComunidad(force){
       </div>`
     }).join('')
     list.innerHTML=html; _comCache=html; _comCacheTs=Date.now()
+    const sw=document.getElementById('com-search-wrap')
+    if(sw){sw.style.display='block';document.getElementById('com-buscar').value=''}
   }catch(e){
     list.innerHTML=_WC_CARD+`<div style="text-align:center;padding:20px;color:var(--tx3)">Error al cargar. Tocá ↻ para reintentar.</div>`
     console.error('loadComunidad:',e)
   }
+}
+
+function filtrarCanchas(q){
+  const t=q.trim().toLowerCase()
+  let ninguna=true
+  document.querySelectorAll('#com-list .com-cc').forEach(el=>{
+    const ok=!t||el.dataset.search.includes(t)
+    el.style.display=ok?'flex':'none'
+    if(ok) ninguna=false
+  })
+  let noRes=document.getElementById('com-no-res')
+  if(t&&ninguna){
+    if(!noRes){noRes=document.createElement('div');noRes.id='com-no-res';noRes.style.cssText='text-align:center;padding:24px 0;color:var(--tx3);font-size:14px';document.getElementById('com-list').appendChild(noRes)}
+    noRes.textContent='Sin canchas para "'+q+'"'
+  }else if(noRes){noRes.remove()}
 }
 
 function abrirComFeedIdx(i){const c=_comCanchas[i];if(c)abrirComFeed(c.id,c.nombre,c.ciudad)}
