@@ -861,17 +861,17 @@ body{display:flex;align-items:center;justify-content:center}
           <div id="np-cancha-lbl" style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:var(--c3);margin-top:-6px"></div>
           <textarea id="np-texto" placeholder="¿Qué querés compartir?" style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r12);padding:14px;color:var(--tx);font-size:15px;resize:none;min-height:100px;font-family:inherit;outline:none;-webkit-appearance:none" rows="4"></textarea>
           <div>
-            <div style="font-size:11px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;margin-bottom:8px">FOTO O VIDEO</div>
-            <input type="file" id="np-foto-input" accept="image/*,video/*" style="display:none" onchange="previewFoto(this)">
+            <div style="font-size:11px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;margin-bottom:8px">FOTO</div>
+            <input type="file" id="np-foto-input" accept="image/*" style="display:none" onchange="previewFoto(this)">
             <div id="np-foto-preview" style="display:none;position:relative;margin-bottom:8px">
               <img id="np-foto-img" style="width:100%;border-radius:var(--r12);max-height:220px;object-fit:cover">
-              <video id="np-video-prev" controls playsinline style="display:none;width:100%;border-radius:var(--r12);max-height:220px;background:#000"></video>
               <button onclick="quitarFoto()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.7);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:14px;cursor:pointer">✕</button>
             </div>
-            <button onclick="document.getElementById('np-foto-input').click()" style="width:100%;background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.2);border-radius:var(--r12);padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--tx2);cursor:pointer">📷🎬 AGREGAR FOTO O VIDEO</button>
+            <button onclick="document.getElementById('np-foto-input').click()" style="width:100%;background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.2);border-radius:var(--r12);padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--tx2);cursor:pointer">📷 AGREGAR FOTO</button>
           </div>
           <div>
-            <div style="font-size:11px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;margin-bottom:8px">VIDEO DE YOUTUBE (opcional)</div>
+            <div style="font-size:11px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;margin-bottom:8px">VIDEO DE YOUTUBE</div>
+            <input type="text" id="np-yt-nombre" placeholder="Nombre del video (ej: Final WC Acapulco)" class="inp" autocomplete="off" autocorrect="off" spellcheck="false" style="margin-bottom:8px">
             <input type="text" inputmode="url" id="np-yt-url" placeholder="https://youtube.com/..." class="inp" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="margin-bottom:0">
           </div>
           <div id="np-status" style="display:none;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--c3);padding:8px">Publicando...</div>
@@ -4469,6 +4469,7 @@ let _npFotoFile=null
 function abrirNuevoPost(){
   if(!USER){toast('Iniciá sesión para publicar');return}
   document.getElementById('np-texto').value=''
+  document.getElementById('np-yt-nombre').value=''
   document.getElementById('np-yt-url').value=''
   quitarFoto()
   document.getElementById('np-status').style.display='none'
@@ -4478,40 +4479,34 @@ function abrirNuevoPost(){
 
 function cerrarNuevoPost(){
   document.getElementById('com-nuevo-post').style.display='none'
+  document.getElementById('np-yt-nombre').value=''
   _npFotoFile=null
 }
 
 function previewFoto(input){
   const file=input.files[0]; if(!file) return
   _npFotoFile=file
-  const esVideo=file.type.startsWith('video/')
-  const img=document.getElementById('np-foto-img')
-  const vid=document.getElementById('np-video-prev')
-  if(esVideo){
-    img.style.display='none'; vid.style.display='block'
-    vid.src=URL.createObjectURL(file)
-  }else{
-    vid.style.display='none'; img.style.display='block'
-    const r=new FileReader()
-    r.onload=e=>{img.src=e.target.result}
-    r.readAsDataURL(file)
+  const r=new FileReader()
+  r.onload=e=>{
+    document.getElementById('np-foto-img').src=e.target.result
+    document.getElementById('np-foto-preview').style.display='block'
   }
-  document.getElementById('np-foto-preview').style.display='block'
+  r.readAsDataURL(file)
 }
 
 function quitarFoto(){
   _npFotoFile=null
   document.getElementById('np-foto-input').value=''
   document.getElementById('np-foto-preview').style.display='none'
-  const vid=document.getElementById('np-video-prev')
-  vid.src=''; vid.style.display='none'
   document.getElementById('np-foto-img').src=''
 }
 
 async function publicarPost(){
-  const texto=document.getElementById('np-texto').value.trim()
+  const textoRaw=document.getElementById('np-texto').value.trim()
+  const ytNombre=document.getElementById('np-yt-nombre').value.trim()
   const ytRaw=document.getElementById('np-yt-url').value.trim()
   const ytId=ytRaw?extraerYtId(ytRaw):null
+  const texto=textoRaw||(ytId&&ytNombre?ytNombre:'')
   if(!texto&&!_npFotoFile&&!ytId){toast('Agregá texto, foto o video');return}
   if(!USER||!_comCanchaActual) return
   const btn=document.getElementById('btn-publicar'); const st=document.getElementById('np-status')
@@ -4519,8 +4514,7 @@ async function publicarPost(){
   try{
     let fotoUrl=null
     if(_npFotoFile){
-      const esVid=_npFotoFile.type.startsWith('video/')
-      st.textContent=esVid?'Subiendo video (puede tardar)...':'Subiendo foto...'
+      st.textContent='Subiendo foto...'
       const ext=_npFotoFile.name.split('.').pop()||'jpg'
       const path=`${USER.id}/${Date.now()}.${ext}`
       const {data:up,error:upE}=await SB.storage.from('comunidad').upload(path,_npFotoFile,{contentType:_npFotoFile.type,upsert:false})
