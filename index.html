@@ -4521,6 +4521,30 @@ function quitarFoto(){
   document.getElementById('np-foto-img').src=''
 }
 
+function _comprimirFoto(file){
+  return new Promise(resolve=>{
+    const img=new Image()
+    const url=URL.createObjectURL(file)
+    img.onload=()=>{
+      URL.revokeObjectURL(url)
+      const MAX=1920
+      let w=img.width, h=img.height
+      if(w>MAX||h>MAX){
+        if(w>h){h=Math.round(h*MAX/w);w=MAX}
+        else{w=Math.round(w*MAX/h);h=MAX}
+      }
+      const cv=document.createElement('canvas')
+      cv.width=w; cv.height=h
+      cv.getContext('2d').drawImage(img,0,0,w,h)
+      cv.toBlob(blob=>{
+        resolve(new File([blob],file.name.replace(/\.[^.]+$/,'.jpg'),{type:'image/jpeg'}))
+      },'image/jpeg',0.85)
+    }
+    img.onerror=()=>{URL.revokeObjectURL(url);resolve(file)}
+    img.src=url
+  })
+}
+
 async function publicarPost(){
   const textoRaw=document.getElementById('np-texto').value.trim()
   const ytNombre=document.getElementById('np-yt-nombre').value.trim()
@@ -4534,10 +4558,11 @@ async function publicarPost(){
   try{
     let fotoUrl=null
     if(_npFotoFile){
+      st.textContent='Optimizando foto...'
+      const fotoFinal=await _comprimirFoto(_npFotoFile)
       st.textContent='Subiendo foto...'
-      const ext=_npFotoFile.name.split('.').pop()||'jpg'
-      const path=`${USER.id}/${Date.now()}.${ext}`
-      const {data:up,error:upE}=await SB.storage.from('comunidad').upload(path,_npFotoFile,{contentType:_npFotoFile.type,upsert:false})
+      const path=`${USER.id}/${Date.now()}.jpg`
+      const {data:up,error:upE}=await SB.storage.from('comunidad').upload(path,fotoFinal,{contentType:'image/jpeg',upsert:false})
       if(upE) throw upE
       fotoUrl=SB.storage.from('comunidad').getPublicUrl(up.path).data.publicUrl
     }
