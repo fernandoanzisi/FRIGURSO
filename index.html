@@ -3989,8 +3989,10 @@ function generarAnalisis(ronda, holes, dist, svp, sameCourseBest){
 async function loadRanking(){
   const el=document.getElementById('ranking-list')
   el.innerHTML='<div class="empty" style="padding:24px 0"><div class="empty-i">⏳</div><div class="empty-t">Calculando...</div></div>'
-  const {data:jugadores}=await SB.from('jugadores').select('id,nombre,apellido,categoria,handicap,pais,avatar_url').catch(()=>({data:null}))
-  const {data:rondasAll}=await SB.from('rondas').select('jugador_id,tipo,posicion_final').eq('completada',true).catch(()=>({data:null}))
+  const [{data:jugadores},{data:rondasAll}]=await Promise.all([
+    SB.from('jugadores').select('id,nombre,apellido,categoria,handicap,avatar_url'),
+    SB.from('rondas').select('jugador_id,tipo,posicion_final').eq('completada',true)
+  ])
   const bgColors=['rgba(74,222,128,.15)','rgba(14,165,233,.12)','rgba(248,113,113,.12)','rgba(251,191,36,.12)']
   const fgColors=['#4ade80','#0369a1','#f87171','#fbbf24']
   let items=[]
@@ -3999,7 +4001,7 @@ async function loadRanking(){
       const mis=rondasAll.filter(r=>r.jugador_id===j.id&&r.tipo&&r.tipo.startsWith('torneo_')&&r.posicion_final)
       const pts=mis.reduce((s,r)=>s+calcPuntosCat(r.tipo.replace('torneo_',''),r.posicion_final),0)
       const hcp=j.handicap!=null?(j.handicap>=0?'+'+parseFloat(j.handicap).toFixed(1):parseFloat(j.handicap).toFixed(1)):'—'
-      return{id:j.id,n:`${j.nombre} ${j.apellido||''}`.trim(),ini:`${j.nombre?.[0]||'?'}${j.apellido?.[0]||''}`,p:j.pais||'🇦🇷',cat:j.categoria||'Aficionado',hcp,pts,avatar:j.avatar_url||''}
+      return{id:j.id,n:`${j.nombre} ${j.apellido||''}`.trim(),ini:`${j.nombre?.[0]||'?'}${j.apellido?.[0]||''}`,p:'🇦🇷',cat:j.categoria||'Aficionado',hcp,pts,avatar:j.avatar_url||''}
     }).sort((a,b)=>b.pts-a.pts)
   }
   if(!items.length){
@@ -4358,7 +4360,7 @@ function installApp(){
 // ═══════════════════════════════════════════════
 // 🏘 COMUNIDAD
 // ═══════════════════════════════════════════════
-let _comCanchaActual=null, _comCache=null, _comCacheTs=0
+let _comCanchaActual=null, _comCache=null, _comCacheTs=0, _comCanchas=[]
 
 const _WC_CARD=`<div onclick="tab(document.querySelector('[data-sc=sc-mundial]'),'sc-mundial')" style="background:linear-gradient(135deg,rgba(255,193,7,.15),rgba(74,222,128,.08));border:0.5px solid rgba(255,193,7,.3);border-radius:var(--r16);padding:16px;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;gap:14px"><div style="font-size:34px">🏆</div><div style="flex:1;min-width:0"><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#ffc107;letter-spacing:.3px">WC ACAPULCO 2026</div><div style="font-size:11px;color:rgba(255,193,7,.55);margin-top:2px">Archivo histórico · FIFG World Cup</div></div><div style="font-size:18px;color:rgba(255,193,7,.4)">→</div></div>`
 
@@ -4368,25 +4370,26 @@ async function loadComunidad(force){
   if(!force&&_comCache&&Date.now()-_comCacheTs<120000){list.innerHTML=_comCache;return}
   list.innerHTML=_WC_CARD+`<div style="text-align:center;padding:20px;color:var(--tx3)">Cargando canchas...</div>`
   try{
-    // Sin join — más rápido, ciudad viene de COURSES si está disponible
     const [{data:canchas},{data:counts}]=await Promise.all([
-      SB.from('canchas').select('id,nombre,ciudad_id').eq('activa',true).order('nombre').catch(()=>({data:[]})),
-      SB.from('comunidad_posts').select('cancha_id').catch(()=>({data:[]}))
+      SB.from('canchas').select('id,nombre,ciudad_id').eq('activa',true).order('nombre'),
+      SB.from('comunidad_posts').select('cancha_id')
     ])
     const cm={}; if(counts) counts.forEach(r=>{cm[r.cancha_id]=(cm[r.cancha_id]||0)+1})
-    // Usar canchas de Supabase + las de COURSES como fallback
     let lista=canchas&&canchas.length?canchas:(COURSES||[]).map(c=>({id:c.cancha_id||c.id,nombre:c.nombre,ciudad_id:null}))
     if(!lista.length){list.innerHTML=_WC_CARD+`<div style="text-align:center;padding:20px;color:var(--tx3)">Sin canchas cargadas</div>`;return}
-    const html=_WC_CARD+lista.map(c=>{
-      const nombre=c.nombre||'Cancha'; const n=cm[c.id]||0
-      // Buscar ciudad en COURSES local
+    _comCanchas=lista.map(c=>{
+      const nombre=c.nombre||'Cancha'
       const local=COURSES&&COURSES.find(x=>x.nombre===nombre)
       const ciudad=local?.ciudad||''
-      return`<div onclick="abrirComFeed('${c.id}','${nombre.replace(/'/g,"\\'")}','${ciudad.replace(/'/g,"\\'")}');" style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r16);padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px">
+      return{id:c.id,nombre,ciudad}
+    })
+    const html=_WC_CARD+_comCanchas.map((c,i)=>{
+      const n=cm[c.id]||0
+      return`<div onclick="abrirComFeedIdx(${i})" style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r16);padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px">
         <div style="width:44px;height:44px;border-radius:50%;background:rgba(74,222,128,.12);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⛳</div>
         <div style="flex:1;min-width:0">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nombre}</div>
-          ${ciudad?`<div style="font-size:11px;color:var(--tx3);margin-top:1px">📍 ${ciudad}</div>`:''}
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.nombre}</div>
+          ${c.ciudad?`<div style="font-size:11px;color:var(--tx3);margin-top:1px">📍 ${c.ciudad}</div>`:''}
         </div>
         ${n>0?`<div style="background:var(--c3);border-radius:20px;padding:2px 9px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:#000;flex-shrink:0">${n}</div>`:''}
       </div>`
@@ -4397,6 +4400,8 @@ async function loadComunidad(force){
     console.error('loadComunidad:',e)
   }
 }
+
+function abrirComFeedIdx(i){const c=_comCanchas[i];if(c)abrirComFeed(c.id,c.nombre,c.ciudad)}
 
 function abrirComFeed(id,nombre,ciudad){
   _comCanchaActual={id,nombre,ciudad}
