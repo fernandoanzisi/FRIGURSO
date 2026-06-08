@@ -2171,7 +2171,8 @@ function resumeDraft(){
     _groupNames=d.groupNames||['','','','']
     _gScores=d.gScores?d.gScores.map(a=>[...a]):[...Array(4)].map(()=>new Array(18).fill(null))
     _activePlayer=d.activePlayer||0
-    localStorage.removeItem(DRAFT_KEY)
+    // El draft se elimina solo cuando saveRound() guarda exitosamente en BD.
+    // No lo borramos acá para que sobreviva si el guardado falla sin conexión.
     document.getElementById('draft-card').style.display='none'
     renderScorecard()
     go('sc-scorecard')
@@ -2249,7 +2250,7 @@ async function saveRound(){
 
   // 3. Guardar en DB en segundo plano
   const statusEl=document.getElementById('sum-save-status')
-  const setStatus=(icon,bg,col,txt)=>{if(statusEl){statusEl.style.display='block';statusEl.style.background=bg;statusEl.style.color=col;statusEl.textContent=icon+' '+txt}}
+  const setStatus=(icon,bg,col,txt)=>{if(statusEl){statusEl.style.display='block';statusEl.style.background=bg;statusEl.style.color=col;statusEl.innerHTML=icon+' '+txt}}
   setStatus('⏳','rgba(134,239,172,.12)','rgba(134,239,172,.7)','Guardando...')
   try{
     // Buscar cancha_id — usa savedCourse para evitar race conditions
@@ -2308,8 +2309,16 @@ async function saveRound(){
     document.getElementById('draft-card') && (document.getElementById('draft-card').style.display='none')
     loadDashboard()
   }catch(e){
-    const msg=e?.message||e?.error_description||e?.code||JSON.stringify(e)||'Error desconocido'
-    setStatus('⚠','rgba(248,113,113,.18)','#f09595','No se guardó: '+msg)
+    const sinSenial=!navigator.onLine||(e?.message||'').toLowerCase().includes('fetch')
+    if(sinSenial){
+      statusEl.style.display='block'
+      statusEl.style.background='rgba(251,191,36,.12)'
+      statusEl.style.color='#fbbf24'
+      statusEl.innerHTML='📵 Sin señal · <strong>tus datos están guardados</strong><br><span style="font-weight:400;font-size:12px">Tocá CONTINUAR, volvé al inicio y retomá la ronda cuando tengas conexión.</span>'
+    }else{
+      const msg=e?.message||e?.error_description||e?.code||JSON.stringify(e)||'Error desconocido'
+      setStatus('⚠','rgba(248,113,113,.18)','#f09595','No se guardó: '+msg)
+    }
     console.error('saveRound error:',e)
   }
 }
