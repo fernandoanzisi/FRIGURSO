@@ -853,7 +853,7 @@ body{display:flex;align-items:center;justify-content:center}
         <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px" id="com-feed-posts"></div>
       </div>
       <!-- Nuevo post overlay -->
-      <div id="com-nuevo-post" style="position:absolute;inset:0;background:var(--bg);z-index:320;display:none;flex-direction:column">
+      <div id="com-nuevo-post" style="position:fixed;inset:0;background:var(--bg);z-index:320;display:none;flex-direction:column">
         <div style="background:var(--c1);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:0.5px solid rgba(74,222,128,.12)">
           <button onclick="cerrarNuevoPost()" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0">✕</button>
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff">NUEVO POST · <span id="np-cancha-lbl" style="color:var(--c3)"></span></div>
@@ -4508,6 +4508,11 @@ function _tiempoRel(iso){
 
 let _npFotoFile=null
 
+function _npVVResize(){
+  const ov=document.getElementById('com-nuevo-post')
+  if(ov) ov.style.height=(window.visualViewport?.height||window.innerHeight)+'px'
+}
+
 function abrirNuevoPost(){
   if(!USER){toast('Iniciá sesión para publicar');return}
   document.getElementById('np-texto').value=''
@@ -4516,11 +4521,16 @@ function abrirNuevoPost(){
   quitarFoto()
   document.getElementById('np-status').style.display='none'
   document.getElementById('np-cancha-lbl').textContent=_comCanchaActual?.nombre||''
-  document.getElementById('com-nuevo-post').style.display='flex'
+  const ov=document.getElementById('com-nuevo-post')
+  ov.style.height=''
+  ov.style.display='flex'
+  if(window.visualViewport) window.visualViewport.addEventListener('resize',_npVVResize)
 }
 
 function cerrarNuevoPost(){
-  document.getElementById('com-nuevo-post').style.display='none'
+  if(window.visualViewport) window.visualViewport.removeEventListener('resize',_npVVResize)
+  const ov=document.getElementById('com-nuevo-post')
+  ov.style.display='none'; ov.style.height=''
   document.getElementById('np-yt-nombre').value=''
   _npFotoFile=null
 }
