@@ -839,13 +839,13 @@ body{display:flex;align-items:center;justify-content:center}
       </div>
       <!-- Feed overlay -->
       <div id="com-feed-ov" style="position:absolute;inset:0;background:var(--bg);z-index:310;display:none;flex-direction:column">
-        <div style="background:var(--c1);padding:14px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;border-bottom:0.5px solid rgba(74,222,128,.12)">
-          <button onclick="cerrarComFeed()" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:7px 14px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer">← VOLVER</button>
+        <div style="background:var(--c1);padding:10px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0;border-bottom:0.5px solid rgba(74,222,128,.12)">
+          <button onclick="cerrarComFeed()" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:8px 12px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0">←</button>
           <div style="flex:1;min-width:0">
-            <div id="com-feed-nombre" style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+            <div id="com-feed-nombre" style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#fff;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
             <div id="com-feed-ciudad" style="font-size:11px;color:var(--tx3)"></div>
           </div>
-          <button onclick="abrirNuevoPost()" style="background:var(--c3);border:none;border-radius:var(--r8);padding:7px 14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#fff;cursor:pointer;flex-shrink:0">+ POST</button>
+          <button onclick="abrirNuevoPost()" style="background:var(--c3);border:none;border-radius:var(--r8);padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#fff;cursor:pointer;flex-shrink:0">+ POST</button>
         </div>
         <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px" id="com-feed-posts"></div>
       </div>
@@ -4529,7 +4529,7 @@ async function publicarPost(){
     const {error}=await SB.from('comunidad_posts').insert(post)
     if(error) throw error
     cerrarNuevoPost(); toast('✓ Post publicado')
-    cargarComPosts(); loadComunidad()
+    cargarComPosts(); loadComunidad(true)
   }catch(e){toast('Error: '+(e.message||'Intentá de nuevo'));console.error(e)}
   finally{btn.disabled=false; st.style.display='none'}
 }
