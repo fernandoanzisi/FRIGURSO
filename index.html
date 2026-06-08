@@ -299,7 +299,7 @@ body{display:flex;align-items:center;justify-content:center}
         <div class="auth-ok" id="auth-ok"></div>
         <button class="btn-main" id="auth-btn" onclick="doAuth()">INGRESAR</button>
         <button id="forgot-link" onclick="switchTab('forgot')" style="background:none;border:none;color:rgba(134,239,172,.4);font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline">¿Olvidaste tu contraseña?</button>
-        <div style="margin-top:12px;text-align:center;font-size:12px;color:rgba(134,239,172,.3)">🌍 89 canchas · 312 jugadores · Sudamérica</div>
+        <div id="auth-stats" style="margin-top:12px;text-align:center;font-size:12px;color:rgba(134,239,172,.3)">🌍 Cargando...</div>
       </div>
     </div>
 
@@ -854,15 +854,13 @@ body{display:flex;align-items:center;justify-content:center}
       </div>
       <!-- Nuevo post overlay -->
       <div id="com-nuevo-post" style="position:absolute;inset:0;background:var(--bg);z-index:320;display:none;flex-direction:column">
-        <div style="background:var(--c1);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:0.5px solid rgba(74,222,128,.12)">
-          <button onclick="cerrarNuevoPost()" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:7px 14px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer">✕</button>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#fff">NUEVO POST</div>
-          <button id="btn-publicar" onclick="publicarPost()" style="background:var(--c3);border:none;border-radius:var(--r8);padding:7px 16px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#fff;cursor:pointer">PUBLICAR</button>
+        <div style="background:var(--c1);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:0.5px solid rgba(74,222,128,.12)">
+          <button onclick="cerrarNuevoPost()" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:6px 12px;color:var(--c5);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0">✕</button>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff">NUEVO POST · <span id="np-cancha-lbl" style="color:var(--c3)"></span></div>
+          <button id="btn-publicar" onclick="publicarPost()" style="background:var(--c3);border:none;border-radius:var(--r8);padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#fff;cursor:pointer;flex-shrink:0">PUBLICAR</button>
         </div>
-        <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:12px">
-          <div style="font-size:11px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">COMUNIDAD</div>
-          <div id="np-cancha-lbl" style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:var(--c3);margin-top:-6px"></div>
-          <textarea id="np-texto" placeholder="¿Qué querés compartir?" style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r12);padding:14px;color:var(--tx);font-size:15px;resize:none;min-height:100px;font-family:inherit;outline:none;-webkit-appearance:none" rows="4"></textarea>
+        <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;display:flex;flex-direction:column;gap:8px">
+          <textarea id="np-texto" placeholder="¿Qué querés compartir?" style="background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r12);padding:12px;color:var(--tx);font-size:15px;resize:none;min-height:72px;font-family:inherit;outline:none;-webkit-appearance:none" rows="3"></textarea>
           <div>
             <div style="font-size:11px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;margin-bottom:8px">FOTO</div>
             <input type="file" id="np-foto-input" accept="image/*" style="display:none" onchange="previewFoto(this)">
@@ -1217,6 +1215,7 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const SB = supabase.createClient(SB_URL, SB_KEY, {auth:{persistSession:true,storage:localStorage}})
 
 let USER=null, JUGADOR=null
+function _fechaHoy(){const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`}
 
 function generateHoles(par,hoyos){
   const layouts={
@@ -1259,7 +1258,7 @@ function showHeroPhoto(idx){
   img.style.opacity='0'
   setTimeout(()=>{
     img.src=p.url
-    img.onerror=()=>{ _photoIdx++; showHeroPhoto(_photoIdx) }
+    img.onerror=()=>{ if(_photoIdx<COURSE_PHOTOS.length-1){_photoIdx++;showHeroPhoto(_photoIdx)} }
     img.onload=()=>{ img.style.opacity='1' }
     if(nom) nom.textContent=p.nombre
     if(loc) loc.textContent=`📍 ${p.ciudad} ${p.pais}`
@@ -1378,9 +1377,16 @@ const GP_COLORS=['#4ade80','#60a5fa','#fbbf24','#f87171']
 window.addEventListener('load', async ()=>{
   load('Iniciando...')
   loadCustomCourses()
-  // Render estático siempre (no depende de sesión)
   renderScorecard(); renderGPSList(); renderSelector(); renderStaticData(); loadClima()
   checkDraft()
+  // Stats reales en pantalla de login
+  Promise.all([
+    SB.from('jugadores').select('id',{count:'exact',head:true}),
+    SB.from('canchas').select('id',{count:'exact',head:true})
+  ]).then(([{count:j},{count:c}])=>{
+    const el=document.getElementById('auth-stats')
+    if(el) el.textContent=`🌍 ${c||'—'} canchas · ${j||'—'} jugadores · Sudamérica`
+  }).catch(()=>{})
   try{
     const {data:{session}} = await SB.auth.getSession()
     if(session){
@@ -1596,9 +1602,8 @@ async function loadDashboard(){
   })()
   // Banner EN VIVO
   ;(()=>{
-    const hoy=new Date().toISOString().split('T')[0]
+    const hoy=_fechaHoy()
     const live=WORLD_EVENTS.filter(e=>hoy>=e.f&&hoy<=e.h)
-    // Agregar circuitos locales al check
     const localLive=Object.entries(CIRCUITOS).filter(([,c])=>c.fechas.includes(hoy)).map(([,c])=>({n:'FECHA '+( c.fechas.indexOf(hoy)+1)+' — '+c.nombre,emoji:c.emoji||'⛳',c:'General Roca 🇦🇷'}))
     const allLive=[...live.map(e=>({n:e.n,emoji:e.emoji,c:e.c})),...localLive]
     const banner=document.getElementById('envivo-banner')
@@ -1625,7 +1630,7 @@ async function loadDashboard(){
   document.getElementById('hdr-hcp').textContent=hcp!=null?(hcp>=0?'+'+parseFloat(hcp).toFixed(1):parseFloat(hcp).toFixed(1)):'—'
   // Próximas fechas de circuitos
   ;(()=>{
-    const hoy=new Date().toISOString().split('T')[0]
+    const hoy=_fechaHoy()
     const chips=Object.entries(CIRCUITOS).map(([tid,circ])=>{
       const next=circ.fechas.find(f=>f>=hoy)
       if(!next) return ''
@@ -1660,8 +1665,16 @@ async function loadDashboard(){
     for(let i=rondas.length-1;i>=0;i--){if(rondas[i].score_vs_par!==null&&rondas[i].score_vs_par<0)racha++;else break}
     const rachaEl=document.getElementById('d-racha')
     if(rachaEl) rachaEl.innerHTML=racha>=2?`<div style="background:rgba(251,146,60,.1);border:0.5px solid rgba(251,146,60,.25);border-radius:16px;padding:11px 16px;display:flex;align-items:center;gap:12px;margin-bottom:14px"><span style="font-size:28px">🔥</span><div><div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fb923c">${racha} RONDAS BAJO PAR SEGUIDAS</div><div style="font-size:12px;color:rgba(251,146,60,.6);margin-top:2px">¡Estás en racha!</div></div></div>`:''
+    // HCP automático: solo si no está fijado manualmente en el perfil
+    if(JUGADOR.handicap==null && scores.length>=3){
+      const sorted=[...scores].sort((a,b)=>a-b)
+      const n=Math.max(1,Math.min(8,Math.floor(scores.length*0.4)))
+      const avg=sorted.slice(0,n).reduce((a,b)=>a+b,0)/n
+      const hcpCalc=Math.round(avg*0.96*10)/10
+      document.getElementById('hdr-hcp').textContent=hcpCalc>0?'+'+hcpCalc:String(hcpCalc)
+    }
   }
-  const {data:torneos}=await SB.from('torneos').select('nombre,fecha_inicio,estado,ciudades(nombre)').gte('fecha_inicio',new Date().toISOString().split('T')[0]).order('fecha_inicio').limit(3)
+  const {data:torneos}=await SB.from('torneos').select('nombre,fecha_inicio,estado,ciudades(nombre)').gte('fecha_inicio',_fechaHoy()).order('fecha_inicio').limit(3)
   const tc=document.getElementById('d-torneos')
   if(torneos&&torneos.length){
     tc.innerHTML=torneos.map(t=>{
@@ -2268,8 +2281,7 @@ async function saveRound(){
 
     const posInput=parseInt(document.getElementById('inp-posicion')?.value)||null
     const puntos=_tourMode&&posInput?calcPuntosCat(_catTorneo,posInput):null
-    const hoyStr=new Date().toISOString().split('T')[0]
-    // Detectar si hoy es fecha de algún circuito activo
+    const hoyStr=_fechaHoy()
     let torneoId=null
     for(const [tid,circ] of Object.entries(CIRCUITOS)){
       if(circ.fechas.includes(hoyStr)){
@@ -3297,7 +3309,8 @@ async function openComentarios(rondaId){
   document.getElementById('comentarios-overlay').style.display='flex'
   const list=document.getElementById('comentarios-list')
   list.innerHTML=`<div style="text-align:center;padding:20px;color:var(--tx3)">Cargando...</div>`
-  const {data}=await SB.from('comentarios_rondas').select('*,jugadores(nombre,apellido)').eq('ronda_id',rondaId).order('created_at').catch(()=>({data:null}))
+  let data=null
+  try{const r=await SB.from('comentarios_rondas').select('*,jugadores(nombre,apellido)').eq('ronda_id',rondaId).order('created_at');data=r.data}catch(e){}
   if(!data||!data.length){ list.innerHTML=`<div style="text-align:center;padding:20px;color:var(--tx3);font-size:13px">Sin comentarios aún. ¡Sé el primero!</div>`; return }
   list.innerHTML=data.map(c=>`<div style="padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,.06)"><div style="font-size:12px;font-weight:700;color:var(--c3);margin-bottom:3px">${c.jugadores?.nombre||'Jugador'} ${c.jugadores?.apellido||''}</div><div style="font-size:14px;color:var(--tx)">${c.texto}</div></div>`).join('')
 }
