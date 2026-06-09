@@ -4099,6 +4099,9 @@ async function loadInforme(rondaId){
     </tr>`
   }).join('')
   ic.innerHTML=`
+    <div style="display:flex;justify-content:flex-end;padding:0 16px 10px">
+      <button onclick="shareInforme('${rondaId}')" style="background:rgba(74,222,128,.15);border:0.5px solid rgba(74,222,128,.3);border-radius:var(--r8);padding:9px 18px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--c3);cursor:pointer">📤 COMPARTIR ESTE DÍA</button>
+    </div>
     <div style="background:linear-gradient(135deg,rgba(74,222,128,.15),rgba(79,70,229,.1));border-radius:var(--r12);margin:0 16px 14px;padding:18px;border:0.5px solid rgba(134,239,172,.12)">
       <div style="font-size:11px;color:var(--tx3);text-transform:capitalize;margin-bottom:4px">${f}</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--tx);margin-bottom:10px">${ronda.canchas?.nombre||'Cancha'}</div>
@@ -5014,6 +5017,168 @@ function _showActividadEnSummary(){
     mapaEl.style.display='block'
     mapaEl.innerHTML=`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.5px;margin-bottom:6px">RECORRIDO GPS</div>${svg}`
   } else { mapaEl.style.display='none' }
+}
+
+async function shareInforme(rondaId){
+  const ronda=_statData?.find(r=>r.id===rondaId)
+  if(!ronda){toast('Cargá el informe primero');return}
+  const holes=(_statHoles||[]).filter(h=>h.ronda_id===rondaId).sort((a,b)=>a.hoyo-b.hoyo)
+  let act=null
+  try{const raw=localStorage.getItem('frigurso_act_'+rondaId);if(raw)act=JSON.parse(raw)}catch(e){}
+
+  const nombre=JUGADOR?(JUGADOR.nombre+(JUGADOR.apellido?' '+JUGADOR.apellido:'')).trim():'Jugador'
+  const svp=ronda.score_vs_par
+  const fmt=v=>v===null?'—':v===0?'E':v>0?'+'+v:''+v
+  const svpStr=svp===null?'—':svp===0?'E (PAR)':svp>0?'+'+svp:''+svp
+  const svpCol=svp!==null&&svp<0?'#4ade80':svp!==null&&svp>0?'#f87171':'#fff'
+  const f=new Date(ronda.fecha+'T00:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+  const canchaName=ronda.canchas?.nombre||'Cancha'
+  const esTorneo=ronda.tipo?.startsWith('torneo_')
+  const catLabel={ra250:'RA250',ra500:'RA500',ra1000:'RA1000',major:'Major',mundial:'World Cup'}[ronda.tipo?.replace('torneo_','')]||'Torneo'
+
+  const W=600
+  // Calculate height
+  let H=310
+  if(act?.clima) H+=72
+  if(act) H+=72
+  if(holes.length) H+=100
+  H+=100 // análisis + footer
+
+  const canvas=document.createElement('canvas')
+  canvas.width=W;canvas.height=H
+  const ctx=canvas.getContext('2d')
+
+  const rr=(x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath()}
+  const sep=(y)=>{ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,y);ctx.lineTo(W-20,y);ctx.stroke()}
+
+  // BG
+  ctx.fillStyle='#060f1a';ctx.fillRect(0,0,W,H)
+  const g=ctx.createLinearGradient(0,0,W,H)
+  g.addColorStop(0,'rgba(74,222,128,.15)');g.addColorStop(1,'rgba(79,70,229,.07)')
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H)
+
+  // Header bar
+  ctx.fillStyle='rgba(74,222,128,.12)';ctx.fillRect(0,0,W,54)
+  ctx.fillStyle='#4ade80';ctx.font='800 18px "Arial Black",sans-serif'
+  ctx.fillText('⚽ FRIGURSO',20,36)
+  ctx.fillStyle='rgba(255,255,255,.35)';ctx.font='500 12px Arial,sans-serif'
+  ctx.textAlign='right';ctx.fillText(f,W-20,36);ctx.textAlign='left'
+
+  // Player + cancha
+  ctx.fillStyle='rgba(255,255,255,.45)';ctx.font='500 13px Arial,sans-serif'
+  ctx.fillText(nombre,20,76)
+  ctx.fillStyle='#fff';ctx.font='800 24px "Arial Black",sans-serif'
+  ctx.fillText(canchaName,20,106)
+  if(esTorneo){
+    ctx.fillStyle='rgba(251,191,36,.15)';rr(24,112,catLabel.length*9+18,22,5);ctx.fill()
+    ctx.fillStyle='#fbbf24';ctx.font='700 11px Arial,sans-serif'
+    ctx.fillText('🏆 '+catLabel,30,127)
+  }
+
+  // Score
+  ctx.fillStyle=svpCol;ctx.font='800 68px "Arial Black",sans-serif'
+  ctx.fillText(svpStr,20,195)
+  ctx.fillStyle='rgba(255,255,255,.28)';ctx.font='500 13px Arial,sans-serif'
+  ctx.fillText('vs par  ·  '+(ronda.total_golpes||'—')+' golpes  ·  '+(esTorneo?catLabel:'Práctica'),20,215)
+  if(ronda.posicion_final){
+    ctx.fillStyle='rgba(251,191,36,.7)';ctx.font='700 13px Arial,sans-serif'
+    ctx.fillText('🏅 Posición final: '+ronda.posicion_final+'°',20,235)
+  }
+  const same=_statData?.filter(r=>r.cancha_id===ronda.cancha_id&&r.id!==rondaId&&r.score_vs_par!==null)
+  const bestSame=same?.length?Math.min(...same.map(r=>r.score_vs_par)):null
+  if(bestSame!==null){
+    ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='500 12px Arial,sans-serif'
+    ctx.fillText('Mejor personal en '+canchaName+': '+fmt(bestSame),20,ronda.posicion_final?253:235)
+  }
+
+  let y=272;sep(y);y+=14
+
+  // CLIMA
+  if(act?.clima){
+    const c=act.clima
+    ctx.fillStyle='rgba(14,165,233,.12)';rr(20,y,W-40,58,10);ctx.fill()
+    ctx.fillStyle='rgba(122,184,245,.6)';ctx.font='700 10px Arial,sans-serif'
+    ctx.fillText('CLIMA AL MOMENTO DE JUGAR',34,y+16)
+    const cl=[c.emoji+' '+c.desc,c.temp+'°C','💨 '+c.viento+' km/h',c.lluvia?'🌧 Lluvia':'☀️ Despejado',c.presion?'🌡 '+c.presion+' hPa':'',c.humedad!=null?'💧 '+c.humedad+'%':''].filter(Boolean)
+    ctx.fillStyle='rgba(186,230,253,.85)';ctx.font='500 13px Arial,sans-serif'
+    ctx.fillText(cl.join(' · '),34,y+40)
+    y+=72;sep(y);y+=14
+  }
+
+  // ACTIVIDAD
+  if(act){
+    const durFmt=m=>{if(!m)return'—';const h=Math.floor(m/60),mn=m%60;return h?h+'h '+mn+'min':mn+'min'}
+    ctx.fillStyle='rgba(74,222,128,.08)';rr(20,y,W-40,58,10);ctx.fill()
+    ctx.fillStyle='rgba(134,239,172,.6)';ctx.font='700 10px Arial,sans-serif'
+    ctx.fillText('ACTIVIDAD EN CAMPO',34,y+16)
+    const al=['📏 '+act.dist+' km','⏱ '+durFmt(act.durMin),'🔥 '+act.cal+' kcal','👣 '+(act.pasos||0).toLocaleString()+' pasos']
+    ctx.fillStyle='rgba(134,239,172,.85)';ctx.font='500 13px Arial,sans-serif'
+    ctx.fillText(al.join('  ·  '),34,y+40)
+    y+=72;sep(y);y+=14
+  }
+
+  // HOYOS color strip
+  if(holes.length){
+    ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='700 10px Arial,sans-serif'
+    ctx.fillText('HOYO A HOYO',20,y+14);y+=22
+    const sz=28,gap=Math.floor((W-40-holes.length*sz)/(holes.length-1||1))
+    const hcols=['#c4b5fd','#4ade80','rgba(156,163,175,.65)','#fb923c','#ef4444']
+    holes.forEach((h,i)=>{
+      const d=h.golpes-h.par
+      const col=d<=-2?hcols[0]:d===-1?hcols[1]:d===0?hcols[2]:d===1?hcols[3]:hcols[4]
+      const x=20+i*(sz+gap)
+      ctx.fillStyle=col+'55';rr(x,y,sz,sz,4);ctx.fill()
+      ctx.strokeStyle=col;ctx.lineWidth=1.5;rr(x,y,sz,sz,4);ctx.stroke()
+      ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='600 7px Arial,sans-serif';ctx.textAlign='center'
+      ctx.fillText(h.hoyo,x+sz/2,y+9)
+      const rs=d===0?'E':d>0?'+'+d:''+d
+      ctx.fillStyle=col;ctx.font='800 10px "Arial Black",sans-serif'
+      ctx.fillText(rs,x+sz/2,y+23);ctx.textAlign='left'
+    })
+    y+=sz+10
+    // dist chips text
+    const dist={eagle:0,birdie:0,par:0,bogey:0,dbl:0}
+    holes.forEach(h=>{const d=h.golpes-h.par;if(d<=-2)dist.eagle++;else if(d===-1)dist.birdie++;else if(d===0)dist.par++;else if(d===1)dist.bogey++;else dist.dbl++})
+    const parts=[]
+    if(dist.eagle)parts.push('🦅 '+dist.eagle+' eagle'+(dist.eagle>1?'s':''))
+    if(dist.birdie)parts.push('🐦 '+dist.birdie+' birdie'+(dist.birdie>1?'s':''))
+    if(dist.par)parts.push('⛳ '+dist.par+' par'+(dist.par>1?'es':''))
+    if(dist.bogey)parts.push('📍 '+dist.bogey+' bogey'+(dist.bogey>1?'s':''))
+    if(dist.dbl)parts.push('✌ '+dist.dbl+' doble+')
+    ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='500 11px Arial,sans-serif'
+    ctx.fillText(parts.join('  '),20,y+14);y+=26
+    sep(y);y+=14
+  }
+
+  // AI análisis resumen
+  const svpV=svp??0
+  let nivelTxt=''
+  if(svpV<=-4) nivelTxt='Ronda sobresaliente'+(esTorneo?' en torneo':'')+'. Resultado de élite.'
+  else if(svpV<=-2) nivelTxt='Ronda excelente bajo par'+(esTorneo?' en competencia':'')+'. Gran consistencia.'
+  else if(svpV<=-1) nivelTxt='Muy buen resultado'+(esTorneo?' bajo presión competitiva':'')+'. Sólido.'
+  else if(svpV===0) nivelTxt='Al par. Ronda técnicamente impecable'+(esTorneo?' en torneo':'')+'. Logro real.'
+  else if(svpV<=3) nivelTxt='Ronda para analizar y mejorar'+(esTorneo?'. La competencia suma experiencia':'')+'. Adelante.'
+  else nivelTxt='Cancha exigente'+(esTorneo?' en torneo':'')+'. Cada ronda es aprendizaje.'
+  ctx.fillStyle='rgba(255,255,255,.25)';ctx.font='700 10px Arial,sans-serif'
+  ctx.fillText('🤖 ANÁLISIS DE RONDA',20,y+14)
+  ctx.fillStyle='rgba(255,255,255,.6)';ctx.font='500 13px Arial,sans-serif'
+  ctx.fillText(nivelTxt,20,y+34)
+
+  // Footer
+  ctx.fillStyle='rgba(74,222,128,.4)';ctx.font='700 11px Arial,sans-serif'
+  ctx.textAlign='right';ctx.fillText('frigurso.vercel.app',W-20,H-10);ctx.textAlign='left'
+
+  canvas.toBlob(async blob=>{
+    const ds=ronda.fecha.replace(/-/g,'')
+    const fn='frigurso-'+canchaName.replace(/\s+/g,'-')+'-'+ds+'.png'
+    const file=new File([blob],fn,{type:'image/png'})
+    const txt=nombre+' · '+canchaName+' · '+svpStr+(esTorneo?' ('+catLabel+')':'')
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:canchaName+' — FRIGURSO',text:txt}).catch(()=>{})
+    }else{
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fn;a.click()
+    }
+  },'image/png')
 }
 
 async function shareStats(){
