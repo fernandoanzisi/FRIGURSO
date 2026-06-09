@@ -3763,8 +3763,9 @@ function renderEquipos(){
 let _statData=null,_statHoles=null
 
 async function loadHistorial(){
+  statTab(0)
   if(!USER){setHistorialDemo();return}
-  const {data}=await SB.from('rondas').select('*,canchas(nombre)').eq('jugador_id',USER.id).eq('completada',true).order('fecha',{ascending:false}).catch(()=>({data:null}))
+  const {data}=await SB.from('rondas').select('*,canchas(nombre)').eq('jugador_id',USER.id).not('score_vs_par','is',null).order('fecha',{ascending:false}).catch(()=>({data:null}))
   if(!data||!data.length){setHistorialDemo();return}
   _statData=data
   const ids=data.map(r=>r.id)
