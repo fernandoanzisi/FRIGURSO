@@ -893,6 +893,7 @@ body{display:flex;align-items:center;justify-content:center}
 
       <!-- TAB 0: MI JUEGO -->
       <div id="stat-panel-0">
+        <div id="stat-debug" style="padding:0 16px 4px"></div>
         <div id="stat-kpis" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 10px">
           <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--tx)">—</div><div style="font-size:10px;color:var(--tx2)">RONDAS</div></div>
           <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--birdie)">—</div><div style="font-size:10px;color:var(--tx2)">MEJOR</div></div>
@@ -3762,9 +3763,20 @@ function renderEquipos(){
 
 let _statData=null,_statHoles=null
 
+function _statDebug(msg){
+  const el=document.getElementById('stat-debug')
+  if(el) el.innerHTML=`<div style="background:rgba(251,191,36,.1);border:0.5px solid rgba(251,191,36,.3);border-radius:var(--r8);padding:10px 14px;font-size:12px;color:#fbbf24;font-family:monospace;margin-bottom:8px;word-break:break-all">${msg}</div>`
+}
+
 async function loadHistorial(){
   statTab(0)
-  if(!USER){setHistorialDemo();return}
+  const dbgEl=document.getElementById('stat-debug')
+  if(dbgEl) dbgEl.innerHTML=''
+  if(!USER){
+    _statDebug('USER es null — no hay sesión activa')
+    setHistorialDemo();return
+  }
+  _statDebug('Cargando... USER.id='+USER.id)
   let data=null, queryErr=null
   try{
     const res=await SB.from('rondas').select('*,canchas(nombre)').eq('jugador_id',USER.id).order('fecha',{ascending:false})
@@ -3772,13 +3784,14 @@ async function loadHistorial(){
     queryErr=res.error
   }catch(e){queryErr=e}
   if(queryErr){
-    document.getElementById('hist-list').innerHTML=`<div style="padding:20px;color:#f87171;font-size:13px">Error al cargar: ${queryErr.message||JSON.stringify(queryErr)}</div>`
-    document.getElementById('chart-evo').innerHTML=''
-    document.getElementById('chart-dist').innerHTML=''
-    return
+    _statDebug('ERROR QUERY: '+(queryErr.message||queryErr.code||JSON.stringify(queryErr)))
+    setHistorialDemo();return
   }
+  const total=data?.length||0
   const filtered=(data||[]).filter(r=>r.score_vs_par!==null)
+  _statDebug('Rondas en DB: '+total+' | Con score: '+filtered.length+(total>0&&!filtered.length?' ← score_vs_par es null en todas':''))
   if(!filtered.length){setHistorialDemo();return}
+  _statDebug('')
   _statData=filtered
   const ids=filtered.map(r=>r.id)
   const {data:holes}=await SB.from('scorecard').select('golpes,par,hoyo,ronda_id').in('ronda_id',ids).catch(()=>({data:null}))
