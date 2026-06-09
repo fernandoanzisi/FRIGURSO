@@ -882,7 +882,7 @@ body{display:flex;align-items:center;justify-content:center}
 
     <!-- HISTORIAL / ESTADÍSTICAS -->
     <div class="sc" id="sc-historial">
-      <div class="hdr"><div style="display:flex;align-items:center;gap:12px"><button class="sc-back" onclick="tab(document.querySelector('[data-sc=sc-perfil]'),'sc-perfil')">← VOLVER</button><div><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Estadísticas 📊</div></div></div></div>
+      <div class="hdr"><div style="display:flex;align-items:center;gap:12px;width:100%"><button class="sc-back" onclick="tab(document.querySelector('[data-sc=sc-perfil]'),'sc-perfil')">← VOLVER</button><div style="flex:1"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Estadísticas 📊</div></div><button onclick="shareStats()" style="background:rgba(74,222,128,.15);border:0.5px solid rgba(74,222,128,.3);border-radius:var(--r8);padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--c3);cursor:pointer;white-space:nowrap">📤 COMPARTIR</button></div></div>
 
       <!-- TABS -->
       <div style="display:flex;gap:0;margin:0 16px 14px;background:var(--bg2);border-radius:var(--r12);padding:4px;border:0.5px solid var(--bd)">
@@ -5014,6 +5014,177 @@ function _showActividadEnSummary(){
     mapaEl.style.display='block'
     mapaEl.innerHTML=`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.5px;margin-bottom:6px">RECORRIDO GPS</div>${svg}`
   } else { mapaEl.style.display='none' }
+}
+
+async function shareStats(){
+  if(!_statData||!_statData.length){toast('Cargá tus estadísticas primero');return}
+  const data=_statData, holes=_statHoles||[]
+  const sc=data.map(r=>r.score_vs_par).filter(s=>s!==null)
+  const best=sc.length?Math.min(...sc):null
+  const avg=sc.length?(sc.reduce((a,b)=>a+b,0)/sc.length):null
+  const torneos=data.filter(r=>r.tipo?.startsWith('torneo_')).length
+  const victorias=data.filter(r=>r.posicion_final===1).length
+  const birdies=holes.filter(h=>h.golpes-h.par===-1).length
+  const eagles=holes.filter(h=>h.golpes-h.par<=-2).length
+  const hcp=JUGADOR?.handicap
+  const nombre=JUGADOR?(JUGADOR.nombre+(JUGADOR.apellido?' '+JUGADOR.apellido:'')).trim():'Jugador'
+  const fmt=v=>v===null?'—':v===0?'E':v>0?'+'+v:''+v
+  const fmtHcp=v=>v>=0?'+'+parseFloat(v).toFixed(1):parseFloat(v).toFixed(1)
+
+  // Racha
+  const sorted=[...data].sort((a,b)=>new Date(a.fecha)-new Date(b.fecha))
+  let racha=0,mejorRacha=0,t=0
+  for(let i=sorted.length-1;i>=0;i--){if(sorted[i].score_vs_par<0)racha++;else break}
+  for(const r of sorted){if(r.score_vs_par!==null&&r.score_vs_par<0){t++}else{mejorRacha=Math.max(mejorRacha,t);t=0}}
+  mejorRacha=Math.max(mejorRacha,t)
+
+  // Top cancha
+  const byC={}
+  data.forEach(r=>{const cn=r.canchas?.nombre;if(cn){if(!byC[cn])byC[cn]={n:0,scores:[]};byC[cn].n++;if(r.score_vs_par!==null)byC[cn].scores.push(r.score_vs_par)}})
+  const topCancha=Object.entries(byC).sort((a,b)=>b[1].n-a[1].n)[0]
+
+  const W=600,H=520
+  const canvas=document.createElement('canvas')
+  canvas.width=W;canvas.height=H
+  const ctx=canvas.getContext('2d')
+
+  // BG
+  ctx.fillStyle='#060f1a';ctx.fillRect(0,0,W,H)
+  const g=ctx.createLinearGradient(0,0,W,H)
+  g.addColorStop(0,'rgba(74,222,128,.14)');g.addColorStop(1,'rgba(79,70,229,.08)')
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H)
+
+  // Top bar
+  ctx.fillStyle='rgba(74,222,128,.12)';ctx.fillRect(0,0,W,58)
+  ctx.fillStyle='#4ade80';ctx.font='800 20px "Arial Black",sans-serif'
+  ctx.fillText('⚽ FRIGURSO',22,37)
+  const hoy=new Date().toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'})
+  ctx.fillStyle='rgba(255,255,255,.35)';ctx.font='500 12px Arial,sans-serif'
+  ctx.textAlign='right';ctx.fillText(hoy,W-22,37);ctx.textAlign='left'
+
+  // Player
+  ctx.fillStyle='#fff';ctx.font='700 22px Arial,sans-serif';ctx.fillText(nombre,22,90)
+  if(hcp!=null){
+    ctx.fillStyle='rgba(74,222,128,.8)';ctx.font='700 13px Arial,sans-serif'
+    ctx.fillText('HCP '+fmtHcp(hcp),22,110)
+  }
+
+  // Divider
+  ctx.strokeStyle='rgba(74,222,128,.2)';ctx.lineWidth=1
+  ctx.beginPath();ctx.moveTo(22,124);ctx.lineTo(W-22,124);ctx.stroke()
+
+  // Main stats row (Rondas / Mejor / Prom / Torneos / Victorias)
+  const row1=[
+    {v:data.length,l:'RONDAS',c:'#fff'},
+    {v:fmt(best),l:'MEJOR',c:best!==null&&best<0?'#4ade80':best!==null&&best>0?'#f87171':'#fff'},
+    {v:avg!==null?(avg>=0?'+'+avg.toFixed(1):avg.toFixed(1)):'—',l:'PROM.',c:avg!==null&&avg<0?'#4ade80':avg!==null&&avg>0?'#f87171':'#fff'},
+    {v:torneos,l:'TORNEOS',c:'#fbbf24'},
+    {v:victorias,l:'VICTORIAS',c:victorias?'#4ade80':'rgba(255,255,255,.4)'},
+  ]
+  const bw=108,bh=72,by=138,bpad=22
+  row1.forEach((s,i)=>{
+    const x=bpad+i*(bw+8)
+    ctx.fillStyle='rgba(255,255,255,.05)'
+    roundRect(ctx,x,by,bw,bh,10);ctx.fill()
+    ctx.fillStyle=s.c;ctx.font='800 30px "Arial Black",sans-serif';ctx.textAlign='center'
+    ctx.fillText(s.v,x+bw/2,by+40)
+    ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='600 10px Arial,sans-serif'
+    ctx.fillText(s.l,x+bw/2,by+58)
+    ctx.textAlign='left'
+  })
+
+  // Divider 2
+  ctx.strokeStyle='rgba(255,255,255,.07)';ctx.lineWidth=1
+  ctx.beginPath();ctx.moveTo(22,224);ctx.lineTo(W-22,224);ctx.stroke()
+
+  // Secondary stats (Eagles / Birdies / Racha / Mejor racha)
+  const row2=[
+    {e:'🦅',v:eagles,l:'EAGLES',c:'#c4b5fd'},
+    {e:'🐦',v:birdies,l:'BIRDIES',c:'#4ade80'},
+    {e:'🔥',v:racha,l:'RACHA ACT.',c:racha>0?'#4ade80':'rgba(255,255,255,.3)'},
+    {e:'⭐',v:mejorRacha,l:'MEJOR RACHA',c:mejorRacha>0?'#fbbf24':'rgba(255,255,255,.3)'},
+  ]
+  const bw2=130,bh2=80,by2=234
+  row2.forEach((s,i)=>{
+    const x=bpad+i*(bw2+9)
+    ctx.fillStyle='rgba(255,255,255,.04)'
+    roundRect(ctx,x,by2,bw2,bh2,10);ctx.fill()
+    ctx.font='22px sans-serif';ctx.textAlign='center'
+    ctx.fillText(s.e,x+bw2/2,by2+28)
+    ctx.fillStyle=s.c;ctx.font='800 28px "Arial Black",sans-serif'
+    ctx.fillText(s.v,x+bw2/2,by2+56)
+    ctx.fillStyle='rgba(255,255,255,.35)';ctx.font='600 9px Arial,sans-serif'
+    ctx.fillText(s.l,x+bw2/2,by2+72)
+    ctx.textAlign='left'
+  })
+
+  // Tendencia
+  if(sorted.length>=6){
+    const l5=sorted.slice(-5).map(r=>r.score_vs_par).filter(s=>s!==null)
+    const p5=sorted.slice(-10,-5).map(r=>r.score_vs_par).filter(s=>s!==null)
+    if(l5.length&&p5.length){
+      const al=l5.reduce((a,b)=>a+b,0)/l5.length
+      const ap=p5.reduce((a,b)=>a+b,0)/p5.length
+      const diff=al-ap
+      const tendTxt=diff<-0.5?'📈 Mejorando':diff>0.5?'📉 Bajando':'📊 Estable'
+      const tendCol=diff<-0.5?'#4ade80':diff>0.5?'#f87171':'rgba(255,255,255,.5)'
+      ctx.fillStyle=tendCol;ctx.font='700 14px Arial,sans-serif'
+      ctx.fillText(tendTxt+'  (últimas 5 rondas: prom. '+(al>=0?'+':'')+al.toFixed(1)+')',bpad,340)
+    }
+  }
+
+  // Top cancha
+  if(topCancha){
+    const [cn,cs]=topCancha
+    const bstC=cs.scores.length?Math.min(...cs.scores):null
+    const avgC=cs.scores.length?cs.scores.reduce((a,b)=>a+b,0)/cs.scores.length:null
+    ctx.fillStyle='rgba(255,255,255,.08)'
+    roundRect(ctx,bpad,354,W-bpad*2,68,10);ctx.fill()
+    ctx.fillStyle='rgba(74,222,128,.6)';ctx.font='700 10px Arial,sans-serif'
+    ctx.fillText('⛳ CANCHA FAVORITA',bpad+14,375)
+    ctx.fillStyle='#fff';ctx.font='700 16px Arial,sans-serif'
+    ctx.fillText(cn,bpad+14,397)
+    ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='500 12px Arial,sans-serif'
+    ctx.fillText(cs.n+' rondas · Mejor: '+(bstC!==null?fmt(bstC):'—')+' · Prom: '+(avgC!==null?(avgC>=0?'+'+avgC.toFixed(1):avgC.toFixed(1)):'—'),bpad+14,415)
+  }
+
+  // Mini chart (score evolution)
+  if(sorted.length>=2){
+    const vals=sorted.slice(-8).map(r=>r.score_vs_par).filter(s=>s!==null)
+    if(vals.length>=2){
+      const mn=Math.min(...vals,-2),mx=Math.max(...vals,2),rng=mx-mn||1
+      const cx0=bpad,cy0=438,cw=W-bpad*2,ch=50
+      ctx.strokeStyle='rgba(255,255,255,.07)';ctx.lineWidth=1
+      ctx.beginPath();ctx.moveTo(cx0,cy0);ctx.lineTo(cx0+cw,cy0);ctx.stroke()
+      ctx.beginPath()
+      vals.forEach((v,i)=>{
+        const px=cx0+i/(vals.length-1)*cw
+        const py=cy0+ch/2-(v-mn)/rng*ch+ch/2- ch/2 - (v-((mn+mx)/2))/rng*(ch*0.7)
+        i===0?ctx.moveTo(px,py):ctx.lineTo(px,py)
+      })
+      ctx.strokeStyle='rgba(74,222,128,.6)';ctx.lineWidth=2;ctx.stroke()
+      // Dots
+      vals.forEach((v,i)=>{
+        const px=cx0+i/(vals.length-1)*cw
+        const py=cy0+ch/2-(v-mn)/rng*ch+ch/2- ch/2 - (v-((mn+mx)/2))/rng*(ch*0.7)
+        ctx.beginPath();ctx.arc(px,py,3,0,Math.PI*2)
+        ctx.fillStyle=v<0?'#4ade80':v>0?'#f87171':'rgba(255,255,255,.5)';ctx.fill()
+      })
+    }
+  }
+
+  // Bottom tag
+  ctx.fillStyle='rgba(74,222,128,.4)';ctx.font='700 11px Arial,sans-serif'
+  ctx.textAlign='right';ctx.fillText('frigurso.vercel.app',W-22,H-8);ctx.textAlign='left'
+
+  canvas.toBlob(async blob=>{
+    const file=new File([blob],'frigurso-stats.png',{type:'image/png'})
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:'Mis estadísticas — FRIGURSO',text:nombre+' · '+data.length+' rondas · Mejor: '+fmt(best)}).catch(()=>{})
+    }else{
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='frigurso-stats.png';a.click()
+    }
+  },'image/png')
 }
 </script>
 </body>
