@@ -4066,8 +4066,12 @@ async function loadInforme(rondaId){
   if(!ronda){ic.innerHTML='<div class="empty" style="padding:40px 0"><div class="empty-i">📄</div><div class="empty-t">Ronda no encontrada</div></div>';return}
   let holes=(_statHoles||[]).filter(h=>h.ronda_id===rondaId)
   if(!holes.length){
-    const {data}=await SB.from('scorecard').select('*').eq('ronda_id',rondaId).order('hoyo').catch(()=>({data:null}))
-    holes=data||[]
+    try{
+      const q=SB.from('scorecard').select('*').eq('ronda_id',rondaId).order('hoyo')
+      const tOut=new Promise(res=>setTimeout(()=>res({data:[]}),6000))
+      const {data}=await Promise.race([q,tOut])
+      holes=data||[]
+    }catch(e){holes=[]}
   }else{
     holes=[...holes].sort((a,b)=>a.hoyo-b.hoyo)
   }
@@ -4079,6 +4083,7 @@ async function loadInforme(rondaId){
   holes.forEach(h=>{const d=h.golpes-h.par;if(d<=-2)dist.eagle++;else if(d===-1)dist.birdie++;else if(d===0)dist.par++;else if(d===1)dist.bogey++;else dist.dbl++})
   const sameCourseBest=_statData?.filter(r=>r.cancha_id===ronda.cancha_id&&r.id!==rondaId&&r.score_vs_par!==null).reduce((b,r)=>b===null?r.score_vs_par:Math.min(b,r.score_vs_par),null)
   const tipoBadge=ronda.tipo?.startsWith('torneo_')?`<span style="background:rgba(251,191,36,.12);color:rgba(251,191,36,.85);border:0.5px solid rgba(251,191,36,.25);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">🏆 TORNEO</span>`:`<span style="background:rgba(52,211,153,.08);color:var(--birdie);border:0.5px solid rgba(52,211,153,.2);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">⛳ PRÁCTICA</span>`
+  const posLine=ronda.posicion_final?`<div style="margin-top:6px;font-size:11px;color:rgba(251,191,36,.7)">🏅 Posición final: <strong style="color:#fbbf24;font-family:'Barlow Condensed',sans-serif;font-size:14px">${ronda.posicion_final}°</strong></div>`:''
   const mejorLine=sameCourseBest!==null?`<div style="margin-top:6px;font-size:11px;color:var(--tx3)">Mejor en esta cancha: <span style="color:${sameCourseBest<0?'var(--birdie)':sameCourseBest>0?'var(--bogey)':'var(--tx)'};font-weight:700;font-family:'Barlow Condensed',sans-serif">${sameCourseBest>=0?'+'+sameCourseBest:sameCourseBest}</span></div>`:''
   const miniChip=(n,lbl,col,show)=>show?`<div style="background:${col}20;border:0.5px solid ${col}40;border-radius:var(--r8);padding:8px 14px;text-align:center;flex-shrink:0"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:${col}">${n}</div><div style="font-size:9px;color:var(--tx3);letter-spacing:.5px;margin-top:2px">${lbl}</div></div>`:''
   const tableRows=holes.map(h=>{
@@ -4099,7 +4104,7 @@ async function loadInforme(rondaId){
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--tx);margin-bottom:10px">${ronda.canchas?.nombre||'Cancha'}</div>
       <div style="display:flex;align-items:flex-start;gap:14px">
         <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:54px;font-weight:800;color:${svpCol};line-height:1">${svpStr}</div><div style="font-size:9px;color:var(--tx3);letter-spacing:.5px;margin-top:2px">SCORE TOTAL</div></div>
-        <div style="flex:1;padding-top:4px">${tipoBadge}${mejorLine}</div>
+        <div style="flex:1;padding-top:4px">${tipoBadge}${posLine}${mejorLine}</div>
       </div>
     </div>
     <div style="display:flex;gap:6px;padding:0 16px 14px;overflow-x:auto">
@@ -4128,15 +4133,21 @@ async function loadInforme(rondaId){
 function generarAnalisis(ronda, holes, dist, svp, sameCourseBest){
   const cancha=ronda.canchas?.nombre||'la cancha'
   const tipo=ronda.tipo?.startsWith('torneo_')?'torneo':'práctica'
+  const esTorneo=tipo==='torneo'
+  const catLabel={ra250:'RA250',ra500:'RA500',ra1000:'RA1000',major:'Major',mundial:'World Cup'}[ronda.tipo?.replace('torneo_','')]||''
+  const ctxTorneo=esTorneo?` en el ${catLabel||'torneo'}`:''
+  const posStr=ronda.posicion_final?` · Posición final: ${ronda.posicion_final}°`:'';
+
   // Score level
   let nivel,intro,acol
-  if(svp<=-6){nivel='excepcional';intro=`Una ronda verdaderamente histórica. Terminar ${Math.abs(svp)} golpes bajo par en ${cancha} refleja un nivel de juego de élite absoluta.`;acol='#a78bfa'}
-  else if(svp<=-4){nivel='sobresaliente';intro=`Ronda sobresaliente en ${cancha}. ${Math.abs(svp)} golpes bajo par es un resultado que muy pocos jugadores logran en una cancha de este nivel.`;acol='var(--birdie)'}
-  else if(svp<=-2){nivel='excelente';intro=`Ronda excelente. ${Math.abs(svp)} golpes bajo par en ${cancha} refleja consistencia y buen manejo de cada hoyo.`;acol='var(--birdie)'}
-  else if(svp===-1){nivel='muy bueno';intro=`Un golpe bajo par en ${cancha}. Sólido y consistente, con buenos momentos durante la ronda.`;acol='var(--birdie)'}
-  else if(svp===0){nivel='perfecto';intro=`Al par en ${cancha}. Una ronda técnicamente impecable que requiere concentración en cada hoyo.`;acol='var(--tx)'}
-  else if(svp<=3){nivel='regular';intro=`Ronda por encima del par en ${cancha}. Con ajustes puntuales podés mejorar significativamente.`;acol='var(--bogey)'}
-  else{nivel='difícil';intro=`${cancha} presentó un desafío importante esta vez. Cada cancha exige adaptación y este resultado sirve como base para mejorar.`;acol='var(--dbl)'}
+  if(svp===null){nivel='sin score';intro=`Ronda en ${cancha} sin score registrado.`;acol='var(--tx3)'}
+  else if(svp<=-6){nivel='excepcional';intro=`Ronda histórica${ctxTorneo} en ${cancha}. Terminar ${Math.abs(svp)} golpes bajo par${esTorneo?' en competencia oficial':''} refleja un nivel de juego de élite absoluta.`;acol='#a78bfa'}
+  else if(svp<=-4){nivel='sobresaliente';intro=`Ronda sobresaliente${ctxTorneo} en ${cancha}. ${Math.abs(svp)} golpes bajo par${esTorneo?' en torneo':''} es un resultado que muy pocos jugadores logran.`;acol='var(--birdie)'}
+  else if(svp<=-2){nivel='excelente';intro=`Ronda excelente${ctxTorneo}. ${Math.abs(svp)} golpes bajo par en ${cancha} refleja consistencia y buen manejo del campo${esTorneo?' bajo presión de competencia':''}.`;acol='var(--birdie)'}
+  else if(svp===-1){nivel='muy bueno';intro=`Un golpe bajo par${ctxTorneo} en ${cancha}. Sólido y consistente${esTorneo?', especialmente valioso en un torneo':''}.`;acol='var(--birdie)'}
+  else if(svp===0){nivel='al par';intro=`Al par${ctxTorneo} en ${cancha}. Una ronda técnicamente impecable${esTorneo?' — mantener el par en competencia es un logro real':''}.`;acol='var(--tx)'}
+  else if(svp<=3){nivel='regular';intro=`Ronda por encima del par${ctxTorneo} en ${cancha}. ${esTorneo?'La presión competitiva es parte del aprendizaje. ':''}Con ajustes puntuales podés mejorar significativamente.`;acol='var(--bogey)'}
+  else{nivel='difícil';intro=`${cancha} presentó un desafío importante${ctxTorneo}. ${esTorneo?'Competir en torneo siempre suma experiencia. ':''}Cada ronda difícil es base para mejorar.`;acol='var(--dbl)'}
 
   // Best and worst holes (if data)
   let fuertes='',mejoras='',holesAnalysis=''
@@ -4205,7 +4216,7 @@ async function loadRanking(){
   el.innerHTML='<div class="empty" style="padding:24px 0"><div class="empty-i">⏳</div><div class="empty-t">Calculando...</div></div>'
   const [{data:jugadores},{data:rondasAll}]=await Promise.all([
     SB.from('jugadores').select('id,nombre,apellido,categoria,handicap,avatar_url'),
-    SB.from('rondas').select('jugador_id,tipo,posicion_final').eq('completada',true)
+    SB.from('rondas').select('jugador_id,tipo,posicion_final').not('score_vs_par','is',null)
   ])
   const bgColors=['rgba(74,222,128,.15)','rgba(14,165,233,.12)','rgba(248,113,113,.12)','rgba(251,191,36,.12)']
   const fgColors=['#4ade80','#0369a1','#f87171','#fbbf24']
