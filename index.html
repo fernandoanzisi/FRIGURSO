@@ -893,18 +893,24 @@ body{display:flex;align-items:center;justify-content:center}
 
       <!-- TAB 0: MI JUEGO -->
       <div id="stat-panel-0">
-        <div id="stat-kpis" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 14px">
+        <div id="stat-kpis" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 10px">
           <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--tx)">—</div><div style="font-size:10px;color:var(--tx2)">RONDAS</div></div>
           <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--birdie)">—</div><div style="font-size:10px;color:var(--tx2)">MEJOR</div></div>
           <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--birdie)">—</div><div style="font-size:10px;color:var(--tx2)">PROM.</div></div>
         </div>
+        <div id="stat-extra-kpis" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 10px"></div>
+        <div id="stat-tendencia" style="display:none;padding:0 16px 12px"></div>
         <div class="sec"><div class="card">
           <div class="ct">📈 Evolución del score</div>
           <div id="chart-evo" style="min-height:40px"></div>
         </div></div>
-        <div class="sec sec-b"><div class="card">
+        <div class="sec"><div class="card">
           <div class="ct">🎯 Distribución de golpes</div>
           <div id="chart-dist"><div class="empty"><div class="empty-i">⛳</div><div class="empty-t">Jugá tu primera ronda</div></div></div>
+        </div></div>
+        <div class="sec sec-b"><div class="card" style="padding:0;overflow:hidden">
+          <div class="ct" style="padding:12px 14px;border-bottom:0.5px solid var(--bd)">⛳ Rendimiento por cancha</div>
+          <div id="stat-canchas"><div class="empty" style="padding:20px 0"><div class="empty-i">⛳</div><div class="empty-t">Sin datos de canchas</div></div></div>
         </div></div>
       </div>
 
@@ -1063,10 +1069,13 @@ body{display:flex;align-items:center;justify-content:center}
     <div id="sum-tour-note" style="display:none;background:rgba(255,193,7,.1);border:0.5px solid rgba(255,193,7,.25);border-radius:var(--r8);padding:9px 16px;font-size:13px;color:#ffc107;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:8px">🌍 Registrada en FIFG World Cup 2026</div>
     <div id="sum-pts-note" style="display:none;background:rgba(74,222,128,.08);border:0.5px solid rgba(74,222,128,.2);border-radius:var(--r8);padding:9px 16px;font-size:13px;color:var(--c3);font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:8px;width:100%;text-align:center"></div>
     <div id="sum-save-status" style="display:none;width:100%;border-radius:var(--r8);padding:10px 14px;font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:4px;text-align:left"></div>
-    <div id="sum-actividad" style="display:none;width:100%;background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r12);padding:12px;margin-bottom:8px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.5px;margin-bottom:10px">ACTIVIDAD</div>
+    <div id="sum-actividad" style="display:none;width:100%;background:rgba(9,25,50,.6);border:0.5px solid rgba(74,222,128,.15);border-radius:var(--r12);padding:14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--c3);box-shadow:0 0 6px rgba(74,222,128,.6)"></div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:rgba(134,239,172,.7);letter-spacing:1px">ACTIVIDAD EN CAMPO</div>
+      </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px" id="sum-act-stats"></div>
-      <div id="sum-act-clima" style="display:none;background:rgba(14,165,233,.08);border:0.5px solid rgba(14,165,233,.2);border-radius:var(--r8);padding:8px 12px;font-size:12px;color:rgba(122,184,245,.8);margin-bottom:10px"></div>
+      <div id="sum-act-clima" style="display:none;background:rgba(14,165,233,.08);border:0.5px solid rgba(14,165,233,.2);border-radius:var(--r8);padding:10px 12px;margin-bottom:10px"></div>
       <div id="sum-act-mapa" style="display:none"></div>
     </div>
     <div style="display:flex;gap:10px;width:100%;margin-top:8px">
@@ -2350,7 +2359,8 @@ async function saveRound(){
     }catch(se){console.warn('scorecard insert:',se)}
     setStatus('✓','rgba(26,122,58,.15)','#4ade80','Ronda guardada correctamente')
     playSoundSave()
-    await _procesarActividad()
+    await _procesarActividad(ronda.id)
+    _showActividadEnSummary()
     localStorage.removeItem(DRAFT_KEY)
     document.getElementById('draft-card') && (document.getElementById('draft-card').style.display='none')
     loadDashboard()
@@ -3771,6 +3781,12 @@ function setHistorialDemo(){
     <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--tx)">0</div><div style="font-size:10px;color:var(--tx2)">RONDAS</div></div>
     <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--tx)">—</div><div style="font-size:10px;color:var(--tx2)">MEJOR</div></div>
     <div style="background:var(--bg2);border-radius:var(--r12);padding:13px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--tx)">—</div><div style="font-size:10px;color:var(--tx2)">PROM.</div></div>`
+  const exEl=document.getElementById('stat-extra-kpis')
+  if(exEl) exEl.innerHTML=''
+  const tEl=document.getElementById('stat-tendencia')
+  if(tEl) tEl.style.display='none'
+  const cEl=document.getElementById('stat-canchas')
+  if(cEl) cEl.innerHTML='<div class="empty" style="padding:20px 0"><div class="empty-i">⛳</div><div class="empty-t">Jugá tu primera ronda</div></div>'
   document.getElementById('chart-evo').innerHTML='<div class="empty" style="padding:20px 0"><div class="empty-i">📈</div><div class="empty-t">Sin datos aún</div></div>'
   document.getElementById('chart-dist').innerHTML='<div class="empty"><div class="empty-i">⛳</div><div class="empty-t">Jugá tu primera ronda</div></div>'
   document.getElementById('hist-list').innerHTML='<div class="empty"><div class="empty-i">📋</div><div class="empty-t">Sin rondas aún</div><div class="empty-s">Jugá tu primera ronda</div></div>'
@@ -3791,19 +3807,123 @@ function renderStatMiJuego(){
   const sc=data.map(r=>r.score_vs_par).filter(s=>s!==null)
   const best=sc.length?Math.min(...sc):null
   const avg=sc.length?(sc.reduce((a,b)=>a+b,0)/sc.length):null
-  const torneos=data.filter(r=>r.tipo==='torneo').length
+  const torneos=data.filter(r=>r.tipo?.startsWith('torneo_')).length
   const victorias=data.filter(r=>r.posicion_final===1).length
   const hcp=JUGADOR?.handicap
   const fmt=v=>v===0?'E':v>0?'+'+v:''+v
   const fmtHcp=v=>v>=0?'+'+parseFloat(v).toFixed(1):parseFloat(v).toFixed(1)
-  const kpi=(val,lbl,col='var(--tx)')=>`<div style="background:var(--bg2);border-radius:var(--r12);padding:14px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:${col};line-height:1">${val}</div><div style="font-size:10px;color:var(--tx2);margin-top:4px;letter-spacing:.5px">${lbl}</div></div>`
+
+  // Hole stats
+  const eagles=holes.filter(h=>h.golpes-h.par<=-2).length
+  const birdies=holes.filter(h=>h.golpes-h.par===-1).length
+  const pares=holes.filter(h=>h.golpes-h.par===0).length
+  const bogeys=holes.filter(h=>h.golpes-h.par===1).length
+  const doubles=holes.filter(h=>h.golpes-h.par>=2).length
+  const bajoPar=eagles+birdies
+  const pctBajoPar=holes.length?Math.round(bajoPar/holes.length*100):0
+  const gir=holes.length?(holes.filter(h=>h.golpes<=h.par).length/holes.length*100).toFixed(0)+'%':'—'
+
+  // Rachas
+  const sorted=[...data].sort((a,b)=>new Date(a.fecha)-new Date(b.fecha))
+  let rachaActual=0,mejorRacha=0,rachaTemp=0
+  for(let i=sorted.length-1;i>=0;i--){
+    if(sorted[i].score_vs_par!==null&&sorted[i].score_vs_par<0) rachaActual++
+    else break
+  }
+  for(const r of sorted){
+    if(r.score_vs_par!==null&&r.score_vs_par<0){rachaTemp++}
+    else{mejorRacha=Math.max(mejorRacha,rachaTemp);rachaTemp=0}
+  }
+  mejorRacha=Math.max(mejorRacha,rachaTemp)
+
+  // Tendencia: últimas 5 vs previas 5
+  const last5sc=sorted.slice(-5).map(r=>r.score_vs_par).filter(s=>s!==null)
+  const prev5sc=sorted.slice(-10,-5).map(r=>r.score_vs_par).filter(s=>s!==null)
+  const avgL5=last5sc.length?last5sc.reduce((a,b)=>a+b,0)/last5sc.length:null
+  const avgP5=prev5sc.length?prev5sc.reduce((a,b)=>a+b,0)/prev5sc.length:null
+
+  // Per cancha
+  const byCancha={}
+  data.forEach(r=>{
+    const cn=r.canchas?.nombre||'Sin nombre'
+    if(!byCancha[cn]) byCancha[cn]={rondas:0,scores:[]}
+    byCancha[cn].rondas++
+    if(r.score_vs_par!==null) byCancha[cn].scores.push(r.score_vs_par)
+  })
+
+  const kpi=(val,lbl,col='var(--tx)')=>`<div style="background:var(--bg2);border-radius:var(--r12);padding:12px;text-align:center;border:0.5px solid var(--bd)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:${col};line-height:1">${val}</div><div style="font-size:9px;color:var(--tx3);margin-top:3px;letter-spacing:.5px">${lbl}</div></div>`
+
   document.getElementById('stat-kpis').innerHTML=
-    kpi(data.length,'RONDAS','var(--tx)')+
+    kpi(data.length,'RONDAS')+
     kpi(best!==null?fmt(best):'—','MEJOR',best!==null&&best<0?'var(--birdie)':best!==null&&best>0?'var(--bogey)':'var(--tx)')+
-    kpi(avg!==null?(avg>=0?'+'+avg.toFixed(1):avg.toFixed(1)):'—','PROM.',avg!==null&&avg<0?'var(--birdie)':avg!==null&&avg>0?'var(--bogey)':'var(--tx)')+
-    kpi(hcp!=null?fmtHcp(hcp):'—','HCP')+
+    kpi(avg!==null?(avg>=0?'+'+avg.toFixed(1):avg.toFixed(1)):'—','PROMEDIO',avg!==null&&avg<0?'var(--birdie)':avg!==null&&avg>0?'var(--bogey)':'var(--tx)')+
+    kpi(hcp!=null?fmtHcp(hcp):'—','HANDICAP')+
     kpi(torneos,'TORNEOS')+
     kpi(victorias,'VICTORIAS',victorias?'var(--c3)':'var(--tx)')
+
+  const exEl=document.getElementById('stat-extra-kpis')
+  if(exEl) exEl.innerHTML=
+    kpi(eagles,'EAGLES','#c4b5fd')+
+    kpi(birdies,'BIRDIES','var(--birdie)')+
+    kpi(pares,'PARES','rgba(156,163,175,.8)')+
+    kpi(bogeys+doubles,'SOBRE PAR','var(--bogey)')+
+    kpi(rachaActual?rachaActual+'🔥':'0','RACHA ACT.',rachaActual>0?'var(--c3)':'var(--tx3)')+
+    kpi(mejorRacha?mejorRacha+'⭐':'0','MEJOR RACHA',mejorRacha>0?'#fbbf24':'var(--tx3)')
+
+  const tEl=document.getElementById('stat-tendencia')
+  if(tEl){
+    if(avgL5!==null&&avgP5!==null){
+      const diff=avgL5-avgP5
+      const tendIcon=diff<-0.5?'📈':diff>0.5?'📉':'📊'
+      const tendTxt=diff<-0.5?'Mejorando':diff>0.5?'Bajando':'Estable'
+      const tendCol=diff<-0.5?'var(--birdie)':diff>0.5?'var(--bogey)':'var(--tx2)'
+      const diffStr=diff>=0?'+'+diff.toFixed(1):diff.toFixed(1)
+      tEl.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:var(--r8);border:0.5px solid var(--bd)">
+        <div style="font-size:20px">${tendIcon}</div>
+        <div style="flex:1">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:${tendCol}">${tendTxt}</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:2px">Últ. 5: prom. ${avgL5>=0?'+'+avgL5.toFixed(1):avgL5.toFixed(1)} · Ant. 5: ${avgP5>=0?'+'+avgP5.toFixed(1):avgP5.toFixed(1)} (${diffStr})</div>
+        </div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:${tendCol}">${diffStr}</div>
+      </div>`
+      tEl.style.display='block'
+    } else {
+      tEl.style.display='none'
+    }
+  }
+
+  const cEl=document.getElementById('stat-canchas')
+  if(cEl){
+    const rows=Object.entries(byCancha)
+      .sort((a,b)=>{
+        const ba=a[1].scores.length?Math.min(...a[1].scores):999
+        const bb=b[1].scores.length?Math.min(...b[1].scores):999
+        return ba-bb
+      })
+      .map(([cn,cs])=>{
+        const bst=cs.scores.length?Math.min(...cs.scores):null
+        const av=cs.scores.length?cs.scores.reduce((a,b)=>a+b,0)/cs.scores.length:null
+        const bstStr=bst!==null?(bst===0?'E':bst>0?'+'+bst:''+bst):'—'
+        const avStr=av!==null?(av>=0?'+'+av.toFixed(1):av.toFixed(1)):'—'
+        const bstCol=bst!==null&&bst<0?'var(--birdie)':bst!==null&&bst>0?'var(--bogey)':'var(--tx)'
+        return`<tr style="border-bottom:0.5px solid rgba(255,255,255,.05)">
+          <td style="padding:9px 12px;font-size:13px;color:var(--tx)">${cn}</td>
+          <td style="padding:9px 8px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--tx2)">${cs.rondas}</td>
+          <td style="padding:9px 8px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:${bstCol}">${bstStr}</td>
+          <td style="padding:9px 8px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--tx2)">${avStr}</td>
+        </tr>`
+      }).join('')
+    cEl.innerHTML=`<table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:rgba(255,255,255,.04)">
+        <th style="padding:7px 12px;font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--tx3);text-align:left;letter-spacing:.5px">CANCHA</th>
+        <th style="padding:7px 8px;font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--tx3);text-align:center">RONDAS</th>
+        <th style="padding:7px 8px;font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--tx3);text-align:center">MEJOR</th>
+        <th style="padding:7px 8px;font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--tx3);text-align:center">PROM.</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`
+  }
+
   const last10=[...data].reverse().slice(-10)
   renderEvoChart(last10)
   if(holes.length){
@@ -3924,7 +4044,7 @@ async function loadInforme(rondaId){
   const dist={eagle:0,birdie:0,par:0,bogey:0,dbl:0}
   holes.forEach(h=>{const d=h.golpes-h.par;if(d<=-2)dist.eagle++;else if(d===-1)dist.birdie++;else if(d===0)dist.par++;else if(d===1)dist.bogey++;else dist.dbl++})
   const sameCourseBest=_statData?.filter(r=>r.cancha_id===ronda.cancha_id&&r.id!==rondaId&&r.score_vs_par!==null).reduce((b,r)=>b===null?r.score_vs_par:Math.min(b,r.score_vs_par),null)
-  const tipoBadge=ronda.tipo==='torneo'?`<span style="background:rgba(251,191,36,.12);color:rgba(251,191,36,.85);border:0.5px solid rgba(251,191,36,.25);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">🏆 TORNEO</span>`:`<span style="background:rgba(52,211,153,.08);color:var(--birdie);border:0.5px solid rgba(52,211,153,.2);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">⛳ PRÁCTICA</span>`
+  const tipoBadge=ronda.tipo?.startsWith('torneo_')?`<span style="background:rgba(251,191,36,.12);color:rgba(251,191,36,.85);border:0.5px solid rgba(251,191,36,.25);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">🏆 TORNEO</span>`:`<span style="background:rgba(52,211,153,.08);color:var(--birdie);border:0.5px solid rgba(52,211,153,.2);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">⛳ PRÁCTICA</span>`
   const mejorLine=sameCourseBest!==null?`<div style="margin-top:6px;font-size:11px;color:var(--tx3)">Mejor en esta cancha: <span style="color:${sameCourseBest<0?'var(--birdie)':sameCourseBest>0?'var(--bogey)':'var(--tx)'};font-weight:700;font-family:'Barlow Condensed',sans-serif">${sameCourseBest>=0?'+'+sameCourseBest:sameCourseBest}</span></div>`:''
   const miniChip=(n,lbl,col,show)=>show?`<div style="background:${col}20;border:0.5px solid ${col}40;border-radius:var(--r8);padding:8px 14px;text-align:center;flex-shrink:0"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:${col}">${n}</div><div style="font-size:9px;color:var(--tx3);letter-spacing:.5px;margin-top:2px">${lbl}</div></div>`:''
   const tableRows=holes.map(h=>{
@@ -3973,7 +4093,7 @@ async function loadInforme(rondaId){
 
 function generarAnalisis(ronda, holes, dist, svp, sameCourseBest){
   const cancha=ronda.canchas?.nombre||'la cancha'
-  const tipo=ronda.tipo==='torneo'?'torneo':'práctica'
+  const tipo=ronda.tipo?.startsWith('torneo_')?'torneo':'práctica'
   // Score level
   let nivel,intro,acol
   if(svp<=-6){nivel='excepcional';intro=`Una ronda verdaderamente histórica. Terminar ${Math.abs(svp)} golpes bajo par en ${cancha} refleja un nivel de juego de élite absoluta.`;acol='#a78bfa'}
@@ -4742,10 +4862,18 @@ function _calcDistancia(track){
 
 async function _fetchClimaRonda(lat,lon){
   try{
-    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,weather_code,precipitation&timezone=auto`).then(r=>r.json())
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,weather_code,precipitation,surface_pressure,relative_humidity_2m&timezone=auto`).then(r=>r.json())
     if(!r.current) return null
     const c=r.current
-    return{temp:Math.round(c.temperature_2m),viento:Math.round(c.wind_speed_10m),lluvia:c.precipitation>0,emoji:wcEmoji(c.weather_code),desc:wcDesc(c.weather_code)}
+    return{
+      temp:Math.round(c.temperature_2m),
+      viento:Math.round(c.wind_speed_10m),
+      lluvia:c.precipitation>0,
+      presion:Math.round(c.surface_pressure),
+      humedad:Math.round(c.relative_humidity_2m),
+      emoji:wcEmoji(c.weather_code),
+      desc:wcDesc(c.weather_code)
+    }
   }catch(e){return null}
 }
 
@@ -4769,18 +4897,24 @@ function _rutaSVG(track){
   </svg>`
 }
 
-async function _procesarActividad(){
+async function _procesarActividad(rondaId=null){
   const track=[..._gpsTrack]
   _stopGPSTrack()
   if(track.length<3){_actividadData=null;return}
   const dist=_calcDistancia(track)
-  if(dist<0.05){_actividadData=null;return} // menos de 50m = no válido
+  if(dist<0.05){_actividadData=null;return}
   const pasos=Math.round(dist*1300)
   const cal=Math.round(dist*65)
   const last=track[track.length-1]
   const clima=await _fetchClimaRonda(last.lat,last.lon)
   const durMin=Math.round((track[track.length-1].t-track[0].t)/60000)
-  _actividadData={dist:dist.toFixed(2),pasos,cal,durMin,clima,track}
+  _actividadData={dist:dist.toFixed(2),pasos,cal,durMin,clima,track,rondaId}
+  if(rondaId){
+    try{
+      const toSave={dist:_actividadData.dist,pasos,cal,durMin,clima,rondaId}
+      localStorage.setItem('frigurso_act_'+rondaId,JSON.stringify(toSave))
+    }catch(_){}
+  }
 }
 
 function _showActividadEnSummary(){
@@ -4789,20 +4923,52 @@ function _showActividadEnSummary(){
   if(!el) return
   if(!d){el.style.display='none';return}
   el.style.display='block'
-  document.getElementById('sum-act-stats').innerHTML=[
-    {e:'📏',v:d.dist+' km',l:'DISTANCIA'},
-    {e:'👣',v:d.pasos.toLocaleString(),l:'PASOS'},
-    {e:'🔥',v:d.cal+' kcal',l:'CALORÍAS'},
-  ].map(x=>`<div style="background:rgba(255,255,255,.05);border-radius:var(--r8);padding:8px;text-align:center"><div style="font-size:18px;margin-bottom:2px">${x.e}</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--tx)">${x.v}</div><div style="font-size:10px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700">${x.l}</div></div>`).join('')
+
+  const hoyosTotal=_lastRoundData?.course?.hoyos||18
+  const paceMin=d.durMin&&d.durMin>0?d.durMin/hoyosTotal:null
+  const paceFmt=paceMin?(Math.floor(paceMin)+"'"+String(Math.round((paceMin%1)*60)).padStart(2,'0')+'"'):null
+
+  const durFmt=(m)=>{
+    if(!m) return '—'
+    const h=Math.floor(m/60),mn=m%60
+    return h>0?h+'h '+mn+'min':mn+'min'
+  }
+
+  const stat=(e,v,l,col='var(--tx)')=>`<div style="background:rgba(255,255,255,.06);border-radius:var(--r8);padding:10px 6px;text-align:center;border:0.5px solid rgba(255,255,255,.08)">
+    <div style="font-size:16px;margin-bottom:3px">${e}</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:${col};line-height:1">${v}</div>
+    <div style="font-size:9px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-top:2px;letter-spacing:.4px">${l}</div>
+  </div>`
+
+  const stats=[
+    stat('📏',d.dist+' km','DISTANCIA','var(--c3)'),
+    stat('⏱',durFmt(d.durMin),'DURACIÓN','#7dd3fc'),
+    stat('🔥',d.cal+' kcal','CALORÍAS','#fb923c'),
+    stat('👣',d.pasos.toLocaleString(),'PASOS','var(--tx)'),
+    d.clima?.presion?stat('🌡',d.clima.presion+' hPa','PRESIÓN','#c4b5fd'):stat('🌡','—','PRESIÓN','var(--tx3)'),
+    d.clima?.humedad!=null?stat('💧',d.clima.humedad+'%','HUMEDAD','#38bdf8'):stat('💧','—','HUMEDAD','var(--tx3)'),
+  ]
+  document.getElementById('sum-act-stats').innerHTML=stats.join('')
+
   const climaEl=document.getElementById('sum-act-clima')
   if(d.clima){
     climaEl.style.display='block'
-    climaEl.innerHTML=`${d.clima.emoji} ${d.clima.desc} · ${d.clima.temp}°C · Viento ${d.clima.viento} km/h${d.clima.lluvia?' · 🌧 Lluvia':''}`
-  } else {climaEl.style.display='none'}
+    const extras=[
+      `${d.clima.emoji} ${d.clima.desc}`,
+      `${d.clima.temp}°C`,
+      `🌬 ${d.clima.viento} km/h`,
+      d.clima.lluvia?'🌧 Lluvia':'☀️ Despejado',
+      paceFmt?`⏱ ${paceFmt}/hoyo`:'',
+    ].filter(Boolean).join(' · ')
+    climaEl.innerHTML=`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(122,184,245,.6);letter-spacing:.5px;margin-bottom:4px">CONDICIONES DE JUEGO</div><div style="font-size:12px;color:rgba(122,184,245,.85);line-height:1.5">${extras}</div>`
+  } else { climaEl.style.display='none' }
+
   const mapaEl=document.getElementById('sum-act-mapa')
   const svg=_rutaSVG(d.track)
-  if(svg){mapaEl.style.display='block';mapaEl.innerHTML=`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.5px;margin-bottom:6px">RECORRIDO</div>${svg}`}
-  else mapaEl.style.display='none'
+  if(svg){
+    mapaEl.style.display='block'
+    mapaEl.innerHTML=`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.5px;margin-bottom:6px">RECORRIDO GPS</div>${svg}`
+  } else { mapaEl.style.display='none' }
 }
 </script>
 </body>
