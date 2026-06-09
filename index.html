@@ -3792,18 +3792,21 @@ async function loadHistorial(){
   _statDebug('Rondas en DB: '+total+' | Con score: '+filtered.length+(total>0&&!filtered.length?' ← score_vs_par es null en todas':''))
   if(!filtered.length){setHistorialDemo();return}
   _statData=filtered
-  const ids=filtered.map(r=>r.id)
-  const {data:holes}=await SB.from('scorecard').select('golpes,par,hoyo,ronda_id').in('ronda_id',ids).catch(()=>({data:null}))
-  _statHoles=holes||[]
-  _statDebug('✓ '+filtered.length+' rondas · '+( (holes||[]).length)+' hoyos — renderizando...')
+  _statHoles=[]
+  // Render básico inmediato (sin hoyos) para que aparezca algo
+  try{ renderStatMiJuego(); renderStatHistorial(); statTab(0) }catch(e){ _statDebug('ERROR render1: '+e.message) }
+  _statDebug('')
+  // Carga scorecard con timeout de 8s para no colgar
   try{
-    renderStatMiJuego()
-    renderStatHistorial()
-    statTab(0)
-    _statDebug('')
-  }catch(e){
-    _statDebug('ERROR render: '+e.message+' — '+e.stack?.split('\n')[1])
-  }
+    const ids=filtered.map(r=>r.id)
+    const qHoles=SB.from('scorecard').select('golpes,par,hoyo,ronda_id').in('ronda_id',ids)
+    const tOut=new Promise(res=>setTimeout(()=>res({data:[]}),8000))
+    const {data:holes}=await Promise.race([qHoles,tOut]).catch(()=>({data:[]}))
+    if(holes&&holes.length){
+      _statHoles=holes
+      try{ renderStatMiJuego(); renderStatHistorial() }catch(e){ _statDebug('ERROR render2: '+e.message) }
+    }
+  }catch(e){ _statDebug('ERROR scorecard: '+e.message) }
 }
 
 function setHistorialDemo(){
