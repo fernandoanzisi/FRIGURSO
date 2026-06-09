@@ -3791,14 +3791,19 @@ async function loadHistorial(){
   const filtered=(data||[]).filter(r=>r.score_vs_par!==null)
   _statDebug('Rondas en DB: '+total+' | Con score: '+filtered.length+(total>0&&!filtered.length?' ← score_vs_par es null en todas':''))
   if(!filtered.length){setHistorialDemo();return}
-  _statDebug('')
   _statData=filtered
   const ids=filtered.map(r=>r.id)
   const {data:holes}=await SB.from('scorecard').select('golpes,par,hoyo,ronda_id').in('ronda_id',ids).catch(()=>({data:null}))
   _statHoles=holes||[]
-  renderStatMiJuego()
-  renderStatHistorial()
-  statTab(0)
+  _statDebug('✓ '+filtered.length+' rondas · '+( (holes||[]).length)+' hoyos — renderizando...')
+  try{
+    renderStatMiJuego()
+    renderStatHistorial()
+    statTab(0)
+    _statDebug('')
+  }catch(e){
+    _statDebug('ERROR render: '+e.message+' — '+e.stack?.split('\n')[1])
+  }
 }
 
 function setHistorialDemo(){
