@@ -3765,10 +3765,22 @@ let _statData=null,_statHoles=null
 async function loadHistorial(){
   statTab(0)
   if(!USER){setHistorialDemo();return}
-  const {data}=await SB.from('rondas').select('*,canchas(nombre)').eq('jugador_id',USER.id).not('score_vs_par','is',null).order('fecha',{ascending:false}).catch(()=>({data:null}))
-  if(!data||!data.length){setHistorialDemo();return}
-  _statData=data
-  const ids=data.map(r=>r.id)
+  let data=null, queryErr=null
+  try{
+    const res=await SB.from('rondas').select('*,canchas(nombre)').eq('jugador_id',USER.id).order('fecha',{ascending:false})
+    data=res.data
+    queryErr=res.error
+  }catch(e){queryErr=e}
+  if(queryErr){
+    document.getElementById('hist-list').innerHTML=`<div style="padding:20px;color:#f87171;font-size:13px">Error al cargar: ${queryErr.message||JSON.stringify(queryErr)}</div>`
+    document.getElementById('chart-evo').innerHTML=''
+    document.getElementById('chart-dist').innerHTML=''
+    return
+  }
+  const filtered=(data||[]).filter(r=>r.score_vs_par!==null)
+  if(!filtered.length){setHistorialDemo();return}
+  _statData=filtered
+  const ids=filtered.map(r=>r.id)
   const {data:holes}=await SB.from('scorecard').select('golpes,par,hoyo,ronda_id').in('ronda_id',ids).catch(()=>({data:null}))
   _statHoles=holes||[]
   renderStatMiJuego()
