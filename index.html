@@ -1080,6 +1080,11 @@ body{display:flex;align-items:center;justify-content:center}
 
   <!-- ROUND SUMMARY -->
   <div class="sum-overlay" id="sum-overlay">
+    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:0.5px solid rgba(74,222,128,.12)">
+      <button onclick="closeSummary()" style="background:rgba(255,255,255,.1);border:none;border-radius:var(--r8);padding:7px 14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--c5);cursor:pointer">← VOLVER</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:rgba(134,239,172,.4);letter-spacing:1px">RONDA COMPLETADA</div>
+      <div style="width:80px"></div>
+    </div>
     <div class="sum-scroll">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(134,239,172,.35);letter-spacing:1.5px;font-weight:700;margin-bottom:10px">RONDA COMPLETADA</div>
       <div class="sum-score" id="sum-score">E</div>
