@@ -2612,53 +2612,66 @@ async function shareRound(){
   const d=_lastRoundData
   if(!d) return
   try{
+    const act=_actividadData
+    const clima=act?.clima
+    const hasAct=!!(act&&(act.dist||act.cal||act.pasos||act.durMin))
+    const hasClima=!!(clima&&(clima.temp!=null||clima.viento!=null))
+
+    // Dynamic canvas height based on available sections
+    const H=370+(hasAct?100:0)+(hasClima?100:0)+150
+    const W=600
+
     const canvas=document.createElement('canvas')
-    canvas.width=600;canvas.height=400
+    canvas.width=W;canvas.height=H
     const ctx=canvas.getContext('2d')
+
     // Background
     ctx.fillStyle='#0d1f2d'
-    ctx.fillRect(0,0,600,400)
-    // Green gradient accent
-    const g=ctx.createLinearGradient(0,0,600,400)
+    ctx.fillRect(0,0,W,H)
+    const g=ctx.createLinearGradient(0,0,W,H)
     g.addColorStop(0,'rgba(74,222,128,0.12)')
     g.addColorStop(1,'rgba(74,222,128,0)')
-    ctx.fillStyle=g;ctx.fillRect(0,0,600,400)
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H)
+
     // Top bar
     ctx.fillStyle='rgba(74,222,128,0.15)'
-    ctx.fillRect(0,0,600,64)
-    // App name
+    ctx.fillRect(0,0,W,64)
     ctx.fillStyle='#4ade80'
     ctx.font='800 22px "Arial Black",sans-serif'
     ctx.fillText('⚽ FRIGURSO',24,40)
-    // Date
     ctx.fillStyle='rgba(255,255,255,0.4)'
     ctx.font='500 13px Arial,sans-serif'
     const hoy=new Date().toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'})
     ctx.textAlign='right'
     ctx.fillText(hoy,576,40)
     ctx.textAlign='left'
-    // Player name
+
+    // Player + course
     ctx.fillStyle='#ffffff'
     ctx.font='700 20px Arial,sans-serif'
     ctx.fillText(JUGADOR?.nombre?(JUGADOR.nombre+(JUGADOR.apellido?' '+JUGADOR.apellido:'')):'Jugador',24,95)
-    // Course
     ctx.fillStyle='rgba(255,255,255,0.55)'
     ctx.font='500 14px Arial,sans-serif'
     ctx.fillText('📍 '+d.course.nombre+' · '+d.course.ciudad,24,118)
+
     // Divider
-    ctx.strokeStyle='rgba(74,222,128,0.2)'
-    ctx.lineWidth=1
-    ctx.beginPath();ctx.moveTo(24,133);ctx.lineTo(576,133);ctx.stroke()
-    // Score big
+    const divider=(y)=>{
+      ctx.strokeStyle='rgba(74,222,128,0.18)'
+      ctx.lineWidth=1
+      ctx.beginPath();ctx.moveTo(24,y);ctx.lineTo(576,y);ctx.stroke()
+    }
+    divider(133)
+
+    // Big score
     const scol=d.svp<0?'#4ade80':d.svp>0?'#f87171':'#ffffff'
     ctx.fillStyle=scol
     ctx.font='800 96px "Arial Black",sans-serif'
-    const scoreW=ctx.measureText(d.str).width
     ctx.fillText(d.str,24,240)
     ctx.fillStyle='rgba(255,255,255,0.3)'
     ctx.font='600 14px Arial,sans-serif'
     ctx.fillText('vs par',24,260)
-    // Golpes / Par
+
+    // Golpes / Par (right side)
     ctx.fillStyle='rgba(255,255,255,0.8)'
     ctx.font='700 18px Arial,sans-serif'
     ctx.textAlign='right'
@@ -2667,18 +2680,18 @@ async function shareRound(){
     ctx.font='500 14px Arial,sans-serif'
     ctx.fillText('Par '+d.tp,576,222)
     ctx.textAlign='left'
+
     // Tally row
     const tally=[
-      {i:'🦅',l:'Eagles',v:d.tally.eagle,c:'#c4b5fd'},
-      {i:'🐦',l:'Birdies',v:d.tally.birdie,c:'#4ade80'},
-      {i:'⛳',l:'Pares',v:d.tally.par,c:'rgba(255,255,255,0.6)'},
-      {i:'📍',l:'Bogeys',v:d.tally.bogey,c:'#fb923c'},
+      {l:'Eagles',v:d.tally.eagle,c:'#c4b5fd'},
+      {l:'Birdies',v:d.tally.birdie,c:'#4ade80'},
+      {l:'Pares',v:d.tally.par,c:'rgba(255,255,255,0.6)'},
+      {l:'Bogeys',v:d.tally.bogey,c:'#fb923c'},
     ]
     tally.forEach((t,i)=>{
       const x=24+i*138
       ctx.fillStyle='rgba(255,255,255,0.05)'
-      roundRect(ctx,x,277,126,74,10)
-      ctx.fill()
+      roundRect(ctx,x,277,126,74,10);ctx.fill()
       ctx.fillStyle=t.c
       ctx.font='800 28px "Arial Black",sans-serif'
       ctx.fillText(t.v,x+15,316)
@@ -2686,13 +2699,103 @@ async function shareRound(){
       ctx.font='500 11px Arial,sans-serif'
       ctx.fillText(t.l,x+15,334)
     })
+
+    let y=370
+
+    // ── ACTIVIDAD FÍSICA ──────────────────────────────────────────
+    if(hasAct){
+      divider(y);y+=14
+      ctx.fillStyle='rgba(255,255,255,0.35)'
+      ctx.font='600 11px Arial,sans-serif'
+      ctx.fillText('ACTIVIDAD FÍSICA',24,y+10)
+      y+=26
+      const durStr=act.durMin>=60
+        ?(Math.floor(act.durMin/60)+'h '+(Math.round(act.durMin)%60)+"'")
+        :(Math.round(act.durMin||0)+"'")
+      const actStats=[
+        {v:(act.dist||0).toFixed(1)+' km',l:'Distancia',c:'#93c5fd'},
+        {v:Math.round(act.cal||0)+' kcal',l:'Calorías',c:'#f9a8d4'},
+        {v:(act.pasos||0).toLocaleString('es'),l:'Pasos',c:'#fde68a'},
+        {v:durStr,l:'Duración',c:'#6ee7b7'},
+      ]
+      actStats.forEach((s,i)=>{
+        const x=24+i*138
+        ctx.fillStyle='rgba(255,255,255,0.07)'
+        roundRect(ctx,x,y,126,52,8);ctx.fill()
+        ctx.fillStyle=s.c
+        ctx.font='700 17px Arial,sans-serif'
+        ctx.fillText(s.v,x+10,y+29)
+        ctx.fillStyle='rgba(255,255,255,0.4)'
+        ctx.font='500 11px Arial,sans-serif'
+        ctx.fillText(s.l,x+10,y+46)
+      })
+      y+=62
+    }
+
+    // ── CLIMA ─────────────────────────────────────────────────────
+    if(hasClima){
+      divider(y);y+=14
+      ctx.fillStyle='rgba(255,255,255,0.35)'
+      ctx.font='600 11px Arial,sans-serif'
+      ctx.fillText('CLIMA',24,y+10)
+      y+=26
+      const wItems=[]
+      if(clima.emoji||clima.desc) wItems.push({v:(clima.emoji||'')+' '+(clima.desc||'').slice(0,10).trim(),l:'Condición',c:'#fde68a'})
+      if(clima.temp!=null) wItems.push({v:clima.temp+'°C',l:'Temperatura',c:'#fed7aa'})
+      if(clima.viento!=null) wItems.push({v:clima.viento+' km/h',l:'Viento',c:'#bae6fd'})
+      if(clima.humedad!=null) wItems.push({v:clima.humedad+'%',l:'Humedad',c:'#a5f3fc'})
+      const wW=wItems.length?Math.floor(552/wItems.length):138
+      wItems.forEach((s,i)=>{
+        const x=24+i*wW
+        ctx.fillStyle='rgba(255,255,255,0.07)'
+        roundRect(ctx,x,y,wW-6,52,8);ctx.fill()
+        ctx.fillStyle=s.c
+        ctx.font='700 17px Arial,sans-serif'
+        ctx.fillText(s.v,x+10,y+29)
+        ctx.fillStyle='rgba(255,255,255,0.4)'
+        ctx.font='500 11px Arial,sans-serif'
+        ctx.fillText(s.l,x+10,y+46)
+      })
+      y+=62
+    }
+
+    // ── ANÁLISIS ──────────────────────────────────────────────────
+    divider(y);y+=18
+    let lbl,analTxt
+    if(d.svp<=-5){lbl='¡EXTRAORDINARIO!';analTxt='Dominio total del campo. Una ronda de élite absoluta.'}
+    else if(d.svp<=-3){lbl='¡EXCELENTE!';analTxt='Ronda sólida con mucho bajo par. Muy por encima del promedio.'}
+    else if(d.svp<=-1){lbl='BAJO EL PAR';analTxt='Buen trabajo, terminaste con ventaja sobre el campo.'}
+    else if(d.svp===0){lbl='AL PAR';analTxt='Ronda consistente. Jugaste exactamente al nivel del campo.'}
+    else if(d.svp<=3){lbl='SOBRE EL PAR';analTxt='Ronda competitiva con margen de mejora. A seguir trabajando.'}
+    else{lbl='EN CONSTRUCCIÓN';analTxt='Cada golpe es aprendizaje. Seguí adelante, el progreso llega.'}
+    if(d.tally.eagle>=1) analTxt+=' Eagle conseguido — golpe de nivel tour.'
+    else if(d.tally.birdie>=3) analTxt+=' '+d.tally.birdie+' birdies destacados en la jornada.'
+
+    ctx.fillStyle=scol
+    ctx.font='800 15px "Arial Black",sans-serif'
+    ctx.fillText(lbl,24,y+14)
+    y+=30
+    // Word-wrapped analysis text
+    ctx.fillStyle='rgba(255,255,255,0.6)'
+    ctx.font='500 13px Arial,sans-serif'
+    const words=analTxt.split(' ')
+    let line=''
+    words.forEach(w=>{
+      const test=line?line+' '+w:w
+      if(ctx.measureText(test).width>548&&line){
+        ctx.fillText(line,24,y);y+=19;line=w
+      } else line=test
+    })
+    if(line){ctx.fillText(line,24,y);y+=19}
+
     // Bottom tag
     ctx.fillStyle='rgba(74,222,128,0.5)'
     ctx.font='700 12px Arial,sans-serif'
     ctx.textAlign='right'
-    ctx.fillText('frigurso.vercel.app',576,390)
+    ctx.fillText('frigurso.vercel.app',576,H-12)
     ctx.textAlign='left'
-    // Share
+
+    // Share / download
     canvas.toBlob(async blob=>{
       const file=new File([blob],'frigurso-ronda.png',{type:'image/png'})
       if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
