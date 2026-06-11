@@ -834,7 +834,30 @@ body{display:flex;align-items:center;justify-content:center}
 
     <!-- EQUIPOS -->
     <div class="sc" id="sc-equipos">
-      <div class="hdr"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Equipos 👥</div></div>
+      <div class="hdr">
+        <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+          <div><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Equipos 👥</div></div>
+          <button onclick="toggleEquipoForm()" style="background:rgba(74,222,128,.15);border:0.5px solid rgba(74,222,128,.3);border-radius:var(--r8);padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--c3);cursor:pointer">+ CREAR</button>
+        </div>
+      </div>
+      <!-- Form crear/unirse -->
+      <div id="eq-form" style="display:none;padding:14px 16px;background:var(--bg2);border-bottom:0.5px solid var(--bd)">
+        <div style="display:flex;gap:6px;margin-bottom:10px">
+          <button id="eq-tab-crear" onclick="setEqTab('crear')" style="flex:1;padding:8px;border-radius:var(--r8);border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;background:var(--c3);color:#fff;cursor:pointer">CREAR EQUIPO</button>
+          <button id="eq-tab-unirse" onclick="setEqTab('unirse')" style="flex:1;padding:8px;border-radius:var(--r8);border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;background:rgba(255,255,255,.08);color:var(--tx2);cursor:pointer">UNIRSE</button>
+        </div>
+        <div id="eq-panel-crear">
+          <input id="eq-nombre" class="inp" placeholder="Nombre del equipo" style="margin-bottom:8px">
+          <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap" id="eq-emoji-row">
+            🦅 🐆 🦁 🐉 🦊 🐺 🦈 ⚡ 🔥 🏆
+          </div>
+          <button onclick="crearEquipo()" class="btn-main" style="margin-top:0">CREAR</button>
+        </div>
+        <div id="eq-panel-unirse" style="display:none">
+          <input id="eq-codigo" class="inp" placeholder="Código de equipo (6 caracteres)" style="margin-bottom:10px;text-transform:uppercase;letter-spacing:2px">
+          <button onclick="unirseEquipo()" class="btn-main" style="margin-top:0">UNIRSE</button>
+        </div>
+      </div>
       <div class="sec sec-b" id="equipos-list"></div>
     </div>
 
@@ -894,7 +917,8 @@ body{display:flex;align-items:center;justify-content:center}
 
     <!-- HISTORIAL / ESTADÍSTICAS -->
     <div class="sc" id="sc-historial">
-      <div class="hdr"><div style="display:flex;align-items:center;gap:12px;width:100%"><button class="sc-back" onclick="tab(document.querySelector('[data-sc=sc-perfil]'),'sc-perfil')">← VOLVER</button><div style="flex:1"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Estadísticas 📊</div></div><button onclick="shareStats()" style="background:rgba(74,222,128,.15);border:0.5px solid rgba(74,222,128,.3);border-radius:var(--r8);padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--c3);cursor:pointer;white-space:nowrap">📤 COMPARTIR</button></div></div>
+      <div class="hdr"><div style="display:flex;align-items:center;gap:12px;width:100%"><button class="sc-back" onclick="tab(document.querySelector('[data-sc=sc-perfil]'),'sc-perfil')">← VOLVER</button><div style="flex:1"><div class="hdr-sub">FRIGURSO</div><div class="hdr-title">Estadísticas 📊</div></div><button onclick="shareStats()" style="background:rgba(74,222,128,.15);border:0.5px solid rgba(74,222,128,.3);border-radius:var(--r8);padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--c3);cursor:pointer;white-space:nowrap">📤 COMPARTIR</button>
+<button onclick="exportHistorialCSV()" style="background:rgba(96,165,250,.12);border:0.5px solid rgba(96,165,250,.3);border-radius:var(--r8);padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#60a5fa;cursor:pointer;white-space:nowrap">📥 CSV</button></div></div>
 
       <!-- TABS -->
       <div style="display:flex;gap:0;margin:0 16px 14px;background:var(--bg2);border-radius:var(--r12);padding:4px;border:0.5px solid var(--bd)">
@@ -1637,6 +1661,7 @@ function tab(btn,id){
   if(id==='sc-clima') loadClima()
   if(id==='sc-mundial') loadMundial()
   if(id==='sc-comunidad') loadComunidad()
+  if(id==='sc-equipos') loadEquipos()
   if(id==='sc-canchas'){ if(window._allCanchas&&window._allCanchas.length) renderCanchas(''); else renderStaticData() }
 }
 // Hardware back button: restore previous screen instead of closing app
@@ -3487,8 +3512,9 @@ async function uploadCanchaPhoto(file){
 let _liveChannel=null, _liveActive=false
 
 function toggleLiveScore(){
-  if(_liveActive) stopLiveScore()
-  else startLiveScore()
+  if(_liveActive){ stopLiveScore(); return }
+  if(!confirm('¿Activar transmisión EN VIVO?\nTu score será visible para todos en tiempo real.')) return
+  startLiveScore()
 }
 
 function startLiveScore(){
@@ -3975,22 +4001,146 @@ function loadMundial(){
   switchMundial('tv')
 }
 
+let _miEquipo=null
+let _equipoEmoji='🦅'
+
+function loadEquipos(){
+  // Cargar mi equipo de localStorage
+  try{ _miEquipo=JSON.parse(localStorage.getItem('fg_mi_equipo')||'null') }catch(_){}
+  renderEquipos()
+}
+
+function toggleEquipoForm(){
+  const f=document.getElementById('eq-form')
+  f.style.display=f.style.display==='none'?'block':'none'
+  // Renderizar emojis como botones
+  const row=document.getElementById('eq-emoji-row')
+  if(row&&row.childElementCount===0){
+    const emojis=['🦅','🐆','🦁','🐉','🦊','🐺','🦈','⚡','🔥','🏆','🎯','💥','🌪','🦂','🛡']
+    row.innerHTML=emojis.map(e=>`<button onclick="setEqEmoji('${e}',this)" style="font-size:22px;background:none;border:1.5px solid transparent;border-radius:8px;padding:4px 6px;cursor:pointer">${e}</button>`).join('')
+    setEqEmoji('🦅',row.querySelector('button'))
+  }
+}
+
+function setEqTab(t){
+  document.getElementById('eq-panel-crear').style.display=t==='crear'?'block':'none'
+  document.getElementById('eq-panel-unirse').style.display=t==='unirse'?'block':'none'
+  document.getElementById('eq-tab-crear').style.background=t==='crear'?'var(--c3)':'rgba(255,255,255,.08)'
+  document.getElementById('eq-tab-crear').style.color=t==='crear'?'#fff':'var(--tx2)'
+  document.getElementById('eq-tab-unirse').style.background=t==='unirse'?'var(--c3)':'rgba(255,255,255,.08)'
+  document.getElementById('eq-tab-unirse').style.color=t==='unirse'?'#fff':'var(--tx2)'
+}
+
+function setEqEmoji(e,btn){
+  _equipoEmoji=e
+  document.querySelectorAll('#eq-emoji-row button').forEach(b=>{
+    b.style.borderColor=b===btn?'var(--c3)':'transparent'
+    b.style.background=b===btn?'rgba(74,222,128,.15)':'none'
+  })
+}
+
+function crearEquipo(){
+  const nombre=document.getElementById('eq-nombre').value.trim()
+  if(!nombre){toast('Ingresá el nombre del equipo');return}
+  const codigo=Math.random().toString(36).substring(2,8).toUpperCase()
+  const miNombre=JUGADOR?(JUGADOR.nombre+' '+(JUGADOR.apellido||'')).trim():'Jugador'
+  const equipo={
+    id:codigo,
+    nombre,
+    emoji:_equipoEmoji,
+    codigo,
+    creador:miNombre,
+    miembros:[{nombre:miNombre,jugador_id:USER?.id||null,hcp:JUGADOR?.handicap||null}],
+    creado:new Date().toISOString()
+  }
+  _miEquipo=equipo
+  try{ localStorage.setItem('fg_mi_equipo',JSON.stringify(equipo)) }catch(_){}
+  document.getElementById('eq-form').style.display='none'
+  document.getElementById('eq-nombre').value=''
+  renderEquipos()
+  toast('✓ Equipo "'+nombre+'" creado · Código: '+codigo)
+}
+
+function unirseEquipo(){
+  const cod=document.getElementById('eq-codigo').value.trim().toUpperCase()
+  if(cod.length!==6){toast('El código tiene 6 caracteres');return}
+  // Por ahora almacenamos localmente con el código ingresado
+  const miNombre=JUGADOR?(JUGADOR.nombre+' '+(JUGADOR.apellido||'')).trim():'Jugador'
+  const equipo={
+    id:cod,
+    nombre:'Equipo '+cod,
+    emoji:'🏆',
+    codigo:cod,
+    creador:'—',
+    miembros:[{nombre:miNombre,jugador_id:USER?.id||null,hcp:JUGADOR?.handicap||null}],
+    unido:new Date().toISOString()
+  }
+  _miEquipo=equipo
+  try{ localStorage.setItem('fg_mi_equipo',JSON.stringify(equipo)) }catch(_){}
+  document.getElementById('eq-form').style.display='none'
+  document.getElementById('eq-codigo').value=''
+  renderEquipos()
+  toast('✓ Te uniste al equipo '+cod)
+}
+
+function salirEquipo(){
+  if(!confirm('¿Salir del equipo?')) return
+  _miEquipo=null
+  localStorage.removeItem('fg_mi_equipo')
+  renderEquipos()
+  toast('Saliste del equipo')
+}
+
+function compartirEquipo(){
+  if(!_miEquipo) return
+  const txt='¡Sumate a mi equipo en FRIGURSO!\nEquipo: '+_miEquipo.nombre+' '+_miEquipo.emoji+'\nCódigo: '+_miEquipo.codigo+'\nfrigurso.vercel.app'
+  if(navigator.share) navigator.share({title:'Equipo FRIGURSO',text:txt}).catch(()=>{})
+  else{ navigator.clipboard?.writeText(_miEquipo.codigo).then(()=>toast('Código copiado: '+_miEquipo.codigo)).catch(()=>toast('Código: '+_miEquipo.codigo)) }
+}
+
 function renderEquipos(){
-  const items=[
-    {i:'PR',n:'Patagonia Rangers',p:'🇦🇷',j:4,v:8,r:1,bg:'rgba(74,222,128,.12)',c:'#4ade80'},
-    {i:'RJ',n:'Rio Jaguares',p:'🇧🇷',j:4,v:6,r:2,bg:'rgba(14,165,233,.12)',c:'#0369a1'},
-    {i:'AM',n:'Andean Masters',p:'🇨🇱',j:3,v:4,r:3,bg:'rgba(248,113,113,.12)',c:'#f87171'},
-    {i:'PA',n:'Pampas Aces',p:'🇦🇷',j:4,v:3,r:4,bg:'rgba(251,191,36,.12)',c:'#fbbf24'},
-  ]
-  const pc=r=>r===1?'p1':r===2?'p2':r===3?'p3':'pn'
-  document.getElementById('equipos-list').innerHTML=`
-    ${items.map(e=>`<div class="eq"><div class="eq-lg" style="background:${e.bg};color:${e.c}">${e.i}</div><div style="flex:1"><div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:var(--tx)">${e.p} ${e.n}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${e.j} jugadores</div></div><div style="text-align:center;margin-right:8px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--birdie)">${e.v}</div><div style="font-size:10px;color:var(--tx3)">victorias</div></div><div class="pos-b ${pc(e.r)}">${e.r}</div></div>`).join('')}
-    <div class="sec-b" style="padding:14px 0 0"><div class="card"><div class="ct">📋 Formatos</div>
-    <div class="li"><span style="flex:1;font-size:14px;color:var(--tx)">Best Ball</span><span class="badge bg">Activo</span></div>
-    <div class="li"><span style="flex:1;font-size:14px;color:var(--tx)">Scramble</span><span class="badge bg">Activo</span></div>
-    <div class="li"><span style="flex:1;font-size:14px;color:var(--tx)">Match Play</span><span class="badge bb">Disponible</span></div>
-    <div class="li"><span style="flex:1;font-size:14px;color:var(--tx)">Ryder Cup</span><span class="badge bb">Disponible</span></div>
-    </div></div>`
+  const el=document.getElementById('equipos-list')
+  if(!el) return
+  if(_miEquipo){
+    el.innerHTML=`
+      <div style="padding:16px">
+        <div class="card" style="margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+            <div style="width:56px;height:56px;border-radius:16px;background:rgba(74,222,128,.12);border:0.5px solid rgba(74,222,128,.25);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">${_miEquipo.emoji}</div>
+            <div style="flex:1">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--tx)">${_miEquipo.nombre}</div>
+              <div style="font-size:12px;color:var(--tx3);margin-top:3px">Código: <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--c3);letter-spacing:2px">${_miEquipo.codigo}</span></div>
+            </div>
+          </div>
+          <div style="background:var(--bg2);border-radius:var(--r8);padding:10px 12px;margin-bottom:12px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--tx3);letter-spacing:.5px;margin-bottom:8px">MIEMBROS</div>
+            ${_miEquipo.miembros.map((m,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;${i<_miEquipo.miembros.length-1?'border-bottom:0.5px solid rgba(255,255,255,.06)':''}">
+              <div style="width:30px;height:30px;border-radius:50%;background:var(--c3);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">${m.nombre.charAt(0)}</div>
+              <div style="flex:1;font-size:13px;color:var(--tx)">${m.nombre}</div>
+              ${m.hcp!=null?`<div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--tx3)">HCP ${m.hcp}</div>`:''}
+            </div>`).join('')}
+          </div>
+          <div style="display:flex;gap:8px">
+            <button onclick="compartirEquipo()" style="flex:1;background:rgba(74,222,128,.12);border:0.5px solid rgba(74,222,128,.25);border-radius:var(--r12);padding:11px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--c3);cursor:pointer">📤 COMPARTIR CÓDIGO</button>
+            <button onclick="salirEquipo()" style="background:rgba(248,113,113,.1);border:0.5px solid rgba(248,113,113,.2);border-radius:var(--r12);padding:11px 14px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--red);cursor:pointer">Salir</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">📋 Formatos de equipo</div>
+          <div class="li"><span style="flex:1;font-size:14px;color:var(--tx)">Best Ball</span><span class="badge bg">Próximamente</span></div>
+          <div class="li"><span style="flex:1;font-size:14px;color:var(--tx)">Scramble</span><span class="badge bg">Próximamente</span></div>
+          <div class="li"><span style="flex:1;font-size:14px;color:var(--tx)">Match Play</span><span class="badge bb">Próximamente</span></div>
+        </div>
+      </div>`
+  } else {
+    el.innerHTML=`
+      <div style="text-align:center;padding:48px 28px">
+        <div style="font-size:52px;margin-bottom:14px">👥</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--tx);margin-bottom:8px">Sin equipo aún</div>
+        <div style="font-size:13px;color:var(--tx2);line-height:1.6;margin-bottom:24px">Creá tu equipo e invitá a tus compañeros con un código, o ingresá el código de alguien para unirte.</div>
+        <button onclick="toggleEquipoForm()" style="background:var(--c3);border:none;border-radius:var(--rF);padding:14px 32px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(74,222,128,.4)">+ CREAR O UNIRSE</button>
+      </div>`
+  }
 }
 
 let _statData=null,_statHoles=null
@@ -4133,6 +4283,8 @@ function renderStatMiJuego(){
     kpi(birdies,'BIRDIES','var(--birdie)')+
     kpi(pares,'PARES','rgba(156,163,175,.8)')+
     kpi(bogeys+doubles,'SOBRE PAR','var(--bogey)')+
+    kpi(gir,'GIR %','var(--blue)')+
+    kpi(pctBajoPar+'%','BAJO PAR','var(--birdie)')+
     kpi(rachaActual?rachaActual+'🔥':'0','RACHA ACT.',rachaActual>0?'var(--c3)':'var(--tx3)')+
     kpi(mejorRacha?mejorRacha+'⭐':'0','MEJOR RACHA',mejorRacha>0?'#fbbf24':'var(--tx3)')
 
@@ -4544,11 +4696,11 @@ async function loadRanking(){
       ?`<div class="av" style="background:${bg};overflow:hidden;padding:0"><img src="${r.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentNode.innerHTML='${r.ini}'"></div>`
       :`<div class="av" style="background:${bg};color:${c}">${r.ini}</div>`
     const isMe=USER&&r.id===USER.id
-    return`<div class="li" onclick="${!isMe&&r.id?`openH2H('${r.id}','${r.n.replace(/'/g,"\\'")}')`:''}" style="${!isMe&&r.id?'cursor:pointer;':''}">
+    return`<div class="li" onclick="${r.id?isMe?`toast('🏅 Tu mejor: ${r.pts} pts · HCP ${r.hcp}')`:`openH2H('${r.id}','${r.n.replace(/'/g,"\\'")}')`:''}" style="${r.id?'cursor:pointer;':''}">
       <div class="pos-b ${pc(pos)}" style="font-size:${pos<=3?'16px':'13px'}">${medals[i]||pos}</div>
       ${avEl}
       <div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--tx)">${r.p} ${r.n}${isMe?'<span style="font-size:10px;color:var(--c3);margin-left:6px;font-family:\'Barlow Condensed\',sans-serif;font-weight:700">TÚ</span>':''}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px">${r.cat} · HCP ${r.hcp}</div></div>
-      <div style="text-align:right"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:${r.pts?'#ffc107':'var(--tx3)'}">${r.pts}</div><div style="font-size:10px;color:var(--tx3)">pts${!isMe&&r.id?'<br><span style="color:var(--c3)">ver →</span>':''}</div></div>
+      <div style="text-align:right"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:${r.pts?'#ffc107':'var(--tx3)'}">${r.pts}</div><div style="font-size:10px;color:var(--tx3)">pts${r.id?'<br><span style="color:var(--c3)">'+(isMe?'🏅':'ver →')+'</span>':''}</div></div>
     </div>`}).join('')
 }
 
@@ -5523,6 +5675,30 @@ async function shareInforme(rondaId){
       const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fn;a.click()
     }
   },'image/png')
+}
+
+function exportHistorialCSV(){
+  if(!_statData||!_statData.length){toast('Sin datos para exportar');return}
+  const fmt=v=>v===null?'':v===0?'E':v>0?'+'+v:''+v
+  const rows=[['Fecha','Cancha','Tipo','Score vs Par','Total Golpes','Posición'].join(',')]
+  _statData.forEach(r=>{
+    const tipo=r.tipo?.startsWith('torneo_')?r.tipo.replace('torneo_','').toUpperCase():'Práctica'
+    rows.push([
+      r.fecha||'',
+      '"'+(r.canchas?.nombre||'—')+'"',
+      tipo,
+      fmt(r.score_vs_par),
+      r.total_golpes||'',
+      r.posicion_final||''
+    ].join(','))
+  })
+  const csv=rows.join('\n')
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'})
+  const url=URL.createObjectURL(blob)
+  const a=document.createElement('a')
+  a.href=url;a.download='frigurso-historial.csv';a.click()
+  URL.revokeObjectURL(url)
+  toast('📥 CSV descargado')
 }
 
 async function shareStats(){
