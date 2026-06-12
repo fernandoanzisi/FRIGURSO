@@ -1222,15 +1222,15 @@ body{display:flex;align-items:center;justify-content:center}
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(134,239,172,.4);letter-spacing:1px;font-weight:700;margin-bottom:10px">⭐ RESEÑAS</div>
         <div id="cd-resenas"></div>
         <div style="margin-top:10px">
-          <div style="display:flex;gap:6px;margin-bottom:8px" id="cd-star-row">
-            <span onclick="setResenaStars(1)" class="rstar" style="font-size:24px;cursor:pointer;opacity:.4">★</span>
-            <span onclick="setResenaStars(2)" class="rstar" style="font-size:24px;cursor:pointer;opacity:.4">★</span>
-            <span onclick="setResenaStars(3)" class="rstar" style="font-size:24px;cursor:pointer;opacity:.4">★</span>
-            <span onclick="setResenaStars(4)" class="rstar" style="font-size:24px;cursor:pointer;opacity:.4">★</span>
-            <span onclick="setResenaStars(5)" class="rstar" style="font-size:24px;cursor:pointer;opacity:.4">★</span>
+          <div style="display:flex;gap:4px;margin-bottom:10px" id="cd-star-row">
+            <button onclick="setResenaStars(1)" class="rstar" style="font-size:28px;cursor:pointer;opacity:.4;background:none;border:none;padding:6px 4px;touch-action:manipulation;-webkit-user-select:none;user-select:none;color:var(--tx3)">★</button>
+            <button onclick="setResenaStars(2)" class="rstar" style="font-size:28px;cursor:pointer;opacity:.4;background:none;border:none;padding:6px 4px;touch-action:manipulation;-webkit-user-select:none;user-select:none;color:var(--tx3)">★</button>
+            <button onclick="setResenaStars(3)" class="rstar" style="font-size:28px;cursor:pointer;opacity:.4;background:none;border:none;padding:6px 4px;touch-action:manipulation;-webkit-user-select:none;user-select:none;color:var(--tx3)">★</button>
+            <button onclick="setResenaStars(4)" class="rstar" style="font-size:28px;cursor:pointer;opacity:.4;background:none;border:none;padding:6px 4px;touch-action:manipulation;-webkit-user-select:none;user-select:none;color:var(--tx3)">★</button>
+            <button onclick="setResenaStars(5)" class="rstar" style="font-size:28px;cursor:pointer;opacity:.4;background:none;border:none;padding:6px 4px;touch-action:manipulation;-webkit-user-select:none;user-select:none;color:var(--tx3)">★</button>
           </div>
           <input id="cd-resena-txt" placeholder="Contá cómo es la cancha..." style="width:100%;background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r12);padding:10px 14px;font-size:13px;color:var(--tx);font-family:'Barlow',sans-serif;outline:none;margin-bottom:8px;box-sizing:border-box">
-          <button onclick="enviarResena()" style="width:100%;background:rgba(255,255,255,.08);border:0.5px solid var(--bd);border-radius:var(--r12);padding:11px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--tx);cursor:pointer">PUBLICAR RESEÑA</button>
+          <button onclick="enviarResena()" style="width:100%;background:rgba(255,255,255,.08);border:0.5px solid var(--bd);border-radius:var(--r12);padding:11px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--tx);cursor:pointer;touch-action:manipulation">PUBLICAR RESEÑA</button>
         </div>
       </div>
     </div>
@@ -3584,6 +3584,11 @@ function openCanchaDetail(c){
     }
   }
   ov.style.display='flex'
+  // Reset estrellas al abrir nueva cancha
+  setResenaStars(0)
+  // Mostrar/ocultar form según auth
+  const formResena=document.getElementById('cd-star-row')?.closest('div[style*="margin-top:10px"]')
+  if(formResena) formResena.style.display=USER?'block':'none'
   cargarResenas()
 }
 
@@ -3778,24 +3783,65 @@ function setResenaStars(n){
 }
 
 async function enviarResena(){
-  if(!_resenaStars){ toast('Elegí una puntuación primero'); return }
-  if(!_currentCancha||!USER){ toast('Iniciá sesión primero'); return }
-  const txt=document.getElementById('cd-resena-txt').value.trim()
-  const {error}=await SB.from('resenas_canchas').insert({cancha_nombre:_currentCancha.nombre,jugador_id:USER.id,rating:_resenaStars,comentario:txt}).catch(()=>({error:true}))
-  if(error){ toast('No se pudo publicar la reseña'); return }
-  document.getElementById('cd-resena-txt').value=''; setResenaStars(0)
-  toast('✓ Reseña publicada')
-  cargarResenas()
+  if(!USER){ toast('Iniciá sesión para dejar una reseña'); return }
+  if(!_resenaStars){ toast('Tocá las estrellas para puntuar'); return }
+  if(!_currentCancha){ return }
+  const txt=document.getElementById('cd-resena-txt')?.value.trim()||''
+  const btn=document.querySelector('[onclick="enviarResena()"]')
+  if(btn){ btn.disabled=true; btn.textContent='Publicando...' }
+  try{
+    const {error}=await SB.from('resenas_canchas').insert({
+      cancha_nombre:_currentCancha.nombre,
+      jugador_id:USER.id,
+      rating:_resenaStars,
+      comentario:txt
+    })
+    if(error) throw error
+    if(document.getElementById('cd-resena-txt')) document.getElementById('cd-resena-txt').value=''
+    setResenaStars(0)
+    toast('✓ Reseña publicada')
+    cargarResenas()
+  }catch(e){
+    console.error('enviarResena:',e)
+    toast('No se pudo publicar — intentá de nuevo')
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='PUBLICAR RESEÑA' }
+  }
 }
 
 async function cargarResenas(){
   const el=document.getElementById('cd-resenas')
   if(!el||!_currentCancha) return
-  const {data}=await SB.from('resenas_canchas').select('*,jugadores(nombre)').eq('cancha_nombre',_currentCancha.nombre).order('created_at',{ascending:false}).limit(5).catch(()=>({data:null}))
-  if(!data||!data.length){ el.innerHTML=''; return }
-  const avg=(data.reduce((a,r)=>a+r.rating,0)/data.length).toFixed(1)
-  el.innerHTML=`<div style="background:rgba(251,191,36,.08);border:0.5px solid rgba(251,191,36,.2);border-radius:var(--r12);padding:10px;margin-bottom:8px;display:flex;align-items:center;gap:10px"><span style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:#fbbf24">${avg}</span><div><div style="color:#fbbf24;font-size:16px">${'★'.repeat(Math.round(avg))}${'☆'.repeat(5-Math.round(avg))}</div><div style="font-size:11px;color:var(--tx3)">${data.length} reseña${data.length>1?'s':''}</div></div></div>`+
-  data.map(r=>`<div style="padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,.05)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px;font-weight:700;color:var(--tx)">${r.jugadores?.nombre||'—'}</span><span style="color:#fbbf24;font-size:13px">${'★'.repeat(r.rating)}</span></div>${r.comentario?`<div style="font-size:12px;color:var(--tx2)">${r.comentario}</div>`:''}</div>`).join('')
+  el.innerHTML='<div style="text-align:center;padding:8px;color:var(--tx3);font-size:12px">Cargando reseñas...</div>'
+  try{
+    const {data,error}=await SB.from('resenas_canchas')
+      .select('rating,comentario,created_at,jugador_id')
+      .eq('cancha_nombre',_currentCancha.nombre)
+      .order('created_at',{ascending:false})
+      .limit(10)
+    if(error||!data||!data.length){ el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:8px">Sin reseñas todavía — ¡sé el primero!</div>'; return }
+    const avg=(data.reduce((a,r)=>a+(r.rating||0),0)/data.length).toFixed(1)
+    const avgN=Math.round(avg)
+    el.innerHTML=`<div style="background:rgba(251,191,36,.08);border:0.5px solid rgba(251,191,36,.2);border-radius:var(--r12);padding:10px;margin-bottom:10px;display:flex;align-items:center;gap:12px">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;color:#fbbf24">${avg}</span>
+      <div>
+        <div style="color:#fbbf24;font-size:18px;letter-spacing:2px">${'★'.repeat(avgN)}${'☆'.repeat(5-avgN)}</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:2px">${data.length} reseña${data.length!==1?'s':''}</div>
+      </div>
+    </div>`+
+    data.map(r=>{
+      const esPropia=USER&&r.jugador_id===USER.id
+      return`<div style="padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,.05)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:11px;font-weight:700;color:${esPropia?'var(--c3)':'var(--tx2)'};">${esPropia?'Vos':('Jugador')}</span>
+          <span style="color:#fbbf24;font-size:14px;letter-spacing:1px">${'★'.repeat(r.rating||0)}</span>
+        </div>
+        ${r.comentario?`<div style="font-size:13px;color:var(--tx)">${r.comentario}</div>`:''}
+      </div>`
+    }).join('')
+  }catch(e){
+    el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:8px">Sin reseñas todavía</div>'
+  }
 }
 
 // ═══ 🔔 NOTIFICACIONES ═══
