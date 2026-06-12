@@ -1330,12 +1330,21 @@ const COURSE_PHOTOS=[
   {url:'https://img.youtube.com/vi/sGOvWHk5sJM/maxresdefault.jpg',nombre:'Tres Vidas Golf Club',ciudad:'Acapulco, México — FIFG World Cup 2026',pais:'🇲🇽'},
   {url:'https://www.footgolf.sport/acapulcoworldcup2026/wp-content/uploads/sites/7/2025/11/home_og-image-2-1-768x432.png',nombre:'Tres Vidas — Cancha oficial',ciudad:'Acapulco, Guerrero, México',pais:'🇲🇽'},
   {url:'https://www.footgolf.com.ar/imagenes/slider/3.jpg',nombre:'Selección Argentina de FootGolf',ciudad:'Torneo nacional',pais:'🇦🇷'},
+  {url:'https://www.footgolf.com.ar/imagenes/slider/4.jpg',nombre:'FootGolf Argentina',ciudad:'Torneo nacional',pais:'🇦🇷'},
   {url:'https://www.footgolf.com.ar/imagenes/slider/6.jpg',nombre:'Selección Argentina — World Cup',ciudad:'FootGolf World Cup 2016',pais:'🇦🇷'},
+  {url:'https://www.footgolf.com.ar/imagenes/slider/7.jpg',nombre:'FootGolf Argentina — Competencia',ciudad:'Torneo nacional',pais:'🇦🇷'},
 ]
 let _photoIdx=0, _photoTimer=null
+let _slidePhotos=[]
+
+function _shuffleArr(arr){
+  const a=[...arr]
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+  return a
+}
 
 function showHeroPhoto(idx){
-  const photos=COURSE_PHOTOS
+  const photos=_slidePhotos.length?_slidePhotos:COURSE_PHOTOS
   if(!photos.length) return
   const p=photos[idx%photos.length]
   const img=document.getElementById('home-hero-img')
@@ -1346,7 +1355,7 @@ function showHeroPhoto(idx){
   img.style.opacity='0'
   setTimeout(()=>{
     img.src=p.url
-    img.onerror=()=>{ if(_photoIdx<COURSE_PHOTOS.length-1){_photoIdx++;showHeroPhoto(_photoIdx)} }
+    img.onerror=()=>{ _photoIdx=(_photoIdx+1)%photos.length; showHeroPhoto(_photoIdx) }
     img.onload=()=>{ img.style.opacity='1' }
     if(nom) nom.textContent=p.nombre
     if(loc) loc.textContent=`📍 ${p.ciudad} ${p.pais}`
@@ -1354,10 +1363,30 @@ function showHeroPhoto(idx){
   },400)
 }
 
-function startHeroSlideshow(){
+async function startHeroSlideshow(){
   if(_photoTimer) clearInterval(_photoTimer)
-  showHeroPhoto(_photoIdx)
-  _photoTimer=setInterval(()=>{ _photoIdx=(_photoIdx+1)%COURSE_PHOTOS.length; showHeroPhoto(_photoIdx) },6000)
+  _photoIdx=0
+  // Arrancar mezclado de base inmediatamente
+  _slidePhotos=_shuffleArr(COURSE_PHOTOS)
+  showHeroPhoto(0)
+  _photoTimer=setInterval(()=>{ _photoIdx=(_photoIdx+1)%_slidePhotos.length; showHeroPhoto(_photoIdx) },6000)
+  // En paralelo: sumar fotos de torneos de la comunidad
+  try{
+    const {data}=await SB.from('comunidad_posts')
+      .select('foto_url')
+      .not('foto_url','is',null)
+      .neq('foto_url','')
+      .order('created_at',{ascending:false})
+      .limit(12)
+    if(data?.length){
+      const comFotos=data
+        .filter(p=>p.foto_url&&!/\.(mp4|mov|webm|avi)(\?|$)/i.test(p.foto_url))
+        .map(p=>({url:p.foto_url,nombre:'Torneo local',ciudad:'Comunidad FRIGURSO',pais:'🇦🇷'}))
+      if(comFotos.length){
+        _slidePhotos=_shuffleArr([..._slidePhotos,...comFotos])
+      }
+    }
+  }catch(_){}
 }
 
 const COURSES=[
