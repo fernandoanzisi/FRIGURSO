@@ -1200,11 +1200,11 @@ body{display:flex;align-items:center;justify-content:center}
       <button onclick="closeCanchaDetail()" style="position:absolute;top:14px;left:14px;background:rgba(0,0,0,.5);border:none;border-radius:var(--r8);padding:7px 12px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;backdrop-filter:blur(4px)">← VOLVER</button>
       <button onclick="toggleCanchaPhotoPanel()" style="position:absolute;top:14px;right:14px;background:rgba(0,0,0,.5);border:none;border-radius:var(--r8);padding:7px 12px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;backdrop-filter:blur(4px)">📷 FOTO</button>
       <input type="file" id="cd-photo-input" accept="image/*" style="display:none" onchange="uploadCanchaPhoto(this.files[0]);this.value=''">
-      <div id="cd-photo-panel" style="display:none;position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);padding:12px 14px;border-top:0.5px solid rgba(255,255,255,.12)">
-        <div style="display:flex;gap:8px">
-          <input type="url" id="cd-photo-url" placeholder="Pegá URL de imagen..." style="flex:1;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:var(--r8);padding:8px 10px;color:#fff;font-size:13px;font-family:'Barlow Condensed',sans-serif">
-          <button onclick="applyCanchaPhotoURL()" style="background:var(--c3);border:none;border-radius:var(--r8);padding:8px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#fff;cursor:pointer;flex-shrink:0">OK</button>
-          <button onclick="document.getElementById('cd-photo-input').click()" style="background:rgba(255,255,255,.15);border:none;border-radius:var(--r8);padding:8px 12px;font-size:13px;cursor:pointer;flex-shrink:0">📁</button>
+      <div id="cd-photo-panel" style="display:none;position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.92);backdrop-filter:blur(12px);padding:16px 16px 20px;border-top:0.5px solid rgba(255,255,255,.15)">
+        <button onclick="document.getElementById('cd-photo-input').click()" style="width:100%;background:rgba(255,255,255,.14);border:0.5px solid rgba(255,255,255,.25);border-radius:var(--r12);padding:14px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;letter-spacing:.5px;touch-action:manipulation">📁 ELEGIR DE LA GALERÍA</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="url" id="cd-photo-url" placeholder="O pegá una URL de imagen..." style="flex:1;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:var(--r8);padding:11px 12px;color:#fff;font-size:13px;font-family:'Barlow Condensed',sans-serif;outline:none">
+          <button onclick="applyCanchaPhotoURL()" style="background:var(--c3);border:none;border-radius:var(--r8);padding:11px 18px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#fff;cursor:pointer;flex-shrink:0;touch-action:manipulation">OK</button>
         </div>
       </div>
       <div style="position:absolute;bottom:14px;left:16px;right:16px">
@@ -3636,20 +3636,25 @@ function changeCanchaPhoto(){
 }
 async function uploadCanchaPhoto(file){
   if(!file||!_currentCancha) return
-  toast('⏳ Subiendo foto...')
+  if(file.size>20*1024*1024){ toast('Imagen muy grande — máx 20 MB'); return }
+  toast('⏳ Procesando foto...')
   try{
-    const blob=await resizeImage(file,800)
-    const key=(_currentCancha.id||_currentCancha.nombre.toLowerCase().replace(/\s+/g,'_'))+'.jpg'
-    const {error}=await SB.storage.from('canchas').upload(key,blob,{upsert:true,contentType:'image/jpeg'})
-    if(error) throw error
-    const {data:ud}=SB.storage.from('canchas').getPublicUrl(key)
-    const url=ud.publicUrl+'?t='+Date.now()
-    localStorage.setItem(getCanchaFotoKey(_currentCancha),url)
-    const img=document.getElementById('cd-photo-img')
-    img.src=url; img.style.display='block'
-    renderCanchas(document.getElementById('cancha-search')?.value||'')
-    toast('✓ Foto subida')
-  }catch(e){ toast('Error al subir foto') }
+    const blob=await resizeImage(file,700)
+    const reader=new FileReader()
+    reader.onload=e=>{
+      const dataUrl=e.target.result
+      try{ localStorage.setItem(getCanchaFotoKey(_currentCancha),dataUrl) }
+      catch(_){ toast('Sin espacio en el dispositivo'); return }
+      const img=document.getElementById('cd-photo-img')
+      img.src=dataUrl; img.style.display='block'
+      img.onerror=()=>img.style.display='none'
+      document.getElementById('cd-photo-panel').style.display='none'
+      renderCanchas(document.getElementById('cancha-search')?.value||'')
+      toast('✓ Foto guardada')
+    }
+    reader.onerror=()=>toast('No se pudo leer la imagen')
+    reader.readAsDataURL(blob)
+  }catch(e){ console.error('uploadCanchaPhoto:',e); toast('Error al procesar la foto') }
 }
 
 // ═══ 📡 LIVE SCORING ═══
@@ -3782,6 +3787,8 @@ function setResenaStars(n){
   })
 }
 
+function _resenaKey(nombre){ return'fg_resenas_'+(nombre||'').toLowerCase().replace(/[^a-z0-9]/g,'_') }
+
 async function enviarResena(){
   if(!USER){ toast('Iniciá sesión para dejar una reseña'); return }
   if(!_resenaStars){ toast('Tocá las estrellas para puntuar'); return }
@@ -3790,20 +3797,23 @@ async function enviarResena(){
   const btn=document.querySelector('[onclick="enviarResena()"]')
   if(btn){ btn.disabled=true; btn.textContent='Publicando...' }
   try{
-    const {error}=await SB.from('resenas_canchas').insert({
-      cancha_nombre:_currentCancha.nombre,
-      jugador_id:USER.id,
-      rating:_resenaStars,
-      comentario:txt
-    })
-    if(error) throw error
-    if(document.getElementById('cd-resena-txt')) document.getElementById('cd-resena-txt').value=''
+    // Guardar en localStorage (siempre funciona)
+    const key=_resenaKey(_currentCancha.nombre)
+    const stored=JSON.parse(localStorage.getItem(key)||'[]')
+    const nueva={rating:_resenaStars,comentario:txt,fecha:new Date().toISOString(),propio:true,nombre:JUGADOR?.nombre||'Vos'}
+    // Una sola reseña propia — reemplaza la anterior
+    const sinPropia=stored.filter(r=>!r.propio)
+    sinPropia.unshift(nueva)
+    localStorage.setItem(key,JSON.stringify(sinPropia.slice(0,30)))
+    document.getElementById('cd-resena-txt').value=''
     setResenaStars(0)
-    toast('✓ Reseña publicada')
+    toast('✓ Reseña guardada')
     cargarResenas()
+    // Intentar Supabase en background (si la tabla existe)
+    SB.from('resenas_canchas').insert({cancha_nombre:_currentCancha.nombre,jugador_id:USER.id,rating:_resenaStars,comentario:txt}).catch(()=>{})
   }catch(e){
     console.error('enviarResena:',e)
-    toast('No se pudo publicar — intentá de nuevo')
+    toast('No se pudo guardar — intentá de nuevo')
   }finally{
     if(btn){ btn.disabled=false; btn.textContent='PUBLICAR RESEÑA' }
   }
@@ -3812,36 +3822,49 @@ async function enviarResena(){
 async function cargarResenas(){
   const el=document.getElementById('cd-resenas')
   if(!el||!_currentCancha) return
-  el.innerHTML='<div style="text-align:center;padding:8px;color:var(--tx3);font-size:12px">Cargando reseñas...</div>'
+  // Leer localStorage primero
+  let reviews=[]
+  try{ reviews=JSON.parse(localStorage.getItem(_resenaKey(_currentCancha.nombre))||'[]') }catch(_){}
+  // Intentar Supabase en background y mezclar
   try{
-    const {data,error}=await SB.from('resenas_canchas')
+    const {data}=await SB.from('resenas_canchas')
       .select('rating,comentario,created_at,jugador_id')
       .eq('cancha_nombre',_currentCancha.nombre)
       .order('created_at',{ascending:false})
-      .limit(10)
-    if(error||!data||!data.length){ el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:8px">Sin reseñas todavía — ¡sé el primero!</div>'; return }
-    const avg=(data.reduce((a,r)=>a+(r.rating||0),0)/data.length).toFixed(1)
-    const avgN=Math.round(avg)
-    el.innerHTML=`<div style="background:rgba(251,191,36,.08);border:0.5px solid rgba(251,191,36,.2);border-radius:var(--r12);padding:10px;margin-bottom:10px;display:flex;align-items:center;gap:12px">
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;color:#fbbf24">${avg}</span>
-      <div>
-        <div style="color:#fbbf24;font-size:18px;letter-spacing:2px">${'★'.repeat(avgN)}${'☆'.repeat(5-avgN)}</div>
-        <div style="font-size:11px;color:var(--tx3);margin-top:2px">${data.length} reseña${data.length!==1?'s':''}</div>
-      </div>
-    </div>`+
-    data.map(r=>{
-      const esPropia=USER&&r.jugador_id===USER.id
-      return`<div style="padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,.05)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-          <span style="font-size:11px;font-weight:700;color:${esPropia?'var(--c3)':'var(--tx2)'};">${esPropia?'Vos':('Jugador')}</span>
-          <span style="color:#fbbf24;font-size:14px;letter-spacing:1px">${'★'.repeat(r.rating||0)}</span>
-        </div>
-        ${r.comentario?`<div style="font-size:13px;color:var(--tx)">${r.comentario}</div>`:''}
-      </div>`
-    }).join('')
-  }catch(e){
-    el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:8px">Sin reseñas todavía</div>'
+      .limit(20)
+    if(data?.length){
+      const dbReviews=data.map(r=>({
+        rating:r.rating,comentario:r.comentario,fecha:r.created_at,
+        propio:!!(USER&&r.jugador_id===USER.id),nombre:'Jugador'
+      }))
+      // Combinar: DB + locales que no están en DB
+      if(reviews.some(r=>r.propio)&&!dbReviews.some(r=>r.propio)){
+        reviews=[reviews.find(r=>r.propio),...dbReviews]
+      } else {
+        reviews=dbReviews
+      }
+    }
+  }catch(_){}
+  if(!reviews.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:12px">Sin reseñas todavía — ¡sé el primero!</div>'
+    return
   }
+  const avg=(reviews.reduce((a,r)=>a+(r.rating||0),0)/reviews.length).toFixed(1)
+  const avgN=Math.round(avg)
+  el.innerHTML=`<div style="background:rgba(251,191,36,.08);border:0.5px solid rgba(251,191,36,.2);border-radius:var(--r12);padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:12px">
+    <span style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;color:#fbbf24">${avg}</span>
+    <div>
+      <div style="color:#fbbf24;font-size:18px;letter-spacing:2px">${'★'.repeat(avgN)}${'☆'.repeat(5-avgN)}</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:2px">${reviews.length} reseña${reviews.length!==1?'s':''}</div>
+    </div>
+  </div>`+
+  reviews.map(r=>`<div style="padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,.05)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <span style="font-size:11px;font-weight:700;color:${r.propio?'var(--c3)':'var(--tx3)'};">${r.propio?(JUGADOR?.nombre||'Vos'):'Jugador'}</span>
+      <span style="color:#fbbf24;font-size:14px;letter-spacing:1px">${'★'.repeat(r.rating||0)}</span>
+    </div>
+    ${r.comentario?`<div style="font-size:13px;color:var(--tx);line-height:1.4">${r.comentario}</div>`:''}
+  </div>`).join('')
 }
 
 // ═══ 🔔 NOTIFICACIONES ═══
