@@ -1644,8 +1644,9 @@ async function doLogout(){
 
 function go(id){
   document.querySelectorAll('.sc').forEach(s=>s.classList.remove('cur'))
-  document.getElementById(id).classList.add('cur')
-  // Push state for hardware back button support
+  const el=document.getElementById(id)
+  if(!el){console.error('go(): elemento no encontrado:',id);return}
+  el.classList.add('cur')
   if(id!=='sc-auth') history.pushState({sc:id},'')
 }
 function tab(btn,id){
@@ -2552,10 +2553,12 @@ async function saveRound(){
   }catch(e){
     const sinSenial=!navigator.onLine||(e?.message||'').toLowerCase().includes('fetch')
     if(sinSenial){
-      statusEl.style.display='block'
-      statusEl.style.background='rgba(251,191,36,.12)'
-      statusEl.style.color='#fbbf24'
-      statusEl.innerHTML='📵 Sin señal · <strong>tus datos están guardados</strong><br><span style="font-weight:400;font-size:12px">Tocá CONTINUAR, volvé al inicio y retomá la ronda cuando tengas conexión.</span>'
+      if(statusEl){
+        statusEl.style.display='block'
+        statusEl.style.background='rgba(251,191,36,.12)'
+        statusEl.style.color='#fbbf24'
+        statusEl.innerHTML='📵 Sin señal · <strong>tus datos están guardados</strong><br><span style="font-weight:400;font-size:12px">Tocá CONTINUAR, volvé al inicio y retomá la ronda cuando tengas conexión.</span>'
+      } else toast('📵 Sin señal — la ronda quedó en borrador')
     }else{
       const msg=e?.message||e?.error_description||e?.code||JSON.stringify(e)||'Error desconocido'
       setStatus('⚠','rgba(248,113,113,.18)','#f09595','No se guardó: '+msg)
@@ -2974,23 +2977,24 @@ function saveEditHoles(){
   course.holes=_editHoles.map(h=>({...h}))
   course.par=_editHoles.reduce((s,h)=>s+h.par,0)
   // Save custom-course overrides to localStorage
+  let _holesSaved=false
   try{
     const key='fg_holes_override'
     const all=JSON.parse(localStorage.getItem(key)||'{}')
     all[course.id]=course.holes
     localStorage.setItem(key,JSON.stringify(all))
-    // Also update fg_custom_courses if it's a custom one
     if(course.custom){
       const saved=JSON.parse(localStorage.getItem('fg_custom_courses')||'[]')
       const idx=saved.findIndex(c=>c.id===course.id)
       if(idx>=0){saved[idx]=course;localStorage.setItem('fg_custom_courses',JSON.stringify(saved))}
     }
-  }catch(_){}
+    _holesSaved=true
+  }catch(e){console.error('saveEditHoles:',e)}
   // Reset scorecard to match new holes
   scores=new Array(course.holes.length).fill(null);hi=0
   renderSelector()
   closeEditHoles()
-  toast('✓ Hoyos guardados · Par total '+course.par)
+  toast(_holesSaved?'✓ Hoyos guardados · Par total '+course.par:'⚠ No se pudieron guardar los hoyos')
 }
 function _syncEditHoleCountBtns(){
   const n=_editHoles.length
@@ -3034,15 +3038,17 @@ function deleteCourse(id){
   if(_selCourse.id===id) _selCourse=COURSES.find(x=>x.id!==id)||COURSES[0]
   const idx=COURSES.findIndex(x=>x.id===id)
   if(idx>=0) COURSES.splice(idx,1)
+  let _delOk=false
   try{
     const saved=JSON.parse(localStorage.getItem('fg_custom_courses')||'[]')
     localStorage.setItem('fg_custom_courses',JSON.stringify(saved.filter(x=>x.id!==id)))
     const overrides=JSON.parse(localStorage.getItem('fg_holes_override')||'{}')
     delete overrides[id]
     localStorage.setItem('fg_holes_override',JSON.stringify(overrides))
-  }catch(_){}
+    _delOk=true
+  }catch(e){console.error('deleteCourse:',e)}
   renderSelector()
-  toast('Cancha eliminada')
+  toast(_delOk?'Cancha eliminada':'⚠ Error al eliminar la cancha')
 }
 
 let _favCourses=JSON.parse(localStorage.getItem('fg_fav_courses')||'[]')
@@ -3071,7 +3077,7 @@ function loadCustomCourses(){
       const c=COURSES.find(x=>x.id===id)
       if(c){c.holes=holes;c.par=holes.reduce((s,h)=>s+h.par,0)}
     })
-  }catch(_){}
+  }catch(e){console.error('loadCustomCourses:',e)}
 }
 
 let _catTorneo='ra250'
