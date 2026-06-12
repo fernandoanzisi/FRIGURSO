@@ -3797,23 +3797,36 @@ async function enviarResena(){
   const btn=document.querySelector('[onclick="enviarResena()"]')
   if(btn){ btn.disabled=true; btn.textContent='Publicando...' }
   try{
-    // Guardar en localStorage (siempre funciona)
+    // Guardar en Supabase (tabla existe y es pública)
+    const {error}=await SB.from('resenas_canchas').insert({
+      cancha_nombre:_currentCancha.nombre,
+      jugador_id:USER.id,
+      rating:_resenaStars,
+      comentario:txt
+    })
+    if(error) throw error
+    // También guardar en localStorage como caché local
     const key=_resenaKey(_currentCancha.nombre)
-    const stored=JSON.parse(localStorage.getItem(key)||'[]')
-    const nueva={rating:_resenaStars,comentario:txt,fecha:new Date().toISOString(),propio:true,nombre:JUGADOR?.nombre||'Vos'}
-    // Una sola reseña propia — reemplaza la anterior
-    const sinPropia=stored.filter(r=>!r.propio)
-    sinPropia.unshift(nueva)
-    localStorage.setItem(key,JSON.stringify(sinPropia.slice(0,30)))
+    const stored=JSON.parse(localStorage.getItem(key)||'[]').filter(r=>!r.propio)
+    stored.unshift({rating:_resenaStars,comentario:txt,fecha:new Date().toISOString(),propio:true})
+    try{ localStorage.setItem(key,JSON.stringify(stored.slice(0,30))) }catch(_){}
     document.getElementById('cd-resena-txt').value=''
     setResenaStars(0)
-    toast('✓ Reseña guardada')
+    toast('✓ Reseña publicada — todos la pueden ver')
     cargarResenas()
-    // Intentar Supabase en background (si la tabla existe)
-    SB.from('resenas_canchas').insert({cancha_nombre:_currentCancha.nombre,jugador_id:USER.id,rating:_resenaStars,comentario:txt}).catch(()=>{})
   }catch(e){
     console.error('enviarResena:',e)
-    toast('No se pudo guardar — intentá de nuevo')
+    // Fallback a localStorage si Supabase falla
+    try{
+      const key=_resenaKey(_currentCancha.nombre)
+      const stored=JSON.parse(localStorage.getItem(key)||'[]').filter(r=>!r.propio)
+      stored.unshift({rating:_resenaStars,comentario:txt,fecha:new Date().toISOString(),propio:true})
+      localStorage.setItem(key,JSON.stringify(stored.slice(0,30)))
+      document.getElementById('cd-resena-txt').value=''
+      setResenaStars(0)
+      toast('✓ Reseña guardada (sin conexión)')
+      cargarResenas()
+    }catch(_){ toast('No se pudo guardar — intentá de nuevo') }
   }finally{
     if(btn){ btn.disabled=false; btn.textContent='PUBLICAR RESEÑA' }
   }
@@ -3822,49 +3835,64 @@ async function enviarResena(){
 async function cargarResenas(){
   const el=document.getElementById('cd-resenas')
   if(!el||!_currentCancha) return
-  // Leer localStorage primero
+  el.innerHTML='<div style="text-align:center;padding:10px;color:var(--tx3);font-size:12px">Cargando...</div>'
   let reviews=[]
-  try{ reviews=JSON.parse(localStorage.getItem(_resenaKey(_currentCancha.nombre))||'[]') }catch(_){}
-  // Intentar Supabase en background y mezclar
   try{
-    const {data}=await SB.from('resenas_canchas')
+    // Supabase: reseñas públicas de todos los usuarios
+    const {data,error}=await SB.from('resenas_canchas')
       .select('rating,comentario,created_at,jugador_id')
       .eq('cancha_nombre',_currentCancha.nombre)
       .order('created_at',{ascending:false})
-      .limit(20)
-    if(data?.length){
-      const dbReviews=data.map(r=>({
-        rating:r.rating,comentario:r.comentario,fecha:r.created_at,
-        propio:!!(USER&&r.jugador_id===USER.id),nombre:'Jugador'
+      .limit(30)
+    if(!error&&data?.length){
+      reviews=data.map(r=>({
+        rating:r.rating,
+        comentario:r.comentario,
+        fecha:r.created_at,
+        propio:!!(USER&&r.jugador_id===USER.id)
       }))
-      // Combinar: DB + locales que no están en DB
-      if(reviews.some(r=>r.propio)&&!dbReviews.some(r=>r.propio)){
-        reviews=[reviews.find(r=>r.propio),...dbReviews]
-      } else {
-        reviews=dbReviews
-      }
     }
   }catch(_){}
+  // Si Supabase no respondió, usar localStorage como caché
+  if(!reviews.length){
+    try{ reviews=JSON.parse(localStorage.getItem(_resenaKey(_currentCancha.nombre))||'[]') }catch(_){}
+  }
   if(!reviews.length){
     el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:12px">Sin reseñas todavía — ¡sé el primero!</div>'
     return
   }
   const avg=(reviews.reduce((a,r)=>a+(r.rating||0),0)/reviews.length).toFixed(1)
   const avgN=Math.round(avg)
+  // Buscar nombre del jugador para reseñas ajenas
+  let jugadoresMap={}
+  try{
+    const ids=[...new Set(reviews.filter(r=>!r.propio&&r.jugador_id).map(r=>r.jugador_id))]
+    if(ids.length){
+      const {data:jd}=await SB.from('jugadores').select('id,nombre,apellido').in('id',ids)
+      if(jd) jd.forEach(j=>{ jugadoresMap[j.id]=(j.nombre||'')+(j.apellido?' '+j.apellido:'') })
+    }
+  }catch(_){}
   el.innerHTML=`<div style="background:rgba(251,191,36,.08);border:0.5px solid rgba(251,191,36,.2);border-radius:var(--r12);padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:12px">
     <span style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;color:#fbbf24">${avg}</span>
     <div>
       <div style="color:#fbbf24;font-size:18px;letter-spacing:2px">${'★'.repeat(avgN)}${'☆'.repeat(5-avgN)}</div>
-      <div style="font-size:11px;color:var(--tx3);margin-top:2px">${reviews.length} reseña${reviews.length!==1?'s':''}</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:2px">${reviews.length} reseña${reviews.length!==1?'s':''} · visible para todos</div>
     </div>
   </div>`+
-  reviews.map(r=>`<div style="padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,.05)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <span style="font-size:11px;font-weight:700;color:${r.propio?'var(--c3)':'var(--tx3)'};">${r.propio?(JUGADOR?.nombre||'Vos'):'Jugador'}</span>
-      <span style="color:#fbbf24;font-size:14px;letter-spacing:1px">${'★'.repeat(r.rating||0)}</span>
-    </div>
-    ${r.comentario?`<div style="font-size:13px;color:var(--tx);line-height:1.4">${r.comentario}</div>`:''}
-  </div>`).join('')
+  reviews.map(r=>{
+    const nombre=r.propio?(JUGADOR?.nombre||'Vos'):(jugadoresMap[r.jugador_id]||'Jugador')
+    const fecha=r.fecha?new Date(r.fecha).toLocaleDateString('es-AR',{day:'numeric',month:'short'}):''
+    return`<div style="padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,.05)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:12px;font-weight:700;color:${r.propio?'var(--c3)':'var(--tx)'};">${nombre}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${fecha?`<span style="font-size:10px;color:var(--tx3)">${fecha}</span>`:''}
+          <span style="color:#fbbf24;font-size:14px;letter-spacing:1px">${'★'.repeat(r.rating||0)}</span>
+        </div>
+      </div>
+      ${r.comentario?`<div style="font-size:13px;color:var(--tx2);line-height:1.4">${r.comentario}</div>`:''}
+    </div>`
+  }).join('')
 }
 
 // ═══ 🔔 NOTIFICACIONES ═══
