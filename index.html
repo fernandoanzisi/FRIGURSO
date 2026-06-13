@@ -2509,7 +2509,8 @@ async function saveRound(){
   }
   const _posF=parseInt(document.getElementById('inp-posicion')?.value)||null
   const _pts=_tourMode&&_posF?calcPuntosCat(_catTorneo,_posF):null
-  _lastRoundData={str,svp,tg,tp,tally,course:savedCourse,tourMode:_tourMode,groupSummary,catTorneo:_catTorneo,puntos:_pts,posicion:_posF}
+  _lastRoundData={str,svp,tg,tp,tally,course:savedCourse,tourMode:_tourMode,groupSummary,catTorneo:_catTorneo,puntos:_pts,posicion:_posF,
+    holes:H.map((h,i)=>({hoyo:h.n,par:h.par,golpes:allSc[i]??null})).filter(h=>h.golpes!==null)}
 
   // 1. Mostrar resumen SIEMPRE primero (UX inmediata)
   showSummary()
@@ -2641,211 +2642,315 @@ function closeSummary(){
 
 function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath()}
 
+// ── SHARE UNIFICADO ────────────────────────────────────────────────────────
+
+function _getCanchaFotoUrl(canchaId,canchaName){
+  const tryKey=k=>{const v=localStorage.getItem(k);return v&&v.startsWith('data:')?v:null}
+  if(canchaId){const r=tryKey('fg_cancha_foto_'+canchaId);if(r)return r}
+  if(canchaName){
+    const norm=canchaName.toLowerCase().replace(/\s+/g,'_')
+    const r=tryKey('fg_cancha_foto_'+norm);if(r)return r
+    const found=COURSES.find(c=>c.nombre===canchaName)
+    if(found){const r2=tryKey('fg_cancha_foto_'+found.id);if(r2)return r2}
+  }
+  if(window._allCanchas){
+    const ca=_allCanchas.find(c=>c.id===canchaId||c.nombre===canchaName)
+    if(ca){const r=tryKey('fg_cancha_foto_'+(ca.id||ca.nombre.toLowerCase().replace(/\s+/g,'_')));if(r)return r;if(ca.imagen_url)return ca.imagen_url}
+  }
+  return null
+}
+
+function _buildRoundAnalysis(d){
+  const{svp,tally,holes,bestEnCancha,esTorneo,catLabel,posicion,canchaName,clima,act,totalGolpes,totalPar}=d
+  const parts=[]
+  if(svp<=-6) parts.push('Ronda histórica: '+svp+' bajo par en '+canchaName+'. Uno de esos días que se recuerdan para siempre.')
+  else if(svp<=-4) parts.push('Ronda excepcional con '+Math.abs(svp)+' bajo par. Dominio técnico y mental sobre cada hoyo de la cancha.')
+  else if(svp<=-2) parts.push('Excelente resultado: '+Math.abs(svp)+' bajo par en '+canchaName+'. Combinación de potencia, precisión y cabeza fría.')
+  else if(svp===-1) parts.push('Un golpe bajo par. Ronda sólida con control constante durante los '+totalPar+' pares del recorrido.')
+  else if(svp===0) parts.push('Al par exacto en '+canchaName+'. Ronda técnicamente impecable — mantenerse en par durante toda la jornada es un logro real, no un accidente.')
+  else if(svp<=3) parts.push('Ronda sobre el par ('+totalGolpes+' golpes vs par '+totalPar+'). La cancha mostró su carácter hoy, pero eso también es parte del juego.')
+  else parts.push('Día exigente en '+canchaName+' con '+totalGolpes+' golpes. Cada ronda difícil es entrenamiento invisible — los mejores la jugaron también.')
+  if(tally.eagle>=2) parts.push(tally.eagle+' eagles en el scorecard — rendimiento de nivel profesional en esos hoyos.')
+  else if(tally.eagle===1) parts.push('1 eagle incluido: un golpe que muy pocos jugadores logran en la ronda.')
+  if(tally.birdie>=5) parts.push(tally.birdie+' birdies en la planilla. Esa consistencia bajo par no es suerte, es trabajo.')
+  else if(tally.birdie>=2) parts.push(tally.birdie+' birdies que marcaron la diferencia y mostraron el mejor nivel del juego.')
+  if(holes&&holes.length){
+    const worst=holes.filter(h=>h.golpes-h.par>=2)
+    if(worst.length===1) parts.push('El hoyo '+worst[0].hoyo+' (doble+) fue el único borrón en una planilla por lo demás sólida. Ese es el próximo foco.')
+    else if(worst.length>=2) parts.push('Los hoyos '+worst.slice(0,3).map(h=>h.hoyo).join(', ')+' concentran el margen de mejora: ahí está la próxima ronda ganada.')
+    const best=holes.filter(h=>h.golpes-h.par<=-2)
+    if(best.length&&worst.length===0) parts.push('Sin dobles ni peores: la consistencia en toda la vuelta es lo más difícil de sostener.')
+  }
+  if(esTorneo&&posicion) parts.push('Posición '+posicion+'° en '+catLabel+' — resultado competitivo real que suma ranking y experiencia bajo presión.')
+  else if(esTorneo) parts.push('Ronda en formato '+catLabel+': la competencia activa el juego de un modo que la práctica sola no puede replicar.')
+  if(bestEnCancha!==null&&bestEnCancha!==undefined&&svp<=bestEnCancha) parts.push('¡Nuevo mejor personal en '+canchaName+'! Ese número queda en el historial.')
+  if(clima){
+    if(clima.viento>=30) parts.push('Con '+clima.viento+' km/h de viento, cada trayectoria requirió ajuste — ese tipo de condiciones forman al jugador completo.')
+    else if(clima.lluvia) parts.push('Jugado con lluvia. Los que aprenden a jugar bajo esas condiciones tienen ventaja real en torneo.')
+    else if(clima.temp<=8) parts.push(clima.temp+'°C en la cancha: el frío endurece el swing y exige más atención en cada golpe.')
+  }
+  if(act&&parseFloat(act.dist)>=8) parts.push(parseFloat(act.dist).toFixed(1)+' km caminados: el footgolf trabaja cuerpo y mente al mismo tiempo. Eso suma.')
+  return parts.join(' ')
+}
+
+async function _buildShareCanvas(d){
+  const W=600
+  const hasHoles=d.holes&&d.holes.length>0
+  const hasAct=!!(d.act&&(d.act.dist||d.act.durMin))
+  const hasClima=!!(d.act?.clima&&(d.act.clima.temp!=null||d.act.clima.viento!=null))
+  const hasTrack=!!(d.act?.track&&d.act.track.length>=3)
+  const heroH=200
+  let H=heroH+130+90  // hero + player/score + tally
+  if(hasHoles) H+=82
+  if(hasTrack) H+=162
+  if(hasAct) H+=72
+  if(hasClima) H+=60
+  H+=115+40  // analysis + footer
+
+  const canvas=document.createElement('canvas')
+  canvas.width=W;canvas.height=H
+  const ctx=canvas.getContext('2d')
+
+  const rr=(x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath()}
+  const sep=y=>{ctx.strokeStyle='rgba(255,255,255,.07)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,y);ctx.lineTo(W-20,y);ctx.stroke()}
+  const wrapText=(text,x,y2,maxW,lh)=>{
+    if(!text) return y2
+    const words=text.split(' ');let line=''
+    for(const w of words){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){ctx.fillText(line,x,y2);y2+=lh;line=w}else line=t}
+    if(line){ctx.fillText(line,x,y2);y2+=lh}
+    return y2
+  }
+
+  // BG
+  ctx.fillStyle='#060f1a';ctx.fillRect(0,0,W,H)
+  const gbg=ctx.createLinearGradient(0,0,W,H)
+  gbg.addColorStop(0,'rgba(74,222,128,.13)');gbg.addColorStop(1,'rgba(79,70,229,.07)')
+  ctx.fillStyle=gbg;ctx.fillRect(0,0,W,H)
+
+  // ── HERO PHOTO ──────────────────────────────────────
+  let photoOk=false
+  if(d.photoUrl){
+    try{
+      const img=await new Promise((res,rej)=>{
+        const i=new Image();i.crossOrigin='anonymous'
+        i.onload=()=>res(i);i.onerror=()=>rej();i.src=d.photoUrl
+      })
+      ctx.save();ctx.beginPath();ctx.rect(0,0,W,heroH);ctx.clip()
+      const ir=img.width/img.height,cr=W/heroH
+      const dw=ir>cr?W:heroH*ir,dh=ir>cr?W/ir:heroH
+      ctx.drawImage(img,(W-dw)/2,(heroH-dh)/2,dw,dh)
+      ctx.restore();photoOk=true
+    }catch(_){}
+  }
+  if(!photoOk){
+    const gf=ctx.createLinearGradient(0,0,W,heroH)
+    gf.addColorStop(0,'#0d2416');gf.addColorStop(1,'#060f1a')
+    ctx.fillStyle=gf;ctx.fillRect(0,0,W,heroH)
+    ctx.font='90px serif';ctx.globalAlpha=0.15
+    ctx.fillText(d.cancha?.emoji||'⛳',W/2-45,heroH/2+32)
+    ctx.globalAlpha=1
+  }
+  // Hero overlay
+  const gOv=ctx.createLinearGradient(0,0,0,heroH)
+  gOv.addColorStop(0,'rgba(6,15,26,.4)');gOv.addColorStop(0.45,'rgba(6,15,26,.1)');gOv.addColorStop(1,'rgba(6,15,26,.92)')
+  ctx.fillStyle=gOv;ctx.fillRect(0,0,W,heroH)
+
+  // FRIGURSO badge
+  ctx.fillStyle='rgba(74,222,128,.18)';rr(14,12,136,30,8);ctx.fill()
+  ctx.strokeStyle='rgba(74,222,128,.45)';ctx.lineWidth=0.5;rr(14,12,136,30,8);ctx.stroke()
+  ctx.fillStyle='#4ade80';ctx.font='800 13px "Arial Black",sans-serif'
+  ctx.fillText('⚽ FRIGURSO',24,32)
+
+  // Date (top right)
+  ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='500 11px Arial,sans-serif'
+  ctx.textAlign='right';ctx.fillText(d.fecha,W-16,32);ctx.textAlign='left'
+
+  // Torneo badge (top right, below date)
+  if(d.esTorneo){
+    ctx.fillStyle='rgba(251,191,36,.2)';rr(W-d.catLabel.length*8-38,48,d.catLabel.length*8+26,22,6);ctx.fill()
+    ctx.fillStyle='#fbbf24';ctx.font='700 11px Arial,sans-serif'
+    ctx.textAlign='right';ctx.fillText('🏆 '+d.catLabel,W-16,64);ctx.textAlign='left'
+  }
+
+  // Course name + city over photo
+  ctx.fillStyle='#fff';ctx.font='800 22px "Arial Black",sans-serif'
+  ctx.fillText(d.canchaName,20,heroH-38)
+  ctx.fillStyle='rgba(255,255,255,.55)';ctx.font='500 12px Arial,sans-serif'
+  ctx.fillText('📍 '+(d.cancha?.ciudad||''),20,heroH-18)
+
+  // ── PLAYER + SCORE ──────────────────────────────────
+  let y=heroH+18
+  ctx.fillStyle='#fff';ctx.font='700 18px Arial,sans-serif'
+  ctx.fillText(d.nombre,20,y+20)
+  if(d.hcp!=null){
+    const hs='HCP '+(d.hcp>=0?'+'+parseFloat(d.hcp).toFixed(1):parseFloat(d.hcp).toFixed(1))
+    const hw=ctx.measureText(hs).width+16
+    ctx.fillStyle='rgba(74,222,128,.15)';rr(20,y+28,hw,20,6);ctx.fill()
+    ctx.strokeStyle='rgba(74,222,128,.3)';ctx.lineWidth=0.5;rr(20,y+28,hw,20,6);ctx.stroke()
+    ctx.fillStyle='#4ade80';ctx.font='700 10px Arial,sans-serif';ctx.fillText(hs,28,y+42)
+  }
+  const svpCol=d.svp<0?'#4ade80':d.svp>0?'#f87171':'#fff'
+  ctx.fillStyle=svpCol;ctx.font='800 76px "Arial Black",sans-serif'
+  ctx.textAlign='right';ctx.fillText(d.svpStr,W-18,y+88)
+  ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='500 12px Arial,sans-serif'
+  ctx.fillText(d.totalGolpes+' golpes · Par '+d.totalPar,W-18,y+106);ctx.textAlign='left'
+  if(d.posicion){
+    ctx.fillStyle='rgba(251,191,36,.75)';ctx.font='700 12px Arial,sans-serif'
+    ctx.fillText('🏅 Posición '+d.posicion+'°'+(d.esTorneo?' — '+d.catLabel:''),20,y+72)
+  }
+  if(d.bestEnCancha!=null){
+    const isNew=d.svp<=d.bestEnCancha
+    const fmtB=d.bestEnCancha===0?'E':d.bestEnCancha>0?'+'+d.bestEnCancha:''+d.bestEnCancha
+    ctx.fillStyle=isNew?'#4ade80':'rgba(255,255,255,.28)';ctx.font='500 11px Arial,sans-serif'
+    ctx.fillText(isNew?'🏆 ¡Nuevo mejor personal en esta cancha!':'Mejor personal aquí: '+fmtB,20,y+92)
+  }
+  y+=130;sep(y);y+=14
+
+  // ── TALLY ────────────────────────────────────────────
+  const tItems=[
+    {l:'Eagles',v:d.tally.eagle,c:'#c4b5fd'},
+    {l:'Birdies',v:d.tally.birdie,c:'#4ade80'},
+    {l:'Pares',v:d.tally.par,c:'rgba(200,200,200,.7)'},
+    {l:'Bogeys',v:d.tally.bogey,c:'#fb923c'},
+    {l:'Doble+',v:d.tally.dbl||0,c:'#f87171'},
+  ]
+  const tW=Math.floor((W-40)/5)
+  tItems.forEach((t,i)=>{
+    const tx=20+i*tW
+    const active=t.v>0
+    ctx.fillStyle=active?t.c+'22':'rgba(255,255,255,.03)';rr(tx,y,tW-6,72,10);ctx.fill()
+    ctx.strokeStyle=active?t.c+'55':'rgba(255,255,255,.04)';ctx.lineWidth=1;rr(tx,y,tW-6,72,10);ctx.stroke()
+    ctx.fillStyle=active?t.c:'rgba(255,255,255,.15)'
+    ctx.font='800 30px "Arial Black",sans-serif';ctx.textAlign='center'
+    ctx.fillText(t.v,tx+tW/2-3,y+44)
+    ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='500 9px Arial,sans-serif'
+    ctx.fillText(t.l.toUpperCase(),tx+tW/2-3,y+60);ctx.textAlign='left'
+  })
+  y+=90;sep(y);y+=12
+
+  // ── HOLE STRIP ───────────────────────────────────────
+  if(hasHoles){
+    ctx.fillStyle='rgba(255,255,255,.22)';ctx.font='700 9px Arial,sans-serif'
+    ctx.fillText('HOYO A HOYO',20,y+10);y+=16
+    const sz=28,gap=Math.max(0,(W-40-d.holes.length*sz)/(Math.max(d.holes.length-1,1)))
+    const hCols=['#c4b5fd','#4ade80','rgba(156,163,175,.65)','#fb923c','#ef4444']
+    d.holes.forEach((h,i)=>{
+      const diff=h.golpes-h.par
+      const col=diff<=-2?hCols[0]:diff===-1?hCols[1]:diff===0?hCols[2]:diff===1?hCols[3]:hCols[4]
+      const hx=20+i*(sz+gap)
+      ctx.fillStyle=col+'44';rr(hx,y,sz,sz,4);ctx.fill()
+      ctx.strokeStyle=col;ctx.lineWidth=1.3;rr(hx,y,sz,sz,4);ctx.stroke()
+      ctx.fillStyle='rgba(255,255,255,.35)';ctx.font='600 7px Arial,sans-serif';ctx.textAlign='center'
+      ctx.fillText(h.hoyo,hx+sz/2,y+9)
+      ctx.fillStyle=col;ctx.font='800 10px "Arial Black",sans-serif'
+      ctx.fillText(diff===0?'E':diff>0?'+'+diff:''+diff,hx+sz/2,y+23);ctx.textAlign='left'
+    })
+    y+=sz+14;sep(y);y+=12
+  }
+
+  // ── GPS ROUTE ────────────────────────────────────────
+  if(hasTrack){
+    const track=d.act.track
+    ctx.fillStyle='rgba(255,255,255,.22)';ctx.font='700 9px Arial,sans-serif'
+    ctx.fillText('RECORRIDO GPS · '+d.act.dist+' km',20,y+10);y+=16
+    const rW=W-40,rH=132,rx=20,ry=y
+    ctx.fillStyle='#0a1a14';rr(rx,ry,rW,rH,10);ctx.fill()
+    const lats=track.map(p=>p.lat),lons=track.map(p=>p.lon)
+    const minLa=Math.min(...lats),maxLa=Math.max(...lats)
+    const minLo=Math.min(...lons),maxLo=Math.max(...lons)
+    const pad3=18
+    const sx=maxLo>minLo?(rW-2*pad3)/(maxLo-minLo):1
+    const sy=maxLa>minLa?(rH-2*pad3)/(maxLa-minLa):1
+    const s=Math.min(sx,sy)
+    const pts=track.map(p=>({x:rx+pad3+(p.lon-minLo)*s,y:ry+rH-pad3-(p.lat-minLa)*s}))
+    // Route line with gradient
+    const gRoute=ctx.createLinearGradient(pts[0].x,pts[0].y,pts[pts.length-1].x,pts[pts.length-1].y)
+    gRoute.addColorStop(0,'rgba(74,222,128,.9)');gRoute.addColorStop(1,'rgba(248,113,113,.9)')
+    ctx.strokeStyle=gRoute;ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round'
+    ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.stroke()
+    // Dots
+    ctx.fillStyle='#4ade80';ctx.beginPath();ctx.arc(pts[0].x,pts[0].y,5,0,Math.PI*2);ctx.fill()
+    const lp=pts[pts.length-1]
+    ctx.fillStyle='#f87171';ctx.beginPath();ctx.arc(lp.x,lp.y,5,0,Math.PI*2);ctx.fill()
+    ctx.fillStyle='#4ade80';ctx.font='600 8px Arial,sans-serif'
+    ctx.fillText('INICIO',Math.min(pts[0].x+7,rx+rW-50),pts[0].y+3)
+    ctx.fillStyle='#f87171'
+    ctx.fillText('FIN',Math.min(lp.x+7,rx+rW-30),lp.y+3)
+    y+=rH+14;sep(y);y+=12
+  }
+
+  // ── ACTIVIDAD ────────────────────────────────────────
+  if(hasAct){
+    const act=d.act
+    const durFmt=m=>{if(!m)return'—';const h=Math.floor(m/60),mn=m%60;return h?h+'h '+mn+'min':mn+'min'}
+    const hoyosN=d.cancha?.hoyos||18
+    const paceMin=act.durMin&&act.durMin>0?act.durMin/hoyosN:null
+    const paceFmt=paceMin?(Math.floor(paceMin)+"'"+String(Math.round((paceMin%1)*60)).padStart(2,'0')+'"'):null
+    ctx.fillStyle='rgba(134,239,172,.08)';rr(20,y,W-40,56,10);ctx.fill()
+    ctx.fillStyle='rgba(134,239,172,.5)';ctx.font='700 9px Arial,sans-serif';ctx.fillText('ACTIVIDAD EN CAMPO',34,y+14)
+    const aLine=['📏 '+act.dist+' km','⏱ '+durFmt(act.durMin),'🔥 '+act.cal+' kcal','👣 '+(act.pasos||0).toLocaleString('es'),paceFmt?'⛳ '+paceFmt+'/hoyo':''].filter(Boolean).join('  ·  ')
+    ctx.fillStyle='rgba(134,239,172,.85)';ctx.font='500 12px Arial,sans-serif';ctx.fillText(aLine,34,y+38)
+    y+=72;sep(y);y+=12
+  }
+
+  // ── CLIMA ────────────────────────────────────────────
+  if(hasClima){
+    const c=d.act.clima
+    ctx.fillStyle='rgba(14,165,233,.08)';rr(20,y,W-40,46,10);ctx.fill()
+    ctx.fillStyle='rgba(122,184,245,.5)';ctx.font='700 9px Arial,sans-serif';ctx.fillText('CLIMA AL MOMENTO DE JUGAR',34,y+14)
+    const cl=[c.emoji+' '+c.desc,c.temp+'°C','💨 '+c.viento+' km/h',c.lluvia?'🌧 Lluvia':'☀️ Despejado',c.presion?'🌡 '+c.presion+' hPa':'',c.humedad!=null?'💧 '+c.humedad+'%':''].filter(Boolean).join(' · ')
+    ctx.fillStyle='rgba(186,230,253,.85)';ctx.font='500 12px Arial,sans-serif';ctx.fillText(cl,34,y+34)
+    y+=60;sep(y);y+=12
+  }
+
+  // ── AI ANALYSIS ──────────────────────────────────────
+  ctx.fillStyle='rgba(74,222,128,.3)';ctx.font='700 9px Arial,sans-serif';ctx.fillText('🤖 ANÁLISIS DE RONDA',20,y+12);y+=24
+  const analysis=_buildRoundAnalysis({svp:d.svp,tally:d.tally,holes:d.holes,bestEnCancha:d.bestEnCancha,esTorneo:d.esTorneo,catLabel:d.catLabel,posicion:d.posicion,canchaName:d.canchaName,clima:d.act?.clima,act:d.act,totalGolpes:d.totalGolpes,totalPar:d.totalPar})
+  ctx.fillStyle='rgba(255,255,255,.62)';ctx.font='500 12px Arial,sans-serif'
+  y=wrapText(analysis,20,y,W-40,19)
+
+  // ── FOOTER ───────────────────────────────────────────
+  y+=18;ctx.strokeStyle='rgba(74,222,128,.12)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,y);ctx.lineTo(W-20,y);ctx.stroke()
+  ctx.fillStyle='rgba(74,222,128,.45)';ctx.font='700 11px Arial,sans-serif'
+  ctx.textAlign='right';ctx.fillText('frigurso.vercel.app',W-18,y+22);ctx.textAlign='left'
+  ctx.fillStyle='rgba(255,255,255,.18)';ctx.font='500 10px Arial,sans-serif'
+  ctx.fillText('FootGolf Argentina',20,y+22)
+
+  // ── SHARE ────────────────────────────────────────────
+  return new Promise(resolve=>{
+    canvas.toBlob(async blob=>{
+      const fn='frigurso-'+(d.canchaName||'ronda').replace(/\s+/g,'-')+'-'+(d.fechaRaw||'').replace(/-/g,'')+'.png'
+      const file=new File([blob],fn,{type:'image/png'})
+      const txt=d.nombre+' · '+d.canchaName+' · '+d.svpStr+(d.esTorneo?' ('+d.catLabel+')':'')
+      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:'Mi ronda — FRIGURSO',text:txt}).catch(()=>{})
+      }else{
+        const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fn;a.click()
+        URL.revokeObjectURL(a.href);toast('📥 Imagen guardada')
+      }
+      resolve()
+    },'image/png')
+  })
+}
+
 async function shareRound(){
   const d=_lastRoundData
   if(!d) return
-  try{
-    const act=_actividadData
-    const clima=act?.clima
-    const hasAct=!!(act&&(act.dist||act.cal||act.pasos||act.durMin))
-    const hasClima=!!(clima&&(clima.temp!=null||clima.viento!=null))
-
-    // Dynamic canvas height based on available sections
-    const H=370+(hasAct?100:0)+(hasClima?100:0)+150
-    const W=600
-
-    const canvas=document.createElement('canvas')
-    canvas.width=W;canvas.height=H
-    const ctx=canvas.getContext('2d')
-
-    // Background
-    ctx.fillStyle='#0d1f2d'
-    ctx.fillRect(0,0,W,H)
-    const g=ctx.createLinearGradient(0,0,W,H)
-    g.addColorStop(0,'rgba(74,222,128,0.12)')
-    g.addColorStop(1,'rgba(74,222,128,0)')
-    ctx.fillStyle=g;ctx.fillRect(0,0,W,H)
-
-    // Top bar
-    ctx.fillStyle='rgba(74,222,128,0.15)'
-    ctx.fillRect(0,0,W,64)
-    ctx.fillStyle='#4ade80'
-    ctx.font='800 22px "Arial Black",sans-serif'
-    ctx.fillText('⚽ FRIGURSO',24,40)
-    ctx.fillStyle='rgba(255,255,255,0.4)'
-    ctx.font='500 13px Arial,sans-serif'
-    const hoy=new Date().toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'})
-    ctx.textAlign='right'
-    ctx.fillText(hoy,576,40)
-    ctx.textAlign='left'
-
-    // Player + course
-    ctx.fillStyle='#ffffff'
-    ctx.font='700 20px Arial,sans-serif'
-    ctx.fillText(JUGADOR?.nombre?(JUGADOR.nombre+(JUGADOR.apellido?' '+JUGADOR.apellido:'')):'Jugador',24,95)
-    ctx.fillStyle='rgba(255,255,255,0.55)'
-    ctx.font='500 14px Arial,sans-serif'
-    ctx.fillText('📍 '+d.course.nombre+' · '+d.course.ciudad,24,118)
-
-    // Divider
-    const divider=(y)=>{
-      ctx.strokeStyle='rgba(74,222,128,0.18)'
-      ctx.lineWidth=1
-      ctx.beginPath();ctx.moveTo(24,y);ctx.lineTo(576,y);ctx.stroke()
-    }
-    divider(133)
-
-    // Big score
-    const scol=d.svp<0?'#4ade80':d.svp>0?'#f87171':'#ffffff'
-    ctx.fillStyle=scol
-    ctx.font='800 96px "Arial Black",sans-serif'
-    ctx.fillText(d.str,24,240)
-    ctx.fillStyle='rgba(255,255,255,0.3)'
-    ctx.font='600 14px Arial,sans-serif'
-    ctx.fillText('vs par',24,260)
-
-    // Golpes / Par (right side)
-    ctx.fillStyle='rgba(255,255,255,0.8)'
-    ctx.font='700 18px Arial,sans-serif'
-    ctx.textAlign='right'
-    ctx.fillText(d.tg+' golpes',576,200)
-    ctx.fillStyle='rgba(255,255,255,0.4)'
-    ctx.font='500 14px Arial,sans-serif'
-    ctx.fillText('Par '+d.tp,576,222)
-    ctx.textAlign='left'
-
-    // Tally row
-    const tally=[
-      {l:'Eagles',v:d.tally.eagle,c:'#c4b5fd'},
-      {l:'Birdies',v:d.tally.birdie,c:'#4ade80'},
-      {l:'Pares',v:d.tally.par,c:'rgba(255,255,255,0.6)'},
-      {l:'Bogeys',v:d.tally.bogey,c:'#fb923c'},
-    ]
-    tally.forEach((t,i)=>{
-      const x=24+i*138
-      ctx.fillStyle='rgba(255,255,255,0.05)'
-      roundRect(ctx,x,277,126,74,10);ctx.fill()
-      ctx.fillStyle=t.c
-      ctx.font='800 28px "Arial Black",sans-serif'
-      ctx.fillText(t.v,x+15,316)
-      ctx.fillStyle='rgba(255,255,255,0.4)'
-      ctx.font='500 11px Arial,sans-serif'
-      ctx.fillText(t.l,x+15,334)
-    })
-
-    let y=370
-
-    // ── ACTIVIDAD FÍSICA ──────────────────────────────────────────
-    if(hasAct){
-      divider(y);y+=14
-      ctx.fillStyle='rgba(255,255,255,0.35)'
-      ctx.font='600 11px Arial,sans-serif'
-      ctx.fillText('ACTIVIDAD FÍSICA',24,y+10)
-      y+=26
-      const durStr=act.durMin>=60
-        ?(Math.floor(act.durMin/60)+'h '+(Math.round(act.durMin)%60)+"'")
-        :(Math.round(act.durMin||0)+"'")
-      const actStats=[
-        {v:(act.dist||0).toFixed(1)+' km',l:'Distancia',c:'#93c5fd'},
-        {v:Math.round(act.cal||0)+' kcal',l:'Calorías',c:'#f9a8d4'},
-        {v:(act.pasos||0).toLocaleString('es'),l:'Pasos',c:'#fde68a'},
-        {v:durStr,l:'Duración',c:'#6ee7b7'},
-      ]
-      actStats.forEach((s,i)=>{
-        const x=24+i*138
-        ctx.fillStyle='rgba(255,255,255,0.07)'
-        roundRect(ctx,x,y,126,52,8);ctx.fill()
-        ctx.fillStyle=s.c
-        ctx.font='700 17px Arial,sans-serif'
-        ctx.fillText(s.v,x+10,y+29)
-        ctx.fillStyle='rgba(255,255,255,0.4)'
-        ctx.font='500 11px Arial,sans-serif'
-        ctx.fillText(s.l,x+10,y+46)
-      })
-      y+=62
-    }
-
-    // ── CLIMA ─────────────────────────────────────────────────────
-    if(hasClima){
-      divider(y);y+=14
-      ctx.fillStyle='rgba(255,255,255,0.35)'
-      ctx.font='600 11px Arial,sans-serif'
-      ctx.fillText('CLIMA',24,y+10)
-      y+=26
-      const wItems=[]
-      if(clima.emoji||clima.desc) wItems.push({v:(clima.emoji||'')+' '+(clima.desc||'').slice(0,10).trim(),l:'Condición',c:'#fde68a'})
-      if(clima.temp!=null) wItems.push({v:clima.temp+'°C',l:'Temperatura',c:'#fed7aa'})
-      if(clima.viento!=null) wItems.push({v:clima.viento+' km/h',l:'Viento',c:'#bae6fd'})
-      if(clima.humedad!=null) wItems.push({v:clima.humedad+'%',l:'Humedad',c:'#a5f3fc'})
-      const wW=wItems.length?Math.floor(552/wItems.length):138
-      wItems.forEach((s,i)=>{
-        const x=24+i*wW
-        ctx.fillStyle='rgba(255,255,255,0.07)'
-        roundRect(ctx,x,y,wW-6,52,8);ctx.fill()
-        ctx.fillStyle=s.c
-        ctx.font='700 17px Arial,sans-serif'
-        ctx.fillText(s.v,x+10,y+29)
-        ctx.fillStyle='rgba(255,255,255,0.4)'
-        ctx.font='500 11px Arial,sans-serif'
-        ctx.fillText(s.l,x+10,y+46)
-      })
-      y+=62
-    }
-
-    // ── ANÁLISIS ──────────────────────────────────────────────────
-    divider(y);y+=18
-    let lbl,analTxt
-    if(d.svp<=-5){lbl='¡EXTRAORDINARIO!';analTxt='Dominio total del campo. Una ronda de élite absoluta.'}
-    else if(d.svp<=-3){lbl='¡EXCELENTE!';analTxt='Ronda sólida con mucho bajo par. Muy por encima del promedio.'}
-    else if(d.svp<=-1){lbl='BAJO EL PAR';analTxt='Buen trabajo, terminaste con ventaja sobre el campo.'}
-    else if(d.svp===0){lbl='AL PAR';analTxt='Ronda consistente. Jugaste exactamente al nivel del campo.'}
-    else if(d.svp<=3){lbl='SOBRE EL PAR';analTxt='Ronda competitiva con margen de mejora. A seguir trabajando.'}
-    else{lbl='EN CONSTRUCCIÓN';analTxt='Cada golpe es aprendizaje. Seguí adelante, el progreso llega.'}
-    if(d.tally.eagle>=1) analTxt+=' Eagle conseguido — golpe de nivel tour.'
-    else if(d.tally.birdie>=3) analTxt+=' '+d.tally.birdie+' birdies destacados en la jornada.'
-
-    ctx.fillStyle=scol
-    ctx.font='800 15px "Arial Black",sans-serif'
-    ctx.fillText(lbl,24,y+14)
-    y+=30
-    // Word-wrapped analysis text
-    ctx.fillStyle='rgba(255,255,255,0.6)'
-    ctx.font='500 13px Arial,sans-serif'
-    const words=analTxt.split(' ')
-    let line=''
-    words.forEach(w=>{
-      const test=line?line+' '+w:w
-      if(ctx.measureText(test).width>548&&line){
-        ctx.fillText(line,24,y);y+=19;line=w
-      } else line=test
-    })
-    if(line){ctx.fillText(line,24,y);y+=19}
-
-    // Bottom tag
-    ctx.fillStyle='rgba(74,222,128,0.5)'
-    ctx.font='700 12px Arial,sans-serif'
-    ctx.textAlign='right'
-    ctx.fillText('frigurso.vercel.app',576,H-12)
-    ctx.textAlign='left'
-
-    // Share / download
-    canvas.toBlob(async blob=>{
-      const file=new File([blob],'frigurso-ronda.png',{type:'image/png'})
-      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-        await navigator.share({files:[file],title:'Mi ronda — FRIGURSO'}).catch(()=>{})
-      } else {
-        const url=URL.createObjectURL(blob)
-        const a=document.createElement('a')
-        a.href=url;a.download='frigurso-ronda.png';a.click()
-        URL.revokeObjectURL(url)
-        toast('📥 Imagen guardada')
-      }
-    },'image/png')
-  }catch(e){
-    const txt=`⚽ FRIGURSO · ${d.str} · ${d.course.nombre} · ${d.tg} golpes\n🐦 ${d.tally.birdie} birdies · 🦅 ${d.tally.eagle} eagles\nfrigurso.vercel.app`
-    if(navigator.share) navigator.share({title:'Mi ronda — FRIGURSO',text:txt}).catch(()=>{})
-    else navigator.clipboard?.writeText(txt).then(()=>toast('📋 Copiado'))
-  }
+  const nombre=JUGADOR?(JUGADOR.nombre+(JUGADOR.apellido?' '+JUGADOR.apellido:'')).trim():'Jugador'
+  const hoy=new Date().toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short',year:'numeric'})
+  const fechaRaw=new Date().toISOString().slice(0,10)
+  const same=(_statData||[]).filter(r=>r.cancha_id===d.course.id&&r.score_vs_par!==null)
+  const bestEnCancha=same.length?Math.min(...same.map(r=>r.score_vs_par)):null
+  const catLabel={ra250:'RA250',ra500:'RA500',ra1000:'RA1000',major:'Major',mundial:'World Cup'}[d.catTorneo]||'Torneo'
+  const photoUrl=_getCanchaFotoUrl(d.course.id,d.course.nombre)
+  await _buildShareCanvas({
+    nombre, hcp:JUGADOR?.handicap, categoria:JUGADOR?.categoria,
+    fecha:hoy, fechaRaw, canchaName:d.course.nombre, canchaId:d.course.id, cancha:d.course,
+    svp:d.svp, svpStr:String(d.str), totalGolpes:d.tg, totalPar:d.tp,
+    tipo:d.catTorneo||'practica', catLabel, esTorneo:!!d.tourMode,
+    posicion:d.posicion, bestEnCancha, tally:d.tally,
+    holes:d.holes||[], act:_actividadData||null, photoUrl,
+  })
 }
 
 function openSelector(){
@@ -5689,7 +5794,8 @@ async function _procesarActividad(rondaId=null){
   _actividadData={dist:dist.toFixed(2),pasos,cal,durMin,clima,track,rondaId}
   if(rondaId){
     try{
-      const toSave={dist:_actividadData.dist,pasos,cal,durMin,clima,rondaId}
+      const trackSample=track.length>400?track.filter((_,i)=>i%Math.ceil(track.length/400)===0):track
+      const toSave={dist:_actividadData.dist,pasos,cal,durMin,clima,rondaId,track:trackSample}
       localStorage.setItem('frigurso_act_'+rondaId,JSON.stringify(toSave))
     }catch(_){}
   }
@@ -5757,160 +5863,29 @@ async function shareInforme(rondaId){
   const holes=(_statHoles||[]).filter(h=>h.ronda_id===rondaId).sort((a,b)=>a.hoyo-b.hoyo)
   let act=null
   try{const raw=localStorage.getItem('frigurso_act_'+rondaId);if(raw)act=JSON.parse(raw)}catch(e){}
-
   const nombre=JUGADOR?(JUGADOR.nombre+(JUGADOR.apellido?' '+JUGADOR.apellido:'')).trim():'Jugador'
   const svp=ronda.score_vs_par
   const fmt=v=>v===null?'—':v===0?'E':v>0?'+'+v:''+v
   const svpStr=svp===null?'—':svp===0?'E (PAR)':svp>0?'+'+svp:''+svp
-  const svpCol=svp!==null&&svp<0?'#4ade80':svp!==null&&svp>0?'#f87171':'#fff'
-  const f=new Date(ronda.fecha+'T00:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+  const f=new Date(ronda.fecha+'T00:00:00').toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short',year:'numeric'})
   const canchaName=ronda.canchas?.nombre||'Cancha'
   const esTorneo=ronda.tipo?.startsWith('torneo_')
   const catLabel={ra250:'RA250',ra500:'RA500',ra1000:'RA1000',major:'Major',mundial:'World Cup'}[ronda.tipo?.replace('torneo_','')]||'Torneo'
-
-  const W=600
-  // Calculate height
-  let H=310
-  if(act?.clima) H+=72
-  if(act) H+=72
-  if(holes.length) H+=100
-  H+=100 // análisis + footer
-
-  const canvas=document.createElement('canvas')
-  canvas.width=W;canvas.height=H
-  const ctx=canvas.getContext('2d')
-
-  const rr=(x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath()}
-  const sep=(y)=>{ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,y);ctx.lineTo(W-20,y);ctx.stroke()}
-
-  // BG
-  ctx.fillStyle='#060f1a';ctx.fillRect(0,0,W,H)
-  const g=ctx.createLinearGradient(0,0,W,H)
-  g.addColorStop(0,'rgba(74,222,128,.15)');g.addColorStop(1,'rgba(79,70,229,.07)')
-  ctx.fillStyle=g;ctx.fillRect(0,0,W,H)
-
-  // Header bar
-  ctx.fillStyle='rgba(74,222,128,.12)';ctx.fillRect(0,0,W,54)
-  ctx.fillStyle='#4ade80';ctx.font='800 18px "Arial Black",sans-serif'
-  ctx.fillText('⚽ FRIGURSO',20,36)
-  ctx.fillStyle='rgba(255,255,255,.35)';ctx.font='500 12px Arial,sans-serif'
-  ctx.textAlign='right';ctx.fillText(f,W-20,36);ctx.textAlign='left'
-
-  // Player + cancha
-  ctx.fillStyle='rgba(255,255,255,.45)';ctx.font='500 13px Arial,sans-serif'
-  ctx.fillText(nombre,20,76)
-  ctx.fillStyle='#fff';ctx.font='800 24px "Arial Black",sans-serif'
-  ctx.fillText(canchaName,20,106)
-  if(esTorneo){
-    ctx.fillStyle='rgba(251,191,36,.15)';rr(24,112,catLabel.length*9+18,22,5);ctx.fill()
-    ctx.fillStyle='#fbbf24';ctx.font='700 11px Arial,sans-serif'
-    ctx.fillText('🏆 '+catLabel,30,127)
-  }
-
-  // Score
-  ctx.fillStyle=svpCol;ctx.font='800 68px "Arial Black",sans-serif'
-  ctx.fillText(svpStr,20,195)
-  ctx.fillStyle='rgba(255,255,255,.28)';ctx.font='500 13px Arial,sans-serif'
-  ctx.fillText('vs par  ·  '+(ronda.total_golpes||'—')+' golpes  ·  '+(esTorneo?catLabel:'Práctica'),20,215)
-  if(ronda.posicion_final){
-    ctx.fillStyle='rgba(251,191,36,.7)';ctx.font='700 13px Arial,sans-serif'
-    ctx.fillText('🏅 Posición final: '+ronda.posicion_final+'°',20,235)
-  }
-  const same=_statData?.filter(r=>r.cancha_id===ronda.cancha_id&&r.id!==rondaId&&r.score_vs_par!==null)
-  const bestSame=same?.length?Math.min(...same.map(r=>r.score_vs_par)):null
-  if(bestSame!==null){
-    ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='500 12px Arial,sans-serif'
-    ctx.fillText('Mejor personal en '+canchaName+': '+fmt(bestSame),20,ronda.posicion_final?253:235)
-  }
-
-  let y=272;sep(y);y+=14
-
-  // CLIMA
-  if(act?.clima){
-    const c=act.clima
-    ctx.fillStyle='rgba(14,165,233,.12)';rr(20,y,W-40,58,10);ctx.fill()
-    ctx.fillStyle='rgba(122,184,245,.6)';ctx.font='700 10px Arial,sans-serif'
-    ctx.fillText('CLIMA AL MOMENTO DE JUGAR',34,y+16)
-    const cl=[c.emoji+' '+c.desc,c.temp+'°C','💨 '+c.viento+' km/h',c.lluvia?'🌧 Lluvia':'☀️ Despejado',c.presion?'🌡 '+c.presion+' hPa':'',c.humedad!=null?'💧 '+c.humedad+'%':''].filter(Boolean)
-    ctx.fillStyle='rgba(186,230,253,.85)';ctx.font='500 13px Arial,sans-serif'
-    ctx.fillText(cl.join(' · '),34,y+40)
-    y+=72;sep(y);y+=14
-  }
-
-  // ACTIVIDAD
-  if(act){
-    const durFmt=m=>{if(!m)return'—';const h=Math.floor(m/60),mn=m%60;return h?h+'h '+mn+'min':mn+'min'}
-    ctx.fillStyle='rgba(74,222,128,.08)';rr(20,y,W-40,58,10);ctx.fill()
-    ctx.fillStyle='rgba(134,239,172,.6)';ctx.font='700 10px Arial,sans-serif'
-    ctx.fillText('ACTIVIDAD EN CAMPO',34,y+16)
-    const al=['📏 '+act.dist+' km','⏱ '+durFmt(act.durMin),'🔥 '+act.cal+' kcal','👣 '+(act.pasos||0).toLocaleString()+' pasos']
-    ctx.fillStyle='rgba(134,239,172,.85)';ctx.font='500 13px Arial,sans-serif'
-    ctx.fillText(al.join('  ·  '),34,y+40)
-    y+=72;sep(y);y+=14
-  }
-
-  // HOYOS color strip
-  if(holes.length){
-    ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='700 10px Arial,sans-serif'
-    ctx.fillText('HOYO A HOYO',20,y+14);y+=22
-    const sz=28,gap=Math.floor((W-40-holes.length*sz)/(holes.length-1||1))
-    const hcols=['#c4b5fd','#4ade80','rgba(156,163,175,.65)','#fb923c','#ef4444']
-    holes.forEach((h,i)=>{
-      const d=h.golpes-h.par
-      const col=d<=-2?hcols[0]:d===-1?hcols[1]:d===0?hcols[2]:d===1?hcols[3]:hcols[4]
-      const x=20+i*(sz+gap)
-      ctx.fillStyle=col+'55';rr(x,y,sz,sz,4);ctx.fill()
-      ctx.strokeStyle=col;ctx.lineWidth=1.5;rr(x,y,sz,sz,4);ctx.stroke()
-      ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='600 7px Arial,sans-serif';ctx.textAlign='center'
-      ctx.fillText(h.hoyo,x+sz/2,y+9)
-      const rs=d===0?'E':d>0?'+'+d:''+d
-      ctx.fillStyle=col;ctx.font='800 10px "Arial Black",sans-serif'
-      ctx.fillText(rs,x+sz/2,y+23);ctx.textAlign='left'
-    })
-    y+=sz+10
-    // dist chips text
-    const dist={eagle:0,birdie:0,par:0,bogey:0,dbl:0}
-    holes.forEach(h=>{const d=h.golpes-h.par;if(d<=-2)dist.eagle++;else if(d===-1)dist.birdie++;else if(d===0)dist.par++;else if(d===1)dist.bogey++;else dist.dbl++})
-    const parts=[]
-    if(dist.eagle)parts.push('🦅 '+dist.eagle+' eagle'+(dist.eagle>1?'s':''))
-    if(dist.birdie)parts.push('🐦 '+dist.birdie+' birdie'+(dist.birdie>1?'s':''))
-    if(dist.par)parts.push('⛳ '+dist.par+' par'+(dist.par>1?'es':''))
-    if(dist.bogey)parts.push('📍 '+dist.bogey+' bogey'+(dist.bogey>1?'s':''))
-    if(dist.dbl)parts.push('✌ '+dist.dbl+' doble+')
-    ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='500 11px Arial,sans-serif'
-    ctx.fillText(parts.join('  '),20,y+14);y+=26
-    sep(y);y+=14
-  }
-
-  // AI análisis resumen
-  const svpV=svp??0
-  let nivelTxt=''
-  if(svpV<=-4) nivelTxt='Ronda sobresaliente'+(esTorneo?' en torneo':'')+'. Resultado de élite.'
-  else if(svpV<=-2) nivelTxt='Ronda excelente bajo par'+(esTorneo?' en competencia':'')+'. Gran consistencia.'
-  else if(svpV<=-1) nivelTxt='Muy buen resultado'+(esTorneo?' bajo presión competitiva':'')+'. Sólido.'
-  else if(svpV===0) nivelTxt='Al par. Ronda técnicamente impecable'+(esTorneo?' en torneo':'')+'. Logro real.'
-  else if(svpV<=3) nivelTxt='Ronda para analizar y mejorar'+(esTorneo?'. La competencia suma experiencia':'')+'. Adelante.'
-  else nivelTxt='Cancha exigente'+(esTorneo?' en torneo':'')+'. Cada ronda es aprendizaje.'
-  ctx.fillStyle='rgba(255,255,255,.25)';ctx.font='700 10px Arial,sans-serif'
-  ctx.fillText('🤖 ANÁLISIS DE RONDA',20,y+14)
-  ctx.fillStyle='rgba(255,255,255,.6)';ctx.font='500 13px Arial,sans-serif'
-  ctx.fillText(nivelTxt,20,y+34)
-
-  // Footer
-  ctx.fillStyle='rgba(74,222,128,.4)';ctx.font='700 11px Arial,sans-serif'
-  ctx.textAlign='right';ctx.fillText('frigurso.vercel.app',W-20,H-10);ctx.textAlign='left'
-
-  canvas.toBlob(async blob=>{
-    const ds=ronda.fecha.replace(/-/g,'')
-    const fn='frigurso-'+canchaName.replace(/\s+/g,'-')+'-'+ds+'.png'
-    const file=new File([blob],fn,{type:'image/png'})
-    const txt=nombre+' · '+canchaName+' · '+svpStr+(esTorneo?' ('+catLabel+')':'')
-    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-      await navigator.share({files:[file],title:canchaName+' — FRIGURSO',text:txt}).catch(()=>{})
-    }else{
-      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fn;a.click()
-    }
-  },'image/png')
+  const tally={eagle:0,birdie:0,par:0,bogey:0,dbl:0}
+  holes.forEach(h=>{const d=h.golpes-h.par;if(d<=-2)tally.eagle++;else if(d===-1)tally.birdie++;else if(d===0)tally.par++;else if(d===1)tally.bogey++;else tally.dbl++})
+  const same=(_statData||[]).filter(r=>r.cancha_id===ronda.cancha_id&&r.id!==rondaId&&r.score_vs_par!==null)
+  const bestEnCancha=same.length?Math.min(...same.map(r=>r.score_vs_par)):null
+  const cancha=COURSES.find(c=>c.nombre===canchaName)||window._allCanchas?.find(c=>c.nombre===canchaName)||{nombre:canchaName,hoyos:18,emoji:'⛳'}
+  const photoUrl=_getCanchaFotoUrl(ronda.cancha_id,canchaName)
+  await _buildShareCanvas({
+    nombre, hcp:JUGADOR?.handicap, categoria:JUGADOR?.categoria,
+    fecha:f, fechaRaw:ronda.fecha, canchaName, canchaId:ronda.cancha_id, cancha,
+    svp, svpStr, totalGolpes:ronda.total_golpes||0, totalPar:(ronda.total_golpes||0)-svp,
+    tipo:ronda.tipo||'practica', catLabel, esTorneo,
+    posicion:ronda.posicion_final, bestEnCancha, tally,
+    holes:holes.map(h=>({hoyo:h.hoyo,par:h.par,golpes:h.golpes})),
+    act, photoUrl,
+  })
 }
 
 function exportHistorialCSV(){
