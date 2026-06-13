@@ -5860,7 +5860,18 @@ function _showActividadEnSummary(){
 async function shareInforme(rondaId){
   const ronda=_statData?.find(r=>r.id===rondaId)
   if(!ronda){toast('Cargá el informe primero');return}
-  const holes=(_statHoles||[]).filter(h=>h.ronda_id===rondaId).sort((a,b)=>a.hoyo-b.hoyo)
+  let holes=(_statHoles||[]).filter(h=>h.ronda_id===rondaId).sort((a,b)=>a.hoyo-b.hoyo)
+  if(!holes.length){
+    try{
+      const {data}=await SB.from('scorecard').select('*').eq('ronda_id',rondaId).order('hoyo')
+      if(data&&data.length){
+        holes=data
+        if(!_statHoles) _statHoles=[]
+        const existing=new Set(_statHoles.map(h=>h.ronda_id+'_'+h.hoyo))
+        data.forEach(h=>{if(!existing.has(h.ronda_id+'_'+h.hoyo))_statHoles.push(h)})
+      }
+    }catch(e){}
+  }
   let act=null
   try{const raw=localStorage.getItem('frigurso_act_'+rondaId);if(raw)act=JSON.parse(raw)}catch(e){}
   const nombre=JUGADOR?(JUGADOR.nombre+(JUGADOR.apellido?' '+JUGADOR.apellido:'')).trim():'Jugador'
